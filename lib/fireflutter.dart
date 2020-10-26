@@ -5,7 +5,17 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class FireFlutter {
+  Stream<User> authStateChanges;
+  FireFlutter() {
+    authStateChanges = FirebaseAuth.instance.authStateChanges();
+  }
+
   /// Register into Firebase with email/password
+  ///
+  /// `authStateChanges` will fire event with login info immediately after the
+  /// user register but before updating user displayName and photoURL meaning.
+  /// This means, when `authStateChanges` event fired, the user have no
+  /// `displayNamd` and `photoURL` in the User data.
   ///
   Future<User> register({
     @required String email,
@@ -48,5 +58,9 @@ class FireFlutter {
     }
 
     return user;
+  }
+
+  Future<void> logout() {
+    return FirebaseAuth.instance.signOut();
   }
 }
