@@ -13,6 +13,7 @@ class FireFlutter {
     String displayName = '',
     String photoURL = '',
     Map<String, dynamic> data,
+    Map<String, Map<String, dynamic>> meta,
   }) async {
     UserCredential userCredential =
         await FirebaseAuth.instance.createUserWithEmailAndPassword(
@@ -29,14 +30,22 @@ class FireFlutter {
     await userCredential.user.reload();
     User user = FirebaseAuth.instance.currentUser;
 
-    print('FireFlutter::register() success: user: ');
-    print(user);
-
     /// Login Success
-    CollectionReference users = FirebaseFirestore.instance.collection('users');
+    DocumentReference userDoc = FirebaseFirestore.instance
+        .collection('users')
+        .doc(userCredential.user.uid);
 
     /// Set user extra information
-    await users.doc(userCredential.user.uid).set(data);
+    await userDoc.set(data);
+
+    // Push default meta to user meta
+    if (meta != null) {
+      CollectionReference metaCol = userDoc.collection('meta');
+      for (final key in meta.keys) {
+        // Save data for each path.
+        await metaCol.doc(key).set(meta[key]);
+      }
+    }
 
     return user;
   }
