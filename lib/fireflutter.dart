@@ -1,7 +1,9 @@
 library fireflutter;
 
+import 'dart:convert';
 import 'dart:io';
 import 'dart:async';
+import 'package:dio/dio.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
@@ -102,6 +104,8 @@ class FireFlutter {
 
   FirebaseMessaging firebaseMessaging = new FirebaseMessaging();
   final String allTopic = 'allTopic';
+  final String firebaseServerToken =
+      'AAAAjdyAvbM:APA91bGist2NNTrrKTZElMzrNV0rpBLV7Nn674NRow-uyjG1-Uhh5wGQWyQEmy85Rcs0wlEpYT2uFJrSnlZywLzP1hkdx32FKiPJMI38evdRZO0x1vBJLc-cukMqZBKytzb3mzRfmrgL';
   String firebaseMessagingToken;
 
   BehaviorSubject<UserChange> userChange = BehaviorSubject.seeded(null);
@@ -309,7 +313,7 @@ class FireFlutter {
     /// subscribe to all topic
     await subscribeTopic(allTopic);
 
-    _firebaseMessagingCallbackHandlers();
+    // _firebaseMessagingCallbackHandlers();
   }
 
   Future subscribeTopic(String topicName) async {
@@ -354,26 +358,29 @@ class FireFlutter {
     }
   }
 
-  _firebaseMessagingCallbackHandlers() {
-    /// Configure callback handlers for
-    /// - foreground
-    /// - background
-    /// - exited
-    firebaseMessaging.configure(
-      onMessage: (Map<String, dynamic> message) async {
-        print('onMessage: $message');
-        _firebaseMessagingDisplayAndNavigate(message, true);
-      },
-      onLaunch: (Map<String, dynamic> message) async {
-        print('onLaunch: $message');
-        _firebaseMessagingDisplayAndNavigate(message, false);
-      },
-      onResume: (Map<String, dynamic> message) async {
-        print('onResume: $message');
-        _firebaseMessagingDisplayAndNavigate(message, false);
-      },
-    );
-  }
+  /// TODO This is a package that handles only backend works.
+  /// TODO This must not have any UI works like showing snackbar, modal dialogs. Do event handler.
+  ///
+  // _firebaseMessagingCallbackHandlers() {
+  //   /// Configure callback handlers for
+  //   /// - foreground
+  //   /// - background
+  //   /// - exited
+  //   firebaseMessaging.configure(
+  //     onMessage: (Map<String, dynamic> message) async {
+  //       print('onMessage: $message');
+  //       _firebaseMessagingDisplayAndNavigate(message, true);
+  //     },
+  //     onLaunch: (Map<String, dynamic> message) async {
+  //       print('onLaunch: $message');
+  //       _firebaseMessagingDisplayAndNavigate(message, false);
+  //     },
+  //     onResume: (Map<String, dynamic> message) async {
+  //       print('onResume: $message');
+  //       _firebaseMessagingDisplayAndNavigate(message, false);
+  //     },
+  //   );
+  // }
 
   /// Display notification & navigate
   ///
@@ -381,48 +388,117 @@ class FireFlutter {
   ///   {notification: {title: This is title., body: Notification test.}, data: {click_action: FLUTTER_NOTIFICATION_CLICK}}
   /// But the data on `onResume` and `onLaunch` are like below;
   ///   { data: {click_action: FLUTTER_NOTIFICATION_CLICK} }
-  void _firebaseMessagingDisplayAndNavigate(
-      Map<String, dynamic> message, bool display) {
-    var notification = message['notification'];
+  // void _firebaseMessagingDisplayAndNavigate(
+  //     Map<String, dynamic> message, bool display) {
+  //   var notification = message['notification'];
 
-    /// iOS 에서는 title, body 가 `message['aps']['alert']` 에 들어온다.
-    if (message['aps'] != null && message['aps']['alert'] != null) {
-      notification = message['aps']['alert'];
-    }
-    // iOS 에서는 data 속성없이, 객체에 바로 저장된다.
-    var data = message['data'] ?? message;
+  //   /// iOS 에서는 title, body 가 `message['aps']['alert']` 에 들어온다.
+  //   if (message['aps'] != null && message['aps']['alert'] != null) {
+  //     notification = message['aps']['alert'];
+  //   }
+  //   // iOS 에서는 data 속성없이, 객체에 바로 저장된다.
+  //   var data = message['data'] ?? message;
 
-    // return if the senderID is the owner.
-    if (data != null && data['senderID'] == user.uid) {
-      return;
-    }
+  //   // return if the senderID is the owner.
+  //   if (data != null && data['senderID'] == user.uid) {
+  //     return;
+  //   }
 
-    if (display) {
-      // Get.snackbar(
-      //   notification['title'].toString(),
-      //   notification['body'].toString(),
-      //   onTap: (_) {
-      //     // print('onTap data: ');
-      //     // print(data);
-      //     Get.toNamed(data['route']);
-      //   },
-      //   mainButton: FlatButton(
-      //     child: Text('Open'),
-      //     onPressed: () {
-      //       // print('mainButton data: ');
-      //       // print(data);
-      //       Get.toNamed(data['route']);
-      //     },
-      //   ),
-      // );
-    } else {
-      // TODO: Make it work.
-      /// App will come here when the user open the app by tapping a push notification on the system tray.
-      /// Do something based on the `data`.
-      if (data != null && data['postId'] != null) {
-        // Get.toNamed(Settings.postViewRoute, arguments: {'postId': data['postId']});
+  //   if (display) {
+  //     Get.snackbar(
+  //       notification['title'].toString(),
+  //       notification['body'].toString(),
+  //       onTap: (_) {
+  //         // print('onTap data: ');
+  //         // print(data);
+  //         Get.toNamed(data['route']);
+  //       },
+  //       mainButton: FlatButton(
+  //         child: Text('Open'),
+  //         onPressed: () {
+  //           // print('mainButton data: ');
+  //           // print(data);
+  //           Get.toNamed(data['route']);
+  //         },
+  //       ),
+  //     );
+  //   } else {
+  //     // TODO: Make it work.
+  //     /// App will come here when the user open the app by tapping a push notification on the system tray.
+  //     /// Do something based on the `data`.
+  //     if (data != null && data['postId'] != null) {
+  //       // Get.toNamed(Settings.postViewRoute, arguments: {'postId': data['postId']});
+  //     }
+  //   }
+  // }
+
+  Future<void> sendNotification(
+    title,
+    body, {
+    route,
+    token,
+    tokens,
+    topic,
+  }) async {
+    print('SendNotification');
+    if (token == null && tokens == null && topic == null)
+      return print('Token/Topic is not provided.');
+
+    final postUrl = 'https://fcm.googleapis.com/fcm/send';
+
+    // String toParams = "/topics/" + App.Settings.allTopic;
+    // print(token);
+    // print(topic);
+
+    final req = [];
+    if (token != null) req.add({'key': 'to', 'value': token});
+    if (topic != null) req.add({'key': 'to', 'value': "/topics/" + topic});
+    if (tokens != null) req.add({'key': 'registration_ids', 'value': tokens});
+
+    final headers = {
+      HttpHeaders.contentTypeHeader: "application/json",
+      HttpHeaders.authorizationHeader: "key=" + firebaseServerToken
+    };
+
+    req.forEach((el) async {
+      final data = {
+        "notification": {"body": body, "title": title},
+        "priority": "high",
+        "data": {
+          "click_action": "FLUTTER_NOTIFICATION_CLICK",
+          "id": "1",
+          "status": "done",
+          "sound": 'default',
+          "senderID": user.uid,
+          'route': route,
+        }
+      };
+      data[el['key']] = el['value'];
+      final encodeData = jsonEncode(data);
+      var dio = Dio();
+
+      print('try sending notification');
+      try {
+        var response = await dio.post(
+          postUrl,
+          data: encodeData,
+          options: Options(
+            headers: headers,
+          ),
+        );
+        if (response.statusCode == 200) {
+          // on success do
+          print("notification success");
+        } else {
+          // on failure do
+          print("notification failure");
+        }
+        print(response.data);
+      } catch (e) {
+        print('Dio error in sendNotification');
+        print(e);
       }
-    }
+    });
   }
 
   /// Get more posts from Firestore
