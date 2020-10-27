@@ -1,7 +1,9 @@
 library fireflutter;
 
+import 'dart:io';
 import 'dart:async';
-
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -48,7 +50,7 @@ class FireFlutter {
   /// User document realtime update.
   StreamSubscription userSubscription;
 
-  CollectionReference usersCol = FirebaseFirestore.instance.collection('users');
+  CollectionReference usersCol;
 
   bool enableNotification = false;
 
@@ -62,15 +64,32 @@ class FireFlutter {
   /// ```
   Stream<User> authStateChanges;
 
+  FirebaseMessaging firebaseMessaging = new FirebaseMessaging();
+  final String allTopic = 'allTopic';
+  String firebaseMessagingToken;
+
   BehaviorSubject<UserChange> userChange = BehaviorSubject.seeded(null);
 
-  ///
-  ///
-  ///
-  FireFlutter({this.enableNotification}) {
+  FireFlutter() {
+    print('FireFlutter');
+  }
+
+  Future<void> initFirebase() async {
+    print('initFirebase');
+    WidgetsFlutterBinding.ensureInitialized();
+    await Firebase.initializeApp();
+    FirebaseFirestore.instance.settings =
+        Settings(cacheSizeBytes: Settings.CACHE_SIZE_UNLIMITED);
+  }
+
+  Future<void> init({bool enableNotification}) async {
+    this.enableNotification = enableNotification;
+    await initFirebase();
+    usersCol = FirebaseFirestore.instance.collection('users');
     initUser();
     initNotification();
   }
+
   initUser() {
     authStateChanges = FirebaseAuth.instance.authStateChanges();
 
@@ -102,10 +121,7 @@ class FireFlutter {
 
   initNotification() {
     if (enableNotification == false) return;
-
-    ///
-    ///
-    ///
+    initFirebaseMessaging();
   }
 
   /// Register into Firebase with email/password
@@ -238,5 +254,134 @@ class FireFlutter {
     await user.updateProfile(photoURL: url);
     await user.reload();
     user = FirebaseAuth.instance.currentUser;
+  }
+
+  Future<void> initFirebaseMessaging() async {
+    await _firebaseMessagingRequestPermission();
+
+    firebaseMessagingToken = await firebaseMessaging.getToken();
+    print('token');
+    print(firebaseMessagingToken);
+    if (user != null) {
+      updateToken(user);
+    }
+
+    /// subscribe to all topic
+    await subscribeTopic(allTopic);
+
+    _firebaseMessagingCallbackHandlers();
+  }
+
+  Future subscribeTopic(String topicName) async {
+    print('subscribeTopic $topicName');
+    try {
+      await firebaseMessaging.subscribeToTopic(topicName);
+    } catch (e) {
+      print(e);
+    }
+  }
+
+  Future unsubscribeTopic(String topicName) async {
+    await firebaseMessaging.unsubscribeFromTopic(topicName);
+  }
+
+  /// Update push notification token to Firestore
+  ///
+  /// [user] is needed because when this method may be called immediately
+  ///   after login but before `Firebase.AuthStateChange()` and when it happens,
+  ///   the user appears not to be logged in even if the user already logged in.
+  updateToken(User user) {
+    if (firebaseMessagingToken == null) return;
+    FirebaseFirestore.instance
+        .collection('users')
+        .doc(user.uid)
+        .collection('meta')
+        .doc('tokens')
+        .set({firebaseMessagingToken: true}, SetOptions(merge: true));
+  }
+
+  Future<void> _firebaseMessagingRequestPermission() async {
+    /// Ask permission to iOS user for Push Notification.
+    if (Platform.isIOS) {
+      firebaseMessaging.onIosSettingsRegistered.listen((event) {
+        // Do something after user accepts the request.
+      });
+      await firebaseMessaging
+          .requestNotificationPermissions(IosNotificationSettings());
+    } else {
+      /// For Android, no permission request is required. just get Push token.
+      await firebaseMessaging.requestNotificationPermissions();
+    }
+  }
+
+  _firebaseMessagingCallbackHandlers() {
+    /// Configure callback handlers for
+    /// - foreground
+    /// - background
+    /// - exited
+    firebaseMessaging.configure(
+      onMessage: (Map<String, dynamic> message) async {
+        print('onMessage: $message');
+        _firebaseMessagingDisplayAndNavigate(message, true);
+      },
+      onLaunch: (Map<String, dynamic> message) async {
+        print('onLaunch: $message');
+        _firebaseMessagingDisplayAndNavigate(message, false);
+      },
+      onResume: (Map<String, dynamic> message) async {
+        print('onResume: $message');
+        _firebaseMessagingDisplayAndNavigate(message, false);
+      },
+    );
+  }
+
+  /// Display notification & navigate
+  ///
+  /// @note the data on `onMessage` is like below;
+  ///   {notification: {title: This is title., body: Notification test.}, data: {click_action: FLUTTER_NOTIFICATION_CLICK}}
+  /// But the data on `onResume` and `onLaunch` are like below;
+  ///   { data: {click_action: FLUTTER_NOTIFICATION_CLICK} }
+  void _firebaseMessagingDisplayAndNavigate(
+      Map<String, dynamic> message, bool display) {
+    var notification = message['notification'];
+
+    /// iOS 에서는 title, body 가 `message['aps']['alert']` 에 들어온다.
+    if (message['aps'] != null && message['aps']['alert'] != null) {
+      notification = message['aps']['alert'];
+    }
+    // iOS 에서는 data 속성없이, 객체에 바로 저장된다.
+    var data = message['data'] ?? message;
+
+    // return if the senderID is the owner.
+    if (data != null && data['senderID'] == user.uid) {
+      return;
+    }
+
+    if (display) {
+      // Get.snackbar(
+      //   notification['title'].toString(),
+      //   notification['body'].toString(),
+      //   onTap: (_) {
+      //     // print('onTap data: ');
+      //     // print(data);
+      //     Get.toNamed(data['route']);
+      //   },
+      //   mainButton: FlatButton(
+      //     child: Text('Open'),
+      //     onPressed: () {
+      //       // print('mainButton data: ');
+      //       // print(data);
+      //       Get.toNamed(data['route']);
+      //     },
+      //   ),
+      // );
+    } else {
+      // TODO: Make it work.
+      /// App will come here when the user open the app by tapping a push notification on the system tray.
+      /// Do something based on the `data`.
+      if (data != null && data['postId'] != null) {
+        // Get.toNamed(Settings.postViewRoute, arguments: {'postId': data['postId']});
+      }
+    }
   }
 }
