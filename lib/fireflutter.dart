@@ -9,19 +9,55 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:rxdart/subjects.dart';
 
+// typedef LoadStateChanges = void Function(bool loading);
 enum UserChange { auth, document, register, profile }
 
-class UserDocumentData {
-  String gender;
-  DateTime birthday;
+class ForumData {
+  /// [render] will be called when the view need to be re-rendered.
+  ForumData({
+    @required String category,
+    @required this.render,
+    this.noOfPostsPerFetch = 10,
+  });
+  bool inLoading = false;
+  loading(bool f) {
+    inLoading = f;
+    render(f);
+  }
 
-  UserDocumentData(Map<String, dynamic> data) : gender = data['gender'] ?? '' {
-    if (data['birthday']?.seconds != null) {
-      birthday =
-          DateTime.fromMillisecondsSinceEpoch(data['birthday'].seconds * 1000);
-    }
+  bool noMorePosts = false;
+  bool get shouldFetch => inLoading == false && noMorePosts == false;
+  bool get shouldNotFetch => !shouldFetch;
+
+  String category;
+  int pageNo = 0;
+  int noOfPostsPerFetch;
+  List<Map<String, dynamic>> posts = [];
+  Function render;
+
+  StreamSubscription postQuerySubscription;
+
+  /// This must be called on Forum screen widget `dispose` to cancel the subscriptions.
+  leave() {
+    postQuerySubscription.cancel();
   }
 }
+
+// class UserDocumentData {
+//   String gender;
+//   DateTime birthday;
+
+//   Map<String, dynamic> props;
+
+//   UserDocumentData(Map<String, dynamic> data)
+//       : props = data,
+//         gender = data['gender'] ?? '' {
+//     if (data['birthday']?.seconds != null) {
+//       birthday =
+//           DateTime.fromMillisecondsSinceEpoch(data['birthday'].seconds * 1000);
+//     }
+//   }
+// }
 
 /// FireFlutter
 ///
@@ -45,7 +81,7 @@ class FireFlutter {
   /// ff.user.updateProfile(displayName: nicknameController.text);
   /// ```
   User user;
-  UserDocumentData data = UserDocumentData({});
+  Map<String, dynamic> data = {};
 
   /// User document realtime update.
   StreamSubscription userSubscription;
@@ -70,6 +106,7 @@ class FireFlutter {
 
   BehaviorSubject<UserChange> userChange = BehaviorSubject.seeded(null);
 
+  CollectionReference colPosts;
   FireFlutter() {
     print('FireFlutter');
   }
@@ -86,6 +123,7 @@ class FireFlutter {
     this.enableNotification = enableNotification;
     await initFirebase();
     usersCol = FirebaseFirestore.instance.collection('users');
+    colPosts = FirebaseFirestore.instance.collection('posts');
     initUser();
     initNotification();
   }
@@ -109,7 +147,7 @@ class FireFlutter {
           userSubscription = usersCol.doc(user.uid).snapshots().listen(
             (DocumentSnapshot snapshot) {
               if (snapshot.exists) {
-                data = UserDocumentData(snapshot.data());
+                data = snapshot.data();
                 userChange.add(UserChange.document);
               }
             },
@@ -118,6 +156,8 @@ class FireFlutter {
       },
     );
   }
+
+  bool get isAdmin => this.data['isAdmin'] == true;
 
   initNotification() {
     if (enableNotification == false) return;
@@ -383,5 +423,66 @@ class FireFlutter {
         // Get.toNamed(Settings.postViewRoute, arguments: {'postId': data['postId']});
       }
     }
+  }
+
+  /// Get more posts from Firestore
+  ///
+  ///
+  fetchPosts(ForumData forum) {
+    if (forum.shouldNotFetch) return;
+    print('should fetch?: ${forum.shouldFetch}');
+    forum.loading(true);
+    forum.pageNo++;
+
+    /// Prepare query
+    Query postsQuery = colPosts.where('category', isEqualTo: forum.category);
+    postsQuery = postsQuery.orderBy('createdAt', descending: true);
+    postsQuery = postsQuery.limit(forum.noOfPostsPerFetch);
+
+    /// Fetch from the last post that had been fetched.
+    if (forum.posts.isNotEmpty) {
+      postsQuery = postsQuery.startAfter([forum.posts.last['createdAt']]);
+    }
+
+    /// Listen to coming posts.
+    forum.postQuerySubscription =
+        postsQuery.snapshots().listen((QuerySnapshot snapshot) {
+      if (snapshot.size == 0) return;
+      snapshot.docChanges.forEach((DocumentChange documentChange) {
+        final post = documentChange.doc.data();
+        post['id'] = documentChange.doc.id;
+
+        if (documentChange.type == DocumentChangeType.added) {
+          /// [createdAt] is null on author mobile (since it is cached locally).
+          if (post['createdAt'] == null) {
+            forum.posts.insert(0, post);
+          }
+
+          /// [createdAt] is not null on other user's mobile and have the
+          /// biggest value among other posts.
+          else if (forum.posts.isNotEmpty &&
+              post['createdAt'].microsecondsSinceEpoch >
+                  forum.posts[0]['createdAt'].microsecondsSinceEpoch) {
+            forum.posts.insert(0, post);
+          }
+
+          /// Or, it is a post that should be added at the bottom for infinite
+          /// page scrolling.
+          else {
+            forum.posts.add(post);
+          }
+          forum.loading(false);
+        } else if (documentChange.type == DocumentChangeType.modified) {
+          final int i = forum.posts.indexWhere((p) => p['id'] == post['id']);
+          if (i > 0) {
+            forum.posts[i] = post;
+          }
+        } else if (documentChange.type == DocumentChangeType.removed) {
+          forum.posts.removeWhere((p) => p['id'] == post['id']);
+        } else {
+          assert(false, 'This is error');
+        }
+      });
+    });
   }
 }
