@@ -1,7 +1,10 @@
 library fireflutter;
 
+import 'dart:convert';
 import 'dart:io';
 import 'dart:async';
+import 'package:get/get.dart';
+import 'package:dio/dio.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
@@ -66,6 +69,8 @@ class FireFlutter {
 
   FirebaseMessaging firebaseMessaging = new FirebaseMessaging();
   final String allTopic = 'allTopic';
+  final String firebaseServerToken =
+      'AAAAjdyAvbM:APA91bGist2NNTrrKTZElMzrNV0rpBLV7Nn674NRow-uyjG1-Uhh5wGQWyQEmy85Rcs0wlEpYT2uFJrSnlZywLzP1hkdx32FKiPJMI38evdRZO0x1vBJLc-cukMqZBKytzb3mzRfmrgL';
   String firebaseMessagingToken;
 
   BehaviorSubject<UserChange> userChange = BehaviorSubject.seeded(null);
@@ -358,23 +363,23 @@ class FireFlutter {
     }
 
     if (display) {
-      // Get.snackbar(
-      //   notification['title'].toString(),
-      //   notification['body'].toString(),
-      //   onTap: (_) {
-      //     // print('onTap data: ');
-      //     // print(data);
-      //     Get.toNamed(data['route']);
-      //   },
-      //   mainButton: FlatButton(
-      //     child: Text('Open'),
-      //     onPressed: () {
-      //       // print('mainButton data: ');
-      //       // print(data);
-      //       Get.toNamed(data['route']);
-      //     },
-      //   ),
-      // );
+      Get.snackbar(
+        notification['title'].toString(),
+        notification['body'].toString(),
+        onTap: (_) {
+          // print('onTap data: ');
+          // print(data);
+          Get.toNamed(data['route']);
+        },
+        mainButton: FlatButton(
+          child: Text('Open'),
+          onPressed: () {
+            // print('mainButton data: ');
+            // print(data);
+            Get.toNamed(data['route']);
+          },
+        ),
+      );
     } else {
       // TODO: Make it work.
       /// App will come here when the user open the app by tapping a push notification on the system tray.
@@ -383,5 +388,74 @@ class FireFlutter {
         // Get.toNamed(Settings.postViewRoute, arguments: {'postId': data['postId']});
       }
     }
+  }
+
+  Future<void> sendNotification(
+    title,
+    body, {
+    route,
+    token,
+    tokens,
+    topic,
+  }) async {
+    print('SendNotification');
+    if (token == null && tokens == null && topic == null)
+      return print('Token/Topic is not provided.');
+
+    final postUrl = 'https://fcm.googleapis.com/fcm/send';
+
+    // String toParams = "/topics/" + App.Settings.allTopic;
+    // print(token);
+    // print(topic);
+
+    final req = [];
+    if (token != null) req.add({'key': 'to', 'value': token});
+    if (topic != null) req.add({'key': 'to', 'value': "/topics/" + topic});
+    if (tokens != null) req.add({'key': 'registration_ids', 'value': tokens});
+
+    final headers = {
+      HttpHeaders.contentTypeHeader: "application/json",
+      HttpHeaders.authorizationHeader: "key=" + firebaseServerToken
+    };
+
+    req.forEach((el) async {
+      final data = {
+        "notification": {"body": body, "title": title},
+        "priority": "high",
+        "data": {
+          "click_action": "FLUTTER_NOTIFICATION_CLICK",
+          "id": "1",
+          "status": "done",
+          "sound": 'default',
+          "senderID": user.uid,
+          'route': route,
+        }
+      };
+      data[el['key']] = el['value'];
+      final encodeData = jsonEncode(data);
+      var dio = Dio();
+
+      print('try sending notification');
+      try {
+        var response = await dio.post(
+          postUrl,
+          data: encodeData,
+          options: Options(
+            headers: headers,
+          ),
+        );
+        if (response.statusCode == 200) {
+          // on success do
+          print("notification success");
+        } else {
+          // on failure do
+          print("notification failure");
+        }
+        print(response.data);
+      } catch (e) {
+        print('Dio error in sendNotification');
+        print(e);
+      }
+    });
   }
 }
