@@ -50,7 +50,7 @@ class FireFlutter {
   /// User document realtime update.
   StreamSubscription userSubscription;
 
-  CollectionReference usersCol = FirebaseFirestore.instance.collection('users');
+  CollectionReference usersCol;
 
   bool enableNotification = false;
 
@@ -70,17 +70,24 @@ class FireFlutter {
 
   BehaviorSubject<UserChange> userChange = BehaviorSubject.seeded(null);
 
-  FireFlutter({this.enableNotification}) {
+  FireFlutter() {
     print('FireFlutter');
-    initUser();
-    initNotification();
   }
 
-  static Future<void> initFirebase() async {
+  Future<void> initFirebase() async {
     print('initFirebase');
+    WidgetsFlutterBinding.ensureInitialized();
     await Firebase.initializeApp();
     FirebaseFirestore.instance.settings =
         Settings(cacheSizeBytes: Settings.CACHE_SIZE_UNLIMITED);
+  }
+
+  Future<void> init({bool enableNotification}) async {
+    this.enableNotification = enableNotification;
+    await initFirebase();
+    usersCol = FirebaseFirestore.instance.collection('users');
+    initUser();
+    initNotification();
   }
 
   initUser() {
