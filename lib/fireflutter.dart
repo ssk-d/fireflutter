@@ -11,7 +11,19 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:rxdart/subjects.dart';
 
-typedef Render = void Function(bool x);
+enum RenderType {
+  postCreate,
+  postUpdate,
+  postDelete,
+  commentCreate,
+  commentUpdate,
+  commentDelete,
+  fileUpload,
+  fileDelete,
+  fetching,
+  stopFetching
+}
+typedef Render = void Function(RenderType x);
 
 enum UserChangeType { auth, document, register, profile }
 enum NotificationType { onMessage, onLaunch, onResume }
@@ -22,14 +34,17 @@ typedef NotificationHadnler = void Function(Map<String, dynamic> messge,
 class ForumData {
   /// [render] will be called when the view need to be re-rendered.
   ForumData({
-    @required String category,
+    @required this.category,
     @required this.render,
     this.noOfPostsPerFetch = 10,
   });
-  bool inLoading = false;
-  loading(bool x) {
-    inLoading = x;
-    render(x);
+
+  /// This is for infinite scrolling in forum screen.
+  RenderType _inLoading;
+  bool get inLoading => _inLoading == RenderType.fetching;
+  fetchingPosts(RenderType x) {
+    _inLoading = x;
+    render(RenderType.stopFetching);
   }
 
   bool noMorePosts = false;
@@ -474,17 +489,20 @@ class FireFlutter {
   //   }
   // }
 
-  Future<void> sendNotification(
+  Future<bool> sendNotification(
     title,
     body, {
     route,
     token,
-    tokens,
+    List<String> tokens,
     topic,
   }) async {
+    if (enableNotification == false) return false;
+
     print('SendNotification');
-    if (token == null && tokens == null && topic == null)
-      return print('Token/Topic is not provided.');
+
+    if (token == null && (tokens == null || tokens.length == 0)) return false;
+    if (topic == null) return false;
 
     final postUrl = 'https://fcm.googleapis.com/fcm/send';
 
@@ -502,6 +520,7 @@ class FireFlutter {
       HttpHeaders.authorizationHeader: "key=" + firebaseServerToken
     };
 
+    /// TODO: Limit title in 128 chars and content 512 chars.
     req.forEach((el) async {
       final data = {
         "notification": {"body": body, "title": title},
@@ -543,14 +562,22 @@ class FireFlutter {
     });
   }
 
+  /////////////////////////////////////////////////////////////////////////////
+  ///
+  /// Forum Functions
+  ///
+  /////////////////////////////////////////////////////////////////////////////
+
   /// Get more posts from Firestore
   ///
   ///
   fetchPosts(ForumData forum) {
     if (forum.shouldNotFetch) return;
+    print('category: ${forum.category}');
     print('should fetch?: ${forum.shouldFetch}');
-    forum.loading(true);
+    forum.fetchingPosts(RenderType.fetching);
     forum.pageNo++;
+    print('pageNo: ${forum.pageNo}');
 
     /// Prepare query
     Query postsQuery = colPosts.where('category', isEqualTo: forum.category);
@@ -609,11 +636,12 @@ class FireFlutter {
                 } else {
                   post['comments'].insert(found, commentData);
                 }
+                forum.render(RenderType.commentCreate);
               }
             });
           });
 
-          forum.loading(false);
+          forum.fetchingPosts(RenderType.stopFetching);
         } else if (documentChange.type == DocumentChangeType.modified) {
           final int i = forum.posts.indexWhere((p) => p['id'] == post['id']);
           if (i > 0) {
@@ -628,5 +656,301 @@ class FireFlutter {
         }
       });
     });
+  }
+
+  /// [data] is the map to save into post document.
+  ///
+  /// `data['title']` and `data['content']` are needed to send push notification.
+  Future editPost(Map<String, dynamic> data) async {
+    /// TODO throw error if both of title and content are empty.
+
+    if (data['id'] != null) {
+      data['updatedAt'] = FieldValue.serverTimestamp();
+      await colPosts.doc(data['id']).set(
+            data,
+            SetOptions(merge: true),
+          );
+    } else {
+      data.remove('id');
+      data['createdAt'] = FieldValue.serverTimestamp();
+      data['updatedAt'] = FieldValue.serverTimestamp();
+      await colPosts.add(data);
+
+      sendNotification(
+        data['title'],
+        data['content'],
+        route: data['category'],
+        topic: "notification_post_" + data['category'],
+      );
+    }
+  }
+
+  Map<String, dynamic> getCommentParent(
+      List<dynamic> comments, int parentIndex) {
+    if (comments == null) return null;
+    if (parentIndex == null) return null;
+
+    return comments[parentIndex];
+  }
+
+  ///
+  Future editComment(Map<String, dynamic> data) async {
+    // final postDoc = postDocument(widget.post.id);
+    final Map<String, dynamic> post = data['post'];
+    final int parentIndex = data['parentIndex'];
+    data.remove('post');
+    data.remove('parentIndex');
+
+    final commentCol = commentsCollection(post['id']);
+    data.remove('postid');
+
+    print('ref.path: ' + commentCol.path.toString());
+
+    data['order'] = getCommentOrderOf(post, parentIndex);
+    data['uid'] = user.uid;
+    dynamic parent = getCommentParent(post['comments'], parentIndex);
+    data['depth'] = parent == null ? 0 : data['depth'] = parent['depth'] + 1;
+    data['createdAt'] = FieldValue.serverTimestamp();
+    data['updatedAt'] = FieldValue.serverTimestamp();
+
+    print('comment create data: $data');
+    await commentCol.add(data);
+
+    // final data = {
+    //   'uid': ff.user.uid,
+    //   'content': contentController.text,
+
+    //   /// depth comes from parent.
+    //   /// order comes from
+    //   ///   - parent if there is no child of the parent.
+    //   /// 	- last comment of siblings.
+
+    //   'depth': parent != null ? parent['depth'] + 1 : 0,
+    //   'order': order,
+    //   'createdAt': FieldValue.serverTimestamp(),
+    //   'updatedAt': FieldValue.serverTimestamp(),
+    // };
+    // print(data);
+    // await commentCol.add(data);
+
+    /// User UID(s) for sending notifications.
+    ///
+    ///
+    List<String> uids = [];
+    List<String> uidsForNotification = [];
+
+    uids.add(post['uid']); // Add post owner's uid
+
+    /// Get ancestors uid
+    List<dynamic> ancestors = getAncestors(
+      post['comments'],
+      data['order'],
+    );
+    for (dynamic c in ancestors) {
+      if (uids.indexOf(c['uid']) == -1) uids.add(c['uid']);
+
+      /// Make uid unique.
+    }
+
+    String topicKey = 'notification_comment_' + post['category'];
+
+    /// TODO send notification in background.
+    /// use .then() or use (()aync {})(); or .. move it to another function.
+    for (String uid in uids) {
+      final docSnapshot =
+          await usersCol.doc(uid).collection('meta').doc('public').get();
+
+      if (!docSnapshot.exists) continue;
+
+      Map<String, dynamic> publicData = docSnapshot.data();
+
+      /// If the user has subscribed the forum, then it does not need to send notification again.
+      if (publicData[topicKey] == true) {
+        // uids.remove(uid);
+        continue;
+      }
+
+      /// If the post owner has not subscribed to new comments under his post, then don't send notification.
+      if (uid == post['uid'] && publicData['notifyPost'] != true) {
+        // uids.remove(uid);
+        continue;
+      }
+
+      /// If the user didn't subscribe for comments under his comments, then don't send notification.
+      if (publicData['notifyComment'] != true) {
+        // uids.remove(uid);
+        continue;
+      }
+      uidsForNotification.add(uid);
+    }
+
+    List<String> tokens = [];
+    for (var uid in uidsForNotification) {
+      final docSnapshot =
+          await usersCol.doc(uid).collection('meta').doc('tokens').get();
+      if (!docSnapshot.exists) continue;
+      Map<String, dynamic> tokensDoc = docSnapshot.data();
+
+      /// TODO: Double check if it's working.
+      tokens = [...tokens, ...tokensDoc.keys];
+
+      // for (var token in tokensDoc.keys) {
+      //   print(token);
+      //   tokens.add(token);
+      // }
+    }
+
+    print('tokens');
+    print(tokens);
+
+    print(uidsForNotification);
+
+    /// send notification with tokens and topic.
+    /// TODO: open the post.
+    sendNotification(
+      post['title'],
+      data['content'],
+      route: post['category'],
+      topic: topicKey,
+      tokens: tokens,
+    );
+  }
+
+  /// Returns order of the new comment(to be created).
+  ///
+  /// [order] is;
+  ///   - is the last comment's order when the created comment is the first depth comment of the post.
+  ///   - the order of last comment of the sibiling.
+  /// [depth] is the depth of newly created comment.
+  getCommentOrder({
+    String order,
+    int depth: 0,
+  }) {
+    if (order == null) {
+      return '999999.999.999.999.999.999.999.999.999.999.999.999';
+    }
+    List<String> parts = order.split('.');
+    int n = int.parse(parts[depth]);
+    parts[depth] = (n - 1).toString();
+    for (int i = (depth + 1); i < parts.length; i++) {
+      parts[i] = '999';
+    }
+    return parts.join('.');
+  }
+
+  /// Returns the ancestor comments of a comment.
+  ///
+  /// To get the ancestor comments based on the [order], it splits the parts of
+  /// order and compare it to the comments in the middle of the comment thread.
+  ///
+  /// Use this method to get the parent comments of a comemnt.
+  ///
+  /// [order] is the comment to know its parent comemnts.
+  ///
+  /// If the comment is the first depth comment(comment right under post), then
+  /// it will return empty array.
+  ///
+  /// The comment itself is not included in return array since it is itself. Not
+  /// one of ancestor.
+  ///
+  List<dynamic> getAncestors(List<dynamic> comments, String order) {
+    List<dynamic> ancestors = [];
+    if (comments == null || comments.length == 0) return ancestors;
+    List<String> parts = order.split('.');
+    int len = parts.length;
+    int depth = parts.indexWhere((element) => element == '999');
+    if (depth == -1) depth = 11;
+
+    List<String> orderOfAncestors = [];
+    //// if [depth] is 0, then there is no ancestors.
+    for (int i = 1; i < depth; i++) {
+      List<String> newParts = List.from(parts);
+      for (int j = i; j < len; j++) newParts[j] = '999';
+      orderOfAncestors.add(newParts.join('.'));
+    }
+
+    for (String findOrder in orderOfAncestors) {
+      for (var comment in comments) {
+        if (comment['order'] == findOrder) {
+          ancestors.add(comment);
+        }
+      }
+    }
+    return ancestors;
+
+    // print('orderOfAncestors: $orderOfAncestors');
+
+    // for (CommentModel comment in comments) {
+    //   // List<String> commentParts = comment.order.split('.');
+    //   for (int i = 0; i < parts.length; i++) {
+    //     String compareOrder = parts[i];
+    //   }
+    // }
+    // print(parts);
+  }
+
+  CollectionReference postsCollection() {
+    return FirebaseFirestore.instance.collection('posts');
+  }
+
+  DocumentReference postDocument(String id) {
+    return postsCollection().doc(id);
+  }
+
+  CollectionReference commentsCollection(String postId) {
+    return postDocument(postId).collection('comments');
+  }
+
+  DocumentReference commentDocument(String postId, String commentId) {
+    return commentsCollection(postId).doc(commentId);
+  }
+
+  /// Returns the order string of the new comment
+  ///
+  /// @TODO: Move this method to `functions.dart`.
+  ///
+  getCommentOrderOf(Map<String, dynamic> post, int parentIndex) {
+    if (parentIndex == null) {
+      /// If the comment to be created is the first depth comment,
+      /// - and if there are no comments under post, then return default order
+      /// - or return the last order.
+      return getCommentOrder(
+          order: (post['comments'] != null && post['comments'].length > 0)
+              ? post['comments'].last['order']
+              : null);
+    }
+
+    /// If it is the first depth of child.
+    // if (parent == null) {
+    //   return getCommentOrder(
+    //       order: (widget.post['comments'] != null &&
+    //               widget.post['comments'].length > 0)
+    //           ? widget.post['comments'].last['order']
+    //           : null);
+    // }
+
+    Map<String, dynamic> parent =
+        getCommentParent(post['comments'], parentIndex);
+    // post['comments'][parentIndex];
+
+    int depth = parent['depth'];
+    String depthOrder = parent['order'].split('.')[depth];
+    print('depthOrder: $depthOrder');
+
+    int i;
+    for (i = parentIndex + 1; i < post['comments'].length; i++) {
+      dynamic c = post['comments'][i];
+      String findOrder = c['order'].split('.')[depth];
+      if (depthOrder != findOrder) break;
+    }
+
+    final previousSiblingComment = post['comments'][i - 1];
+    print(
+        'previousSiblingComment: ${previousSiblingComment['content']}, ${previousSiblingComment['order']}');
+    return getCommentOrder(
+      order: previousSiblingComment['order'],
+      depth: parent['depth'] + 1,
+      // previousSiblingComment.depth + 1,
+    );
   }
 }
