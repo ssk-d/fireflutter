@@ -639,6 +639,8 @@ class FireFlutter {
               .listen((QuerySnapshot snapshot) {
             snapshot.docChanges.forEach((DocumentChange commentsChange) {
               final commentData = commentsChange.doc.data();
+
+              /// comment added
               if (commentsChange.type == DocumentChangeType.added) {
                 /// TODO For comments loading on post view, it does not need to loop.
                 /// TODO Only for newly created comment needs to have loop and find a position to insert.
@@ -651,6 +653,21 @@ class FireFlutter {
                   post['comments'].insert(found, commentData);
                 }
                 forum.render(RenderType.commentCreate);
+              }
+
+              /// comment modified
+              else if (commentsChange.type == DocumentChangeType.modified) {
+                final int ci = post['comments']
+                    .indexWhere((c) => c['id'] == commentData['id']);
+                if (ci > -1) {
+                  post['comments'][ci] = post;
+                }
+              }
+
+              /// comment deleted
+              else if (commentsChange.type == DocumentChangeType.removed) {
+                print('comment delete');
+                post['comments'].removeWhere((c) => c['id'] == commentData['id']);
               }
             });
           });
@@ -699,6 +716,17 @@ class FireFlutter {
     }
   }
 
+  Future deletePost(String postID) async {
+    if (postID == null) throw "ERROR_POST_ID_REQUIRED";
+    await colPosts.doc(postID).delete();
+  }
+
+  Future deleteComment(String postID, String commentID) async {
+    if (postID == null) throw "ERROR_POST_ID_REQUIRED";
+    if (commentID == null) throw "ERROR_COMMENT_ID_REQUIRED";
+    await colPosts.doc(postID).collection('comments').doc(commentID).delete();
+  }
+
   Map<String, dynamic> getCommentParent(
       List<dynamic> comments, int parentIndex) {
     if (comments == null) return null;
@@ -707,45 +735,43 @@ class FireFlutter {
     return comments[parentIndex];
   }
 
+  /// `post` property of [data] is required.
   ///
   Future editComment(Map<String, dynamic> data) async {
-    // final postDoc = postDocument(widget.post.id);
+    /// data['post'] is required.
+    if (data['post'] == null) throw 'ERROR_POST_IS_REQUIRED';
     final Map<String, dynamic> post = data['post'];
-    final int parentIndex = data['parentIndex'];
     data.remove('post');
-    data.remove('parentIndex');
 
-    final commentCol = commentsCollection(post['id']);
+    final commentsCol = commentsCollection(post['id']);
     data.remove('postid');
 
-    print('ref.path: ' + commentCol.path.toString());
+    print('ref.path: ' + commentsCol.path.toString());
 
-    data['order'] = getCommentOrderOf(post, parentIndex);
-    data['uid'] = user.uid;
-    dynamic parent = getCommentParent(post['comments'], parentIndex);
-    data['depth'] = parent == null ? 0 : data['depth'] = parent['depth'] + 1;
-    data['createdAt'] = FieldValue.serverTimestamp();
-    data['updatedAt'] = FieldValue.serverTimestamp();
+    /// update
+    if (data['id'] != null) {
+      data['createdAt'] = FieldValue.serverTimestamp();
+      await commentsCol.doc(data['id']).set(data, SetOptions(merge: true));
+    }
 
-    print('comment create data: $data');
-    await commentCol.add(data);
+    /// create
+    else {
+      final int parentIndex = data['parentIndex'];
+      data.remove('parentIndex');
 
-    // final data = {
-    //   'uid': ff.user.uid,
-    //   'content': contentController.text,
+      /// get order
+      data['order'] = getCommentOrderOf(post, parentIndex);
+      data['uid'] = user.uid;
 
-    //   /// depth comes from parent.
-    //   /// order comes from
-    //   ///   - parent if there is no child of the parent.
-    //   /// 	- last comment of siblings.
+      /// get depth
+      dynamic parent = getCommentParent(post['comments'], parentIndex);
+      data['depth'] = parent == null ? 0 : parent['depth'] + 1;
 
-    //   'depth': parent != null ? parent['depth'] + 1 : 0,
-    //   'order': order,
-    //   'createdAt': FieldValue.serverTimestamp(),
-    //   'updatedAt': FieldValue.serverTimestamp(),
-    // };
-    // print(data);
-    // await commentCol.add(data);
+      data['createdAt'] = FieldValue.serverTimestamp();
+      data['updatedAt'] = FieldValue.serverTimestamp();
+      print('comment create data: $data');
+      await commentsCol.add(data);
+    }
 
     /// User UID(s) for sending notifications.
     ///
