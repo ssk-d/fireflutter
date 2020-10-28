@@ -43,11 +43,18 @@ class ForumData {
   Render render;
 
   StreamSubscription postQuerySubscription;
-  Map<String, dynamic> commentsSubcriptions = {};
+  Map<String, StreamSubscription> commentsSubcriptions = {};
 
   /// This must be called on Forum screen widget `dispose` to cancel the subscriptions.
   leave() {
     postQuerySubscription.cancel();
+
+    /// TODO: unsubscribe all commentsSubscriptions.
+    if (commentsSubcriptions.isNotEmpty) {
+      commentsSubcriptions.forEach((key, value) {
+        value.cancel();
+      });
+    }
   }
 }
 
