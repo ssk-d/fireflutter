@@ -562,6 +562,9 @@ class FireFlutter {
         post['id'] = documentChange.doc.id;
 
         if (documentChange.type == DocumentChangeType.added) {
+          CollectionReference colComments = FirebaseFirestore.instance
+              .collection('posts/${post['id']}/comments');
+
           /// [createdAt] is null on author mobile (since it is cached locally).
           if (post['createdAt'] == null) {
             forum.posts.insert(0, post);
@@ -580,6 +583,27 @@ class FireFlutter {
           else {
             forum.posts.add(post);
           }
+
+          colComments
+              .orderBy('order', descending: true)
+              .snapshots()
+              .listen((QuerySnapshot snapshot) {
+            snapshot.docChanges.forEach((DocumentChange commentsChange) {
+              final commentData = commentsChange.doc.data();
+              if (commentsChange.type == DocumentChangeType.added) {
+                /// TODO For comments loading on post view, it does not need to loop.
+                /// TODO Only for newly created comment needs to have loop and find a position to insert.
+                int found = post['comments'].indexWhere(
+                    (c) => c.order.compareTo(commentData['order']) < 0);
+                if (found == -1) {
+                  post['comments'].add(commentData);
+                } else {
+                  post['comments'].insert(found, commentData);
+                }
+              }
+            });
+          });
+
           forum.loading(false);
         } else if (documentChange.type == DocumentChangeType.modified) {
           final int i = forum.posts.indexWhere((p) => p['id'] == post['id']);
