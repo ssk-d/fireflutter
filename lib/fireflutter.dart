@@ -11,8 +11,11 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:rxdart/subjects.dart';
 
-// typedef LoadStateChanges = void Function(bool loading);
-enum UserChange { auth, document, register, profile }
+enum UserChangeType { auth, document, register, profile }
+enum NotificationType { onMessage, onLaunch, onResume }
+
+typedef NotificationHadnler = void Function(Map<String, dynamic> messge,
+    Map<String, dynamic> data, NotificationType type);
 
 class ForumData {
   /// [render] will be called when the view need to be re-rendered.
@@ -90,7 +93,7 @@ class FireFlutter {
 
   CollectionReference usersCol;
 
-  bool enableNotification = false;
+  bool enableNotification;
 
   /// [authStateChange] is a link to `FirebaseAuth.instance.authStateChanges()`
   ///
@@ -108,9 +111,13 @@ class FireFlutter {
       'AAAAjdyAvbM:APA91bGist2NNTrrKTZElMzrNV0rpBLV7Nn674NRow-uyjG1-Uhh5wGQWyQEmy85Rcs0wlEpYT2uFJrSnlZywLzP1hkdx32FKiPJMI38evdRZO0x1vBJLc-cukMqZBKytzb3mzRfmrgL';
   String firebaseMessagingToken;
 
-  BehaviorSubject<UserChange> userChange = BehaviorSubject.seeded(null);
+  BehaviorSubject<UserChangeType> userChange = BehaviorSubject.seeded(null);
 
   CollectionReference colPosts;
+
+  /// [notificationHandler] will be invoked when a push notification arrives.
+  NotificationHadnler notificationHandler;
+
   FireFlutter() {
     print('FireFlutter');
   }
@@ -123,13 +130,17 @@ class FireFlutter {
         Settings(cacheSizeBytes: Settings.CACHE_SIZE_UNLIMITED);
   }
 
-  Future<void> init({bool enableNotification}) async {
+  Future<void> init({
+    bool enableNotification = false,
+    Function notificationHandler,
+  }) async {
     this.enableNotification = enableNotification;
+    this.notificationHandler = notificationHandler;
     await initFirebase();
     usersCol = FirebaseFirestore.instance.collection('users');
     colPosts = FirebaseFirestore.instance.collection('posts');
     initUser();
-    initNotification();
+    initFirebaseMessaging();
   }
 
   initUser() {
@@ -139,7 +150,7 @@ class FireFlutter {
     authStateChanges.listen(
       (User user) {
         this.user = user;
-        userChange.add(UserChange.auth);
+        userChange.add(UserChangeType.auth);
 
         if (this.user == null) {
         } else {
@@ -152,7 +163,7 @@ class FireFlutter {
             (DocumentSnapshot snapshot) {
               if (snapshot.exists) {
                 data = snapshot.data();
-                userChange.add(UserChange.document);
+                userChange.add(UserChangeType.document);
               }
             },
           );
@@ -162,11 +173,6 @@ class FireFlutter {
   }
 
   bool get isAdmin => this.data['isAdmin'] == true;
-
-  initNotification() {
-    if (enableNotification == false) return;
-    initFirebaseMessaging();
-  }
 
   /// Register into Firebase with email/password
   ///
@@ -301,6 +307,7 @@ class FireFlutter {
   }
 
   Future<void> initFirebaseMessaging() async {
+    if (enableNotification == false) return;
     await _firebaseMessagingRequestPermission();
 
     firebaseMessagingToken = await firebaseMessaging.getToken();
@@ -313,7 +320,7 @@ class FireFlutter {
     /// subscribe to all topic
     await subscribeTopic(allTopic);
 
-    // _firebaseMessagingCallbackHandlers();
+    _firebaseMessagingCallbackHandlers();
   }
 
   Future subscribeTopic(String topicName) async {
@@ -358,29 +365,50 @@ class FireFlutter {
     }
   }
 
+  /// Do some sanitizing and call `notificationHandler` to deliver
+  /// notification to app.
+  _notifyApp(Map<String, dynamic> message, NotificationType type) {
+    Map<String, dynamic> notification = message['notification'];
+    print('notification: ');
+    print(notification);
+
+    /// on `iOS`, `title`, `body` are insdie `message['aps']['alert']`.
+    if (message['aps'] != null && message['aps']['alert'] != null) {
+      notification = message['aps']['alert'];
+    }
+
+    /// on `iOS`, `message` has all the `data properties`.
+    Map<String, dynamic> data = message['data'] ?? message;
+
+    /// return if the senderID is the owner.
+    /// TODO: `senderID` has changed to `senderUid`
+    if (data != null && data['senderUid'] == user.uid) {
+      return;
+    }
+
+    notificationHandler(notification, data, type);
+  }
+
   /// TODO This is a package that handles only backend works.
   /// TODO This must not have any UI works like showing snackbar, modal dialogs. Do event handler.
   ///
-  // _firebaseMessagingCallbackHandlers() {
-  //   /// Configure callback handlers for
-  //   /// - foreground
-  //   /// - background
-  //   /// - exited
-  //   firebaseMessaging.configure(
-  //     onMessage: (Map<String, dynamic> message) async {
-  //       print('onMessage: $message');
-  //       _firebaseMessagingDisplayAndNavigate(message, true);
-  //     },
-  //     onLaunch: (Map<String, dynamic> message) async {
-  //       print('onLaunch: $message');
-  //       _firebaseMessagingDisplayAndNavigate(message, false);
-  //     },
-  //     onResume: (Map<String, dynamic> message) async {
-  //       print('onResume: $message');
-  //       _firebaseMessagingDisplayAndNavigate(message, false);
-  //     },
-  //   );
-  // }
+  _firebaseMessagingCallbackHandlers() {
+    /// Configure callback handlers for
+    /// - foreground
+    /// - background
+    /// - exited
+    firebaseMessaging.configure(
+      onMessage: (Map<String, dynamic> message) async {
+        _notifyApp(message, NotificationType.onMessage);
+      },
+      onLaunch: (Map<String, dynamic> message) async {
+        _notifyApp(message, NotificationType.onLaunch);
+      },
+      onResume: (Map<String, dynamic> message) async {
+        _notifyApp(message, NotificationType.onResume);
+      },
+    );
+  }
 
   /// Display notification & navigate
   ///
