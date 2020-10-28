@@ -1,29 +1,39 @@
 # Fire Flutter
 
-`FireFlutter` is a rapid development package for creating Social apps based on `Firebase`.
+⚡️ `FireFlutter` is a rapid development package for creating Social apps based on `Firebase`.
 
 ## Features
 
 - User functionalities
 
   - User registration, login, profile update with email/password
-  - Social logins with Firebase Sign-in methods.
+  - Social logins
+    - Google,
+    - Apple,
+    - Facebook,
+    - Naver,
+    - Kakao.
   - User profile photo update
-  - Phone number authentication
+  - Phone number authentication(x)
 
 - Forum functionalities
 
   - Post create, update, delete.
   - Comment create, update, delete.
-  - File uploads on posts and comments.
+  - File uploads on posts and comments. (x)
   - Vote(like, dislkie) on posts and comments.
   - Infinite scroll
-  - And other functions to complete forum funcitons.
 
 - Push notifications
+
   - Admin can send push notifications to all users.
+  - Admin can send push notifications to users of a forum.(x)
   - User can enable/disable to get notification when a user creates a comments under his post/comment.
   - User can subscribe/unsubscribe for new posts or comments under a forum.
+
+- Remote Realtime Configuration
+
+  - Realtime contents update. Admin can update a page title and content.
 
 ## Firestore Structure
 

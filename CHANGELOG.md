@@ -1,6 +1,13 @@
+## [0.0.4] - Forum CRUD, Push Notifications, User CRUD, Social Login
+
+- User CRUD.
+- Forum CRUD is in progress.
+- Push notification is in progress.
+- Social Login is in progress.
+
 ## [0.0.3] - User registration, login, update, logout
 
-- Registration
+- Registration and more works on User crud.
 
 ## [0.0.2] - Adding user functions
 
