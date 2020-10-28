@@ -73,3 +73,47 @@ class _ForumScreenState extends State<ForumScreen> {
 ```
 
 ### Push Notification
+
+- Must be enableNotification `true` on main on FireFlutter init
+  - to handble notification you can pass method via notificationHandler.
+
+```dart
+ff.init(
+    enableNotification: true,
+    notificationHandler: (Map<String, dynamic> notification,
+        Map<String, dynamic> data, NotificationType type) {
+          // do something here.
+          // display, alert, move to specific page
+    },
+  );
+```
+
+### Social Login
+
+- You need to handle the success and error on FireFlutter init
+
+```dart
+ff.init(
+  socialLoginSuccessHandler: (user) {
+    // on success do something here
+  }),
+  socialLoginErrorHandler: (e) {
+    // on error do something here
+  },
+);
+```
+
+- You can use the social Login by calling signInWithGoogle or signInWithFacebook
+
+```dart
+children: [
+    RaisedButton(
+      child: Text('Google Sign-in'),
+      onPressed: ff.signInWithGoogle,
+    ),
+    RaisedButton(
+      child: Text('Facebook Sign-in'),
+      onPressed: ff.signInWithFacebook,
+    ),
+]
+```

@@ -667,7 +667,8 @@ class FireFlutter {
               /// comment deleted
               else if (commentsChange.type == DocumentChangeType.removed) {
                 print('comment delete');
-                post['comments'].removeWhere((c) => c['id'] == commentData['id']);
+                post['comments']
+                    .removeWhere((c) => c['id'] == commentData['id']);
               }
             });
           });
@@ -771,31 +772,32 @@ class FireFlutter {
       data['updatedAt'] = FieldValue.serverTimestamp();
       print('comment create data: $data');
       await commentsCol.add(data);
+      sendCommentNotification(post, data);
     }
+  }
 
-    /// User UID(s) for sending notifications.
-    ///
-    ///
+  Future sendCommentNotification(
+      Map<String, dynamic> post, Map<String, dynamic> data) async {
     List<String> uids = [];
     List<String> uidsForNotification = [];
 
-    uids.add(post['uid']); // Add post owner's uid
+    // Add post owner's uid
+    uids.add(post['uid']);
 
-    /// Get ancestors uid
+    /// Get ancestors
     List<dynamic> ancestors = getAncestors(
       post['comments'],
       data['order'],
     );
+
+    /// Get ancestors uid and eliminate duplicate
     for (dynamic c in ancestors) {
       if (uids.indexOf(c['uid']) == -1) uids.add(c['uid']);
-
-      /// Make uid unique.
     }
 
     String topicKey = 'notification_comment_' + post['category'];
 
-    /// TODO send notification in background.
-    /// use .then() or use (()aync {})(); or .. move it to another function.
+    // Only get uid that will recieve notification
     for (String uid in uids) {
       final docSnapshot =
           await usersCol.doc(uid).collection('meta').doc('public').get();
@@ -824,6 +826,7 @@ class FireFlutter {
       uidsForNotification.add(uid);
     }
 
+    // Get tokens
     List<String> tokens = [];
     for (var uid in uidsForNotification) {
       final docSnapshot =
