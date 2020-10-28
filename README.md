@@ -11,7 +11,7 @@
     - Google,
     - Apple (only on iOS),
     - Facebook,
-    - Kakao.
+    - Kakao. Read `Kakao Login`.
   - User profile photo update
   - Phone number authentication(x)
 
@@ -126,3 +126,10 @@ children: [
     ),
 ]
 ```
+
+## External Logins
+
+### Kakao Login
+
+- Kakao login is completely separated from `fireflutter` since it is not part of `Firebase`.
+  - The sample app has an example code on how to do `Kakao login` and link to `Firebase Auth` account.

@@ -83,6 +83,9 @@ class FireFlutter extends Base {
     await userCredential.user.reload();
     user = FirebaseAuth.instance.currentUser;
 
+    /// Remove default data.
+    /// And if there is no more properties to save into document, then save
+    /// empty object.
     data.remove('email');
     data.remove('password');
     data.remove('displayName');
