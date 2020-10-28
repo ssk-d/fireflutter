@@ -730,46 +730,32 @@ class FireFlutter {
     print('comment create data: $data');
     await commentCol.add(data);
 
-    // final data = {
-    //   'uid': ff.user.uid,
-    //   'content': contentController.text,
+    // todo: check if new comment or edit comment
+    sendCommentNotification(post, data);
+  }
 
-    //   /// depth comes from parent.
-    //   /// order comes from
-    //   ///   - parent if there is no child of the parent.
-    //   /// 	- last comment of siblings.
-
-    //   'depth': parent != null ? parent['depth'] + 1 : 0,
-    //   'order': order,
-    //   'createdAt': FieldValue.serverTimestamp(),
-    //   'updatedAt': FieldValue.serverTimestamp(),
-    // };
-    // print(data);
-    // await commentCol.add(data);
-
-    /// User UID(s) for sending notifications.
-    ///
-    ///
+  Future sendCommentNotification(
+      Map<String, dynamic> post, Map<String, dynamic> data) async {
     List<String> uids = [];
     List<String> uidsForNotification = [];
 
-    uids.add(post['uid']); // Add post owner's uid
+    // Add post owner's uid
+    uids.add(post['uid']);
 
-    /// Get ancestors uid
+    /// Get ancestors
     List<dynamic> ancestors = getAncestors(
       post['comments'],
       data['order'],
     );
+
+    /// Get ancestors uid and eliminate duplicate
     for (dynamic c in ancestors) {
       if (uids.indexOf(c['uid']) == -1) uids.add(c['uid']);
-
-      /// Make uid unique.
     }
 
     String topicKey = 'notification_comment_' + post['category'];
 
-    /// TODO send notification in background.
-    /// use .then() or use (()aync {})(); or .. move it to another function.
+    // Only get uid that will recieve notification
     for (String uid in uids) {
       final docSnapshot =
           await usersCol.doc(uid).collection('meta').doc('public').get();
@@ -798,6 +784,7 @@ class FireFlutter {
       uidsForNotification.add(uid);
     }
 
+    // Get tokens
     List<String> tokens = [];
     for (var uid in uidsForNotification) {
       final docSnapshot =
