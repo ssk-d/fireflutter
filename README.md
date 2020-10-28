@@ -9,9 +9,8 @@
   - User registration, login, profile update with email/password
   - Social logins
     - Google,
-    - Apple,
+    - Apple (only on iOS),
     - Facebook,
-    - Naver,
     - Kakao.
   - User profile photo update
   - Phone number authentication(x)

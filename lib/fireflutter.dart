@@ -32,10 +32,12 @@ class FireFlutter extends Base {
 
   Future<void> init({
     bool enableNotification = false,
+    String firebaseServerToken,
     Function notificationHandler,
   }) async {
     this.enableNotification = enableNotification;
     this.notificationHandler = notificationHandler;
+    this.firebaseServerToken = firebaseServerToken;
     await initFirebase();
     initUser();
     initFirebaseMessaging();
