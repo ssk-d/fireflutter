@@ -109,6 +109,11 @@ class FireFlutter {
   final String allTopic = 'allTopic';
   final String firebaseServerToken =
       'AAAAjdyAvbM:APA91bGist2NNTrrKTZElMzrNV0rpBLV7Nn674NRow-uyjG1-Uhh5wGQWyQEmy85Rcs0wlEpYT2uFJrSnlZywLzP1hkdx32FKiPJMI38evdRZO0x1vBJLc-cukMqZBKytzb3mzRfmrgL';
+
+  /// Device token for Firebase messaging.
+  ///
+  /// This will be available by default on Android. For iOS, this will be only
+  /// available when user accepts the permission request.
   String firebaseMessagingToken;
 
   BehaviorSubject<UserChangeType> userChange = BehaviorSubject.seeded(null);
