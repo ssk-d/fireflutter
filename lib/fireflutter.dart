@@ -9,6 +9,8 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter_facebook_auth/flutter_facebook_auth.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 import 'package:rxdart/subjects.dart';
 
 enum RenderType {
@@ -24,12 +26,17 @@ enum RenderType {
   stopFetching
 }
 typedef Render = void Function(RenderType x);
+const ERROR_SIGNIN_ABORTED = 'ERROR_SIGNIN_ABORTED';
+const ERROR_PERMISSION_RESTRICTED = 'ERROR_PERMISSION_RESTRICTED';
 
 enum UserChangeType { auth, document, register, profile }
 enum NotificationType { onMessage, onLaunch, onResume }
 
-typedef NotificationHadnler = void Function(Map<String, dynamic> messge,
+typedef NotificationHandler = void Function(Map<String, dynamic> messge,
     Map<String, dynamic> data, NotificationType type);
+
+typedef SocialLoginErrorHandler = void Function(String error);
+typedef SocialLoginSuccessHandler = void Function(User user);
 
 class ForumData {
   /// [render] will be called when the view need to be re-rendered.
@@ -146,7 +153,11 @@ class FireFlutter {
   CollectionReference colPosts;
 
   /// [notificationHandler] will be invoked when a push notification arrives.
-  NotificationHadnler notificationHandler;
+  NotificationHandler notificationHandler;
+
+  /// [socialLoginHandler] will be invoked when a social login success or fail.
+  SocialLoginErrorHandler socialLoginErrorHandler;
+  SocialLoginSuccessHandler socialLoginSuccessHandler;
 
   FireFlutter() {
     print('FireFlutter');
@@ -163,9 +174,13 @@ class FireFlutter {
   Future<void> init({
     bool enableNotification = false,
     Function notificationHandler,
+    Function socialLoginSuccessHandler,
+    Function socialLoginErrorHandler,
   }) async {
     this.enableNotification = enableNotification;
     this.notificationHandler = notificationHandler;
+    this.socialLoginSuccessHandler = socialLoginSuccessHandler;
+    this.socialLoginErrorHandler = socialLoginErrorHandler;
     await initFirebase();
     usersCol = FirebaseFirestore.instance.collection('users');
     colPosts = FirebaseFirestore.instance.collection('posts');
@@ -358,6 +373,7 @@ class FireFlutter {
     try {
       await firebaseMessaging.subscribeToTopic(topicName);
     } catch (e) {
+      print('subscribeTopic $topicName failed');
       print(e);
     }
   }
@@ -409,8 +425,7 @@ class FireFlutter {
     /// on `iOS`, `message` has all the `data properties`.
     Map<String, dynamic> data = message['data'] ?? message;
 
-    /// return if the senderID is the owner.
-    /// TODO: `senderID` has changed to `senderUid`
+    /// return if the senderUid is the owner.
     if (data != null && data['senderUid'] == user.uid) {
       return;
     }
@@ -428,12 +443,15 @@ class FireFlutter {
     /// - exited
     firebaseMessaging.configure(
       onMessage: (Map<String, dynamic> message) async {
+        print('onMessage');
         _notifyApp(message, NotificationType.onMessage);
       },
       onLaunch: (Map<String, dynamic> message) async {
+        print('onLaunch');
         _notifyApp(message, NotificationType.onLaunch);
       },
       onResume: (Map<String, dynamic> message) async {
+        print('onResume');
         _notifyApp(message, NotificationType.onResume);
       },
     );
@@ -506,10 +524,6 @@ class FireFlutter {
 
     final postUrl = 'https://fcm.googleapis.com/fcm/send';
 
-    // String toParams = "/topics/" + App.Settings.allTopic;
-    // print(token);
-    // print(topic);
-
     final req = [];
     if (token != null) req.add({'key': 'to', 'value': token});
     if (topic != null) req.add({'key': 'to', 'value': "/topics/" + topic});
@@ -530,7 +544,7 @@ class FireFlutter {
           "id": "1",
           "status": "done",
           "sound": 'default',
-          "senderID": user.uid,
+          "senderUid": user.uid,
           'route': route,
         }
       };
@@ -950,7 +964,90 @@ class FireFlutter {
     return getCommentOrder(
       order: previousSiblingComment['order'],
       depth: parent['depth'] + 1,
-      // previousSiblingComment.depth + 1,
     );
+  }
+
+  /// Google sign-in
+  ///
+  ///
+  Future<void> signInWithGoogle() async {
+    // Trigger the authentication flow
+
+    await GoogleSignIn().signOut(); // to ensure you can sign in different user.
+
+    final GoogleSignInAccount googleUser = await GoogleSignIn().signIn();
+    if (googleUser == null)
+      return socialLoginErrorHandler(ERROR_SIGNIN_ABORTED);
+
+    try {
+      // Obtain the auth details from the request
+      final GoogleSignInAuthentication googleAuth =
+          await googleUser.authentication;
+
+      // Create a new credential
+      final GoogleAuthCredential credential = GoogleAuthProvider.credential(
+        accessToken: googleAuth.accessToken,
+        idToken: googleAuth.idToken,
+      );
+
+      // Once signed in, return the UserCredential
+      UserCredential userCredential =
+          await FirebaseAuth.instance.signInWithCredential(credential);
+
+      onSocialLogin(userCredential.user);
+    } catch (e) {
+      socialLoginErrorHandler(e);
+    }
+  }
+
+  /// Facebook social login
+  ///
+  ///
+  Future<void> signInWithFacebook() async {
+    // Trigger the sign-in flow
+    LoginResult result;
+    try {
+      await FacebookAuth.instance
+          .logOut(); // Need to logout to avoid 'User logged in as different Facebook user'
+      result = await FacebookAuth.instance.login();
+      if (result == null || result.accessToken == null) {
+        return socialLoginErrorHandler(ERROR_SIGNIN_ABORTED);
+      }
+    } catch (e) {
+      socialLoginErrorHandler(e);
+    }
+
+    // Create a credential from the access token
+    final FacebookAuthCredential facebookAuthCredential =
+        FacebookAuthProvider.credential(result.accessToken.token);
+
+    try {
+      // Once signed in, return the UserCredential
+      UserCredential userCredential = await FirebaseAuth.instance
+          .signInWithCredential(facebookAuthCredential);
+
+      onSocialLogin(userCredential.user);
+    } catch (e) {
+      socialLoginErrorHandler(e);
+    }
+  }
+
+  onSocialLogin(User user) async {
+    final userRef =
+        await usersCol.doc(user.uid).collection('meta').doc('public').get();
+
+    if (!userRef.exists) {
+      usersCol.doc(user.uid).collection('meta').doc('public').set({
+        "notifyPost": true,
+        "notifyComment": true,
+      }, SetOptions(merge: true));
+    }
+
+    socialLoginSuccessHandler(user);
+    onLogin(user);
+  }
+
+  onLogin(User user) {
+    updateToken(user);
   }
 }
