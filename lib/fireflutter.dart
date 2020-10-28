@@ -333,6 +333,7 @@ class FireFlutter {
     try {
       await firebaseMessaging.subscribeToTopic(topicName);
     } catch (e) {
+      print('subscribeTopic $topicName failed');
       print(e);
     }
   }
@@ -373,6 +374,9 @@ class FireFlutter {
   /// Do some sanitizing and call `notificationHandler` to deliver
   /// notification to app.
   _notifyApp(Map<String, dynamic> message, NotificationType type) {
+    print('_notifyApp: ');
+    print(message);
+
     Map<String, dynamic> notification = message['notification'];
     print('notification: ');
     print(notification);
@@ -385,8 +389,7 @@ class FireFlutter {
     /// on `iOS`, `message` has all the `data properties`.
     Map<String, dynamic> data = message['data'] ?? message;
 
-    /// return if the senderID is the owner.
-    /// TODO: `senderID` has changed to `senderUid`
+    /// return if the senderUid is the owner.
     if (data != null && data['senderUid'] == user.uid) {
       return;
     }
@@ -404,66 +407,19 @@ class FireFlutter {
     /// - exited
     firebaseMessaging.configure(
       onMessage: (Map<String, dynamic> message) async {
+        print('onMessage');
         _notifyApp(message, NotificationType.onMessage);
       },
       onLaunch: (Map<String, dynamic> message) async {
+        print('onLaunch');
         _notifyApp(message, NotificationType.onLaunch);
       },
       onResume: (Map<String, dynamic> message) async {
+        print('onResume');
         _notifyApp(message, NotificationType.onResume);
       },
     );
   }
-
-  /// Display notification & navigate
-  ///
-  /// @note the data on `onMessage` is like below;
-  ///   {notification: {title: This is title., body: Notification test.}, data: {click_action: FLUTTER_NOTIFICATION_CLICK}}
-  /// But the data on `onResume` and `onLaunch` are like below;
-  ///   { data: {click_action: FLUTTER_NOTIFICATION_CLICK} }
-  // void _firebaseMessagingDisplayAndNavigate(
-  //     Map<String, dynamic> message, bool display) {
-  //   var notification = message['notification'];
-
-  //   /// iOS 에서는 title, body 가 `message['aps']['alert']` 에 들어온다.
-  //   if (message['aps'] != null && message['aps']['alert'] != null) {
-  //     notification = message['aps']['alert'];
-  //   }
-  //   // iOS 에서는 data 속성없이, 객체에 바로 저장된다.
-  //   var data = message['data'] ?? message;
-
-  //   // return if the senderID is the owner.
-  //   if (data != null && data['senderID'] == user.uid) {
-  //     return;
-  //   }
-
-  //   if (display) {
-  //     Get.snackbar(
-  //       notification['title'].toString(),
-  //       notification['body'].toString(),
-  //       onTap: (_) {
-  //         // print('onTap data: ');
-  //         // print(data);
-  //         Get.toNamed(data['route']);
-  //       },
-  //       mainButton: FlatButton(
-  //         child: Text('Open'),
-  //         onPressed: () {
-  //           // print('mainButton data: ');
-  //           // print(data);
-  //           Get.toNamed(data['route']);
-  //         },
-  //       ),
-  //     );
-  //   } else {
-  //     // TODO: Make it work.
-  //     /// App will come here when the user open the app by tapping a push notification on the system tray.
-  //     /// Do something based on the `data`.
-  //     if (data != null && data['postId'] != null) {
-  //       // Get.toNamed(Settings.postViewRoute, arguments: {'postId': data['postId']});
-  //     }
-  //   }
-  // }
 
   Future<void> sendNotification(
     title,
@@ -478,10 +434,6 @@ class FireFlutter {
       return print('Token/Topic is not provided.');
 
     final postUrl = 'https://fcm.googleapis.com/fcm/send';
-
-    // String toParams = "/topics/" + App.Settings.allTopic;
-    // print(token);
-    // print(topic);
 
     final req = [];
     if (token != null) req.add({'key': 'to', 'value': token});
@@ -502,7 +454,7 @@ class FireFlutter {
           "id": "1",
           "status": "done",
           "sound": 'default',
-          "senderID": user.uid,
+          "senderUid": user.uid,
           'route': route,
         }
       };
