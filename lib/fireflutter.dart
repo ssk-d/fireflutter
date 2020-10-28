@@ -43,6 +43,7 @@ class ForumData {
   Render render;
 
   StreamSubscription postQuerySubscription;
+  Map<String, dynamic> commentsSubcriptions = {};
 
   /// This must be called on Forum screen widget `dispose` to cancel the subscriptions.
   leave() {
@@ -563,9 +564,6 @@ class FireFlutter {
         post['id'] = documentChange.doc.id;
 
         if (documentChange.type == DocumentChangeType.added) {
-          CollectionReference colComments = FirebaseFirestore.instance
-              .collection('posts/${post['id']}/comments');
-
           /// [createdAt] is null on author mobile (since it is cached locally).
           if (post['createdAt'] == null) {
             forum.posts.insert(0, post);
@@ -585,7 +583,9 @@ class FireFlutter {
             forum.posts.add(post);
           }
 
-          colComments
+          /// TODO: have a placeholder for all the posts' comments change subscription.
+          forum.commentsSubcriptions[post['id']] = FirebaseFirestore.instance
+              .collection('posts/${post['id']}/comments')
               .orderBy('order', descending: true)
               .snapshots()
               .listen((QuerySnapshot snapshot) {
@@ -594,8 +594,9 @@ class FireFlutter {
               if (commentsChange.type == DocumentChangeType.added) {
                 /// TODO For comments loading on post view, it does not need to loop.
                 /// TODO Only for newly created comment needs to have loop and find a position to insert.
-                int found = post['comments'].indexWhere(
-                    (c) => c.order.compareTo(commentData['order']) < 0);
+                if (post['comments'] == null) post['comments'] = [];
+                int found = (post['comments'] as List).indexWhere(
+                    (c) => c['order'].compareTo(commentData['order']) < 0);
                 if (found == -1) {
                   post['comments'].add(commentData);
                 } else {
@@ -612,6 +613,8 @@ class FireFlutter {
             forum.posts[i] = post;
           }
         } else if (documentChange.type == DocumentChangeType.removed) {
+          /// TODO: when post is deleted, also remove comment list subscription to avoid memory leak.
+          forum.commentsSubcriptions[post['id']].cancel();
           forum.posts.removeWhere((p) => p['id'] == post['id']);
         } else {
           assert(false, 'This is error');
