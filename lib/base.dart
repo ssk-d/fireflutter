@@ -8,8 +8,6 @@ class Base {
   /// User document realtime update.
   StreamSubscription userSubscription;
 
-  SocialLoginSuccessHandler socialLoginSuccessHandler;
-
   CollectionReference postsCol;
   CollectionReference usersCol;
 
@@ -523,7 +521,6 @@ class Base {
       }, SetOptions(merge: true));
     }
 
-    socialLoginSuccessHandler(user);
     onLogin(user);
   }
 
