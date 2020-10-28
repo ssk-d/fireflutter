@@ -347,6 +347,9 @@ class FireFlutter extends Base {
     }
   }
 
+  deletePost(a) {}
+  deleteComment(c, d) {}
+
   /// Google sign-in
   ///
   ///
