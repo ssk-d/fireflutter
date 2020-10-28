@@ -230,6 +230,8 @@ class FireFlutter extends Base {
               .listen((QuerySnapshot snapshot) {
             snapshot.docChanges.forEach((DocumentChange commentsChange) {
               final commentData = commentsChange.doc.data();
+
+              /// comment added
               if (commentsChange.type == DocumentChangeType.added) {
                 /// TODO For comments loading on post view, it does not need to loop.
                 /// TODO Only for newly created comment needs to have loop and find a position to insert.
@@ -242,6 +244,22 @@ class FireFlutter extends Base {
                   post['comments'].insert(found, commentData);
                 }
                 forum.render(RenderType.commentCreate);
+              }
+
+              /// comment modified
+              else if (commentsChange.type == DocumentChangeType.modified) {
+                final int ci = post['comments']
+                    .indexWhere((c) => c['id'] == commentData['id']);
+                if (ci > -1) {
+                  post['comments'][ci] = post;
+                }
+              }
+
+              /// comment deleted
+              else if (commentsChange.type == DocumentChangeType.removed) {
+                print('comment delete');
+                post['comments']
+                    .removeWhere((c) => c['id'] == commentData['id']);
               }
             });
           });
@@ -292,29 +310,41 @@ class FireFlutter extends Base {
 
   ///
   Future editComment(Map<String, dynamic> data) async {
-    // final postDoc = postDocument(widget.post.id);
+    /// data['post'] is required.
+    if (data['post'] == null) throw 'ERROR_POST_IS_REQUIRED';
     final Map<String, dynamic> post = data['post'];
-    final int parentIndex = data['parentIndex'];
     data.remove('post');
-    data.remove('parentIndex');
 
-    final commentCol = commentsCollection(post['id']);
+    final commentsCol = commentsCollection(post['id']);
     data.remove('postid');
 
-    print('ref.path: ' + commentCol.path.toString());
+    print('ref.path: ' + commentsCol.path.toString());
 
-    data['order'] = getCommentOrderOf(post, parentIndex);
-    data['uid'] = user.uid;
-    dynamic parent = getCommentParent(post['comments'], parentIndex);
-    data['depth'] = parent == null ? 0 : data['depth'] = parent['depth'] + 1;
-    data['createdAt'] = FieldValue.serverTimestamp();
-    data['updatedAt'] = FieldValue.serverTimestamp();
+    /// update
+    if (data['id'] != null) {
+      data['createdAt'] = FieldValue.serverTimestamp();
+      await commentsCol.doc(data['id']).set(data, SetOptions(merge: true));
+    }
 
-    print('comment create data: $data');
-    await commentCol.add(data);
+    /// create
+    else {
+      final int parentIndex = data['parentIndex'];
+      data.remove('parentIndex');
 
-    // todo: check if new comment or edit comment
-    sendCommentNotification(post, data);
+      /// get order
+      data['order'] = getCommentOrderOf(post, parentIndex);
+      data['uid'] = user.uid;
+
+      /// get depth
+      dynamic parent = getCommentParent(post['comments'], parentIndex);
+      data['depth'] = parent == null ? 0 : parent['depth'] + 1;
+
+      data['createdAt'] = FieldValue.serverTimestamp();
+      data['updatedAt'] = FieldValue.serverTimestamp();
+      print('comment create data: $data');
+      await commentsCol.add(data);
+      sendCommentNotification(post, data);
+    }
   }
 
   /// Google sign-in
