@@ -11,6 +11,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:rxdart/subjects.dart';
 
+typedef Render = void Function(bool x);
+
 enum UserChangeType { auth, document, register, profile }
 enum NotificationType { onMessage, onLaunch, onResume }
 
@@ -25,9 +27,9 @@ class ForumData {
     this.noOfPostsPerFetch = 10,
   });
   bool inLoading = false;
-  loading(bool f) {
-    inLoading = f;
-    render(f);
+  loading(bool x) {
+    inLoading = x;
+    render(x);
   }
 
   bool noMorePosts = false;
@@ -38,7 +40,7 @@ class ForumData {
   int pageNo = 0;
   int noOfPostsPerFetch;
   List<Map<String, dynamic>> posts = [];
-  Function render;
+  Render render;
 
   StreamSubscription postQuerySubscription;
 
@@ -373,9 +375,8 @@ class FireFlutter {
   /// Do some sanitizing and call `notificationHandler` to deliver
   /// notification to app.
   _notifyApp(Map<String, dynamic> message, NotificationType type) {
-    Map<String, dynamic> notification = message['notification'];
-    print('notification: ');
-    print(notification);
+    Map<String, dynamic> notification =
+        jsonDecode(jsonEncode(message['notification']));
 
     /// on `iOS`, `title`, `body` are insdie `message['aps']['alert']`.
     if (message['aps'] != null && message['aps']['alert'] != null) {
