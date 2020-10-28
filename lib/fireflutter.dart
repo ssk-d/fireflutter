@@ -13,8 +13,6 @@ import 'package:flutter_facebook_auth/flutter_facebook_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:rxdart/subjects.dart';
 
-import './base.dart';
-
 enum RenderType {
   postCreate,
   postUpdate,
@@ -105,7 +103,7 @@ class ForumData {
 ///
 /// Warning: instantiate it after `initFirebase`. One of good places is insdie
 /// the first widget loaded by `runApp()` or home screen.
-class FireFlutter extends Base {
+class FireFlutter {
   /// User document at `/users/{uid}`
   ///
   /// Attention! [user] may not immediately be available after instantiating
