@@ -26,7 +26,6 @@ part './base.dart';
 /// the first widget loaded by `runApp()` or home screen.
 class FireFlutter extends Base {
   /// [socialLoginHandler] will be invoked when a social login success or fail.
-  SocialLoginErrorHandler socialLoginErrorHandler;
   FireFlutter() {
     print('FireFlutter');
   }
@@ -34,14 +33,9 @@ class FireFlutter extends Base {
   Future<void> init({
     bool enableNotification = false,
     Function notificationHandler,
-    Function socialLoginSuccessHandler,
-    Function socialLoginErrorHandler,
   }) async {
     this.enableNotification = enableNotification;
     this.notificationHandler = notificationHandler;
-    this.socialLoginSuccessHandler = socialLoginSuccessHandler;
-    this.socialLoginErrorHandler = socialLoginErrorHandler;
-
     await initFirebase();
     initUser();
     initFirebaseMessaging();
@@ -353,65 +347,56 @@ class FireFlutter extends Base {
   /// Google sign-in
   ///
   ///
-  Future<void> signInWithGoogle() async {
+  Future<User> signInWithGoogle() async {
     // Trigger the authentication flow
 
     await GoogleSignIn().signOut(); // to ensure you can sign in different user.
 
     final GoogleSignInAccount googleUser = await GoogleSignIn().signIn();
-    if (googleUser == null)
-      return socialLoginErrorHandler(ERROR_SIGNIN_ABORTED);
+    if (googleUser == null) throw ERROR_SIGNIN_ABORTED;
 
-    try {
-      // Obtain the auth details from the request
-      final GoogleSignInAuthentication googleAuth =
-          await googleUser.authentication;
+    // Obtain the auth details from the request
+    final GoogleSignInAuthentication googleAuth =
+        await googleUser.authentication;
 
-      // Create a new credential
-      final GoogleAuthCredential credential = GoogleAuthProvider.credential(
-        accessToken: googleAuth.accessToken,
-        idToken: googleAuth.idToken,
-      );
+    // Create a new credential
+    final GoogleAuthCredential credential = GoogleAuthProvider.credential(
+      accessToken: googleAuth.accessToken,
+      idToken: googleAuth.idToken,
+    );
 
-      // Once signed in, return the UserCredential
-      UserCredential userCredential =
-          await FirebaseAuth.instance.signInWithCredential(credential);
+    // Once signed in, return the UserCredential
+    UserCredential userCredential =
+        await FirebaseAuth.instance.signInWithCredential(credential);
 
-      onSocialLogin(userCredential.user);
-    } catch (e) {
-      socialLoginErrorHandler(e);
-    }
+    onSocialLogin(userCredential.user);
+    return userCredential.user;
   }
 
   /// Facebook social login
   ///
   ///
-  Future<void> signInWithFacebook() async {
+  Future<User> signInWithFacebook() async {
     // Trigger the sign-in flow
     LoginResult result;
-    try {
-      await FacebookAuth.instance
-          .logOut(); // Need to logout to avoid 'User logged in as different Facebook user'
-      result = await FacebookAuth.instance.login();
-      if (result == null || result.accessToken == null) {
-        return socialLoginErrorHandler(ERROR_SIGNIN_ABORTED);
-      }
-    } catch (e) {
-      socialLoginErrorHandler(e);
+
+    await FacebookAuth.instance
+        .logOut(); // Need to logout to avoid 'User logged in as different Facebook user'
+    result = await FacebookAuth.instance.login();
+    if (result == null || result.accessToken == null) {
+      throw ERROR_SIGNIN_ABORTED;
     }
 
     // Create a credential from the access token
     final FacebookAuthCredential facebookAuthCredential =
         FacebookAuthProvider.credential(result.accessToken.token);
 
-    try {
-      // Once signed in, return the UserCredential
-      UserCredential userCredential = await FirebaseAuth.instance
-          .signInWithCredential(facebookAuthCredential);
+    // Once signed in, return the UserCredential
+    UserCredential userCredential = await FirebaseAuth.instance
+        .signInWithCredential(facebookAuthCredential);
 
-      onSocialLogin(userCredential.user);
-    } catch (e) {
-      socialLoginErrorHandler(e);
-    }
+    onSocialLogin(userCredential.user);
+
+    return userCredential.user;
   }
 }
