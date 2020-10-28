@@ -230,6 +230,7 @@ class FireFlutter extends Base {
               .listen((QuerySnapshot snapshot) {
             snapshot.docChanges.forEach((DocumentChange commentsChange) {
               final commentData = commentsChange.doc.data();
+              commentData['ud'] = commentsChange.doc.id;
 
               /// comment added
               if (commentsChange.type == DocumentChangeType.added) {
@@ -252,6 +253,7 @@ class FireFlutter extends Base {
                     .indexWhere((c) => c['id'] == commentData['id']);
                 if (ci > -1) {
                   post['comments'][ci] = post;
+                  forum.render(RenderType.commentUpdate);
                 }
               }
 
@@ -260,6 +262,7 @@ class FireFlutter extends Base {
                 print('comment delete');
                 post['comments']
                     .removeWhere((c) => c['id'] == commentData['id']);
+                forum.render(RenderType.commentDelete);
               }
             });
           });
@@ -347,8 +350,16 @@ class FireFlutter extends Base {
     }
   }
 
-  deletePost(a) {}
-  deleteComment(c, d) {}
+  Future deletePost(String postID) async {
+    if (postID == null) throw "ERROR_POST_ID_IS_REQUIRED";
+    await postsCol.doc(postID).delete();
+  }
+
+  Future deleteComment(String postID, String commentID) async {
+    if (postID == null) throw "ERROR_POST_ID_IS_REQUIRED";
+    if (commentID == null) throw "ERROR_COMMENT_ID_IS_REQUIRED";
+    await postsCol.doc(postID).collection('comments').doc(commentID).delete();
+  }
 
   /// Google sign-in
   ///
