@@ -6,6 +6,7 @@ import 'dart:async';
 import 'package:dio/dio.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -438,5 +439,32 @@ class FireFlutter extends Base {
     UserCredential userCredential =
         await FirebaseAuth.instance.signInWithCredential(oauthCred);
     return userCredential.user;
+  }
+
+
+  Future<String> uploadFile({
+    @required String collection,
+    @required File file, 
+    void progress(double progress),
+  }) async {
+
+    /// if collection doesn't end with a '/' add it.
+    if (collection.split('').last != '/') {
+      collection += '/';
+    }
+
+    final ref = FirebaseStorage.instance
+        .ref(collection + filenameFromPath(file.path) + '.jpg');
+
+    UploadTask task = ref.putFile(file);
+    task.snapshotEvents.listen((TaskSnapshot snapshot) {
+      double p = (snapshot.totalBytes / snapshot.bytesTransferred) * 100;
+      progress(p);
+    });
+
+    await task;
+    final url = await ref.getDownloadURL();
+    print('DOWNLOAD URL : $url');
+    return url;
   }
 }

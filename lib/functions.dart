@@ -48,3 +48,15 @@ Future<OAuthCredential> createAppleOAuthCred() async {
     rawNonce: nonce,
   );
 }
+
+
+/// Returns filename without extension.
+///
+/// @example
+///   `/root/users/.../abc.jpg` returns `abc`
+///
+/// 파일 경로로 부터, 파일 명(확장자 제외)을 리턴한다.
+/// 예) /root/users/.../abc.jpg 로 부터 abc 를 리턴한다.
+String filenameFromPath(String path) {
+  return path.split('/').last.split('.').first;
+}
