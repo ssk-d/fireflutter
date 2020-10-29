@@ -22,6 +22,7 @@ dependencies:
   firebase_messaging: ^7.0.3
 
   sign_in_with_apple: ^2.5.4
+  crypto: ^2.1.5
 
   jiffy: ^3.0.1
   dio: ^3.0.10
