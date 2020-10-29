@@ -24,7 +24,16 @@ dependencies:
   firebase_remote_config: ^0.4.0+2
 
   jiffy: ^3.0.1
+  sign_in_with_apple: ^2.5.4
+  crypto: ^2.1.5
+
   dio: ^3.0.10
+
+  image_picker: ^0.6.7+12
+  permission_handler: ^5.0.1+1
+  flutter_image_compress: ^0.7.0
+
+  path_provider: ^1.6.21
 
 dev_dependencies:
   flutter_test:

@@ -7,15 +7,18 @@ import 'package:dio/dio.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:firebase_remote_config/firebase_remote_config.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_facebook_auth/flutter_facebook_auth.dart';
+import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:rxdart/subjects.dart';
-
+import './functions.dart';
 part './definitions.dart';
-part './functions.dart';
 part './base.dart';
 
 /// FireFlutter
@@ -120,6 +123,7 @@ class FireFlutter extends Base {
     @required String password,
     Map<String, Map<String, dynamic>> meta,
   }) async {
+    print('email: $email');
     UserCredential userCredential =
         await FirebaseAuth.instance.signInWithEmailAndPassword(
       email: email,
@@ -172,6 +176,27 @@ class FireFlutter extends Base {
   /// Forum Functions
   ///
   /////////////////////////////////////////////////////////////////////////////
+
+  /// Add url to post or comment document.
+  ///
+  /// Note: Same URL can be added twice. The user may upload same file twice.
+  ///
+  /// ```
+  /// // after upload
+  /// // get url
+  /// ff.addFile(url: url, path: 'post or comment path', files: comments['files'] );
+  /// ```
+  addFile({
+    @required String url,
+    List<String> files,
+    @required String path,
+  }) {
+    if (files == null) files = [];
+    files.add(url);
+    final doc =
+        FirebaseFirestore.instance.doc('posts/{postId}/comments/{commentId');
+    doc.set({'files': files}, SetOptions(merge: true));
+  }
 
   /// Get more posts from Firestore
   ///
@@ -230,13 +255,14 @@ class FireFlutter extends Base {
               .listen((QuerySnapshot snapshot) {
             snapshot.docChanges.forEach((DocumentChange commentsChange) {
               final commentData = commentsChange.doc.data();
-              commentData['ud'] = commentsChange.doc.id;
+              commentData['id'] = commentsChange.doc.id;
 
               /// comment added
               if (commentsChange.type == DocumentChangeType.added) {
                 /// TODO For comments loading on post view, it does not need to loop.
                 /// TODO Only for newly created comment needs to have loop and find a position to insert.
                 if (post['comments'] == null) post['comments'] = [];
+
                 int found = (post['comments'] as List).indexWhere(
                     (c) => c['order'].compareTo(commentData['order']) < 0);
                 if (found == -1) {
@@ -244,6 +270,7 @@ class FireFlutter extends Base {
                 } else {
                   post['comments'].insert(found, commentData);
                 }
+
                 forum.render(RenderType.commentCreate);
               }
 
@@ -251,15 +278,16 @@ class FireFlutter extends Base {
               else if (commentsChange.type == DocumentChangeType.modified) {
                 final int ci = post['comments']
                     .indexWhere((c) => c['id'] == commentData['id']);
+
+                print('comment index : $ci');
                 if (ci > -1) {
-                  post['comments'][ci] = post;
-                  forum.render(RenderType.commentUpdate);
+                  post['comments'][ci] = commentData;
                 }
+                forum.render(RenderType.commentUpdate);
               }
 
               /// comment deleted
               else if (commentsChange.type == DocumentChangeType.removed) {
-                print('comment delete');
                 post['comments']
                     .removeWhere((c) => c['id'] == commentData['id']);
                 forum.render(RenderType.commentDelete);
@@ -268,15 +296,23 @@ class FireFlutter extends Base {
           });
 
           forum.fetchingPosts(RenderType.stopFetching);
-        } else if (documentChange.type == DocumentChangeType.modified) {
+        }
+
+        /// post update
+        else if (documentChange.type == DocumentChangeType.modified) {
           final int i = forum.posts.indexWhere((p) => p['id'] == post['id']);
-          if (i > 0) {
+          if (i > -1) {
             forum.posts[i] = post;
           }
-        } else if (documentChange.type == DocumentChangeType.removed) {
+          forum.render(RenderType.postUpdate);
+        }
+
+        /// post delete
+        else if (documentChange.type == DocumentChangeType.removed) {
           /// TODO: when post is deleted, also remove comment list subscription to avoid memory leak.
           forum.commentsSubcriptions[post['id']].cancel();
           forum.posts.removeWhere((p) => p['id'] == post['id']);
+          forum.render(RenderType.postDelete);
         } else {
           assert(false, 'This is error');
         }
@@ -289,6 +325,8 @@ class FireFlutter extends Base {
   /// `data['title']` and `data['content']` are needed to send push notification.
   Future editPost(Map<String, dynamic> data) async {
     /// TODO throw error if both of title and content are empty.
+    if (data['title'] == null && data['content'] == null)
+      throw "ERROR_TITLE_AND_CONTENT_EMPTY";
 
     if (data['id'] != null) {
       data['updatedAt'] = FieldValue.serverTimestamp();
@@ -311,9 +349,10 @@ class FireFlutter extends Base {
     }
   }
 
+  /// [data] is the map to save into comment document.
   ///
+  /// `post` property of [data] is required.
   Future editComment(Map<String, dynamic> data) async {
-    /// data['post'] is required.
     if (data['post'] == null) throw 'ERROR_POST_IS_REQUIRED';
     final Map<String, dynamic> post = data['post'];
     data.remove('post');
@@ -321,11 +360,11 @@ class FireFlutter extends Base {
     final commentsCol = commentsCollection(post['id']);
     data.remove('postid');
 
-    print('ref.path: ' + commentsCol.path.toString());
+    // print('ref.path: ' + commentsCol.path.toString());
 
     /// update
     if (data['id'] != null) {
-      data['createdAt'] = FieldValue.serverTimestamp();
+      data['updatedAt'] = FieldValue.serverTimestamp();
       await commentsCol.doc(data['id']).set(data, SetOptions(merge: true));
     }
 
@@ -341,10 +380,11 @@ class FireFlutter extends Base {
       /// get depth
       dynamic parent = getCommentParent(post['comments'], parentIndex);
       data['depth'] = parent == null ? 0 : parent['depth'] + 1;
-
+      data['like'] = 0;
+      data['dislike'] = 0;
       data['createdAt'] = FieldValue.serverTimestamp();
       data['updatedAt'] = FieldValue.serverTimestamp();
-      print('comment create data: $data');
+      // print('comment create data: $data');
       await commentsCol.add(data);
       sendCommentNotification(post, data);
     }
@@ -415,5 +455,58 @@ class FireFlutter extends Base {
     onSocialLogin(userCredential.user);
 
     return userCredential.user;
+  }
+
+  Future<User> signInWithApple() async {
+    final oauthCred = await createAppleOAuthCred();
+    print(oauthCred);
+
+    UserCredential userCredential =
+        await FirebaseAuth.instance.signInWithCredential(oauthCred);
+    return userCredential.user;
+  }
+
+  ///
+  ///
+  /// [folder] is the folder name on Firebase Storage.
+  /// [source] is the source of file input. It can be Camera or Gallery.
+  /// [maxWidth] is the max width of image to upload.
+  /// [quality] is the quality of the jpeg image.
+  ///
+  /// It will return a string of URL of uploaded file.
+  ///
+  /// 'upload-cancelled' may return when there is no return(no value) from file selection.
+  Future<String> uploadFile({
+    @required String folder,
+    ImageSource source,
+    // @required File file,
+    double maxWidth = 1024,
+    int quality = 90,
+    void progress(double progress),
+  }) async {
+    /// select file.
+    File file = await pickImage(
+      source: source,
+      maxWidth: maxWidth,
+      quality: quality,
+    );
+
+    /// if no file is selected then do nothing.
+    if (file == null) throw 'upload-cancelled';
+    // print('success: file picked: ${file.path}');
+
+    final ref = FirebaseStorage.instance
+        .ref(folder + '/' + getFilenameFromPath(file.path));
+
+    UploadTask task = ref.putFile(file);
+    task.snapshotEvents.listen((TaskSnapshot snapshot) {
+      double p = (snapshot.totalBytes / snapshot.bytesTransferred) * 100;
+      progress(p);
+    });
+
+    await task;
+    final url = await ref.getDownloadURL();
+    print('DOWNLOAD URL : $url');
+    return url;
   }
 }

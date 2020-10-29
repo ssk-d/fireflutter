@@ -99,32 +99,44 @@ ff.init(
 
 ### Social Login
 
-- You need to handle the success and error on FireFlutter init
+#### Google Login
+
+- You can use the social Login by calling signInWithGoogle.
 
 ```dart
-ff.init(
-  socialLoginSuccessHandler: (user) {
-    // on success do something here
-  }),
-  socialLoginErrorHandler: (e) {
-    // on error do something here
-  },
+RaisedButton(
+  child: Text('Google Sign-in'),
+  onPressed: ff.signInWithGoogle,
+)
+```
+
+### Facebook Login
+
+- Follow the instructions on how to setup Facebook project.
+
+```dart
+RaisedButton(
+  child: Text('Facebook Sign-in'),
+  onPressed: ff.signInWithFacebook,
 );
 ```
 
-- You can use the social Login by calling signInWithGoogle or signInWithFacebook
+### Apple Login
+
+- Follow the instructions on how to setup Apple project.
+- Enable `Apple` in Sign-in Method.
 
 ```dart
-children: [
-    RaisedButton(
-      child: Text('Google Sign-in'),
-      onPressed: ff.signInWithGoogle,
-    ),
-    RaisedButton(
-      child: Text('Facebook Sign-in'),
-      onPressed: ff.signInWithFacebook,
-    ),
-]
+SignInWithAppleButton(
+  onPressed: () async {
+    try {
+      await ff.signInWithApple();
+      Get.toNamed(RouteNames.home);
+    } catch (e) {
+      Service.error(e);
+    }
+  },
+),
 ```
 
 ## External Logins

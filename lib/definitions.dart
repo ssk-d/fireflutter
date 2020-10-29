@@ -14,7 +14,6 @@ enum RenderType {
 }
 typedef Render = void Function(RenderType x);
 const ERROR_SIGNIN_ABORTED = 'ERROR_SIGNIN_ABORTED';
-const ERROR_PERMISSION_RESTRICTED = 'ERROR_PERMISSION_RESTRICTED';
 
 enum UserChangeType { auth, document, register, profile }
 enum NotificationType { onMessage, onLaunch, onResume }
