@@ -8,6 +8,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:firebase_remote_config/firebase_remote_config.dart';
 import 'package:firebase_storage/firebase_storage.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -34,17 +35,23 @@ class FireFlutter extends Base {
     print('FireFlutter');
   }
 
+  ///
+  /// [remoteConfigFetchInterval] is the interval that the app will fetch remote config data again.
+  /// the unit of [remoteConfigFetchInterval] is minute. In debug mode, it can be set to 1.
+  /// But in release mode, it must not be less than 15. If it is less than 15,
+  /// then it will be escalated to 15.
   Future<void> init({
     bool enableNotification = false,
     String firebaseServerToken,
     Map<String, dynamic> defaultConfigs,
+    int remoteConfigFetchInterval = 1,
   }) async {
     this.enableNotification = enableNotification;
     this.firebaseServerToken = firebaseServerToken;
     await initFirebase();
     initUser();
     initFirebaseMessaging();
-    initRemoteConfig(defaultConfigs);
+    initRemoteConfig(defaultConfigs, remoteConfigFetchInterval);
   }
 
   bool get isAdmin => this.data['isAdmin'] == true;
