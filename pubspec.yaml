@@ -21,6 +21,8 @@ dependencies:
   firebase_storage: "^5.0.0-dev.3"
   firebase_messaging: ^7.0.3
 
+  sign_in_with_apple: ^2.5.4
+
   jiffy: ^3.0.1
   dio: ^3.0.10
 

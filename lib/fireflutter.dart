@@ -119,6 +119,7 @@ class FireFlutter extends Base {
     @required String password,
     Map<String, Map<String, dynamic>> meta,
   }) async {
+    print('email: $email');
     UserCredential userCredential =
         await FirebaseAuth.instance.signInWithEmailAndPassword(
       email: email,
