@@ -323,9 +323,10 @@ class FireFlutter extends Base {
     }
   }
 
+  /// [data] is the map to save into comment document.
   ///
+  /// `post` property of [data] is required.
   Future editComment(Map<String, dynamic> data) async {
-    /// data['post'] is required.
     if (data['post'] == null) throw 'ERROR_POST_IS_REQUIRED';
     final Map<String, dynamic> post = data['post'];
     data.remove('post');
@@ -353,7 +354,8 @@ class FireFlutter extends Base {
       /// get depth
       dynamic parent = getCommentParent(post['comments'], parentIndex);
       data['depth'] = parent == null ? 0 : parent['depth'] + 1;
-
+      data['like'] = 0;
+      data['dislike'] = 0;
       data['createdAt'] = FieldValue.serverTimestamp();
       data['updatedAt'] = FieldValue.serverTimestamp();
       // print('comment create data: $data');
