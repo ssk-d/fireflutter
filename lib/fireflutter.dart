@@ -12,9 +12,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_facebook_auth/flutter_facebook_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:rxdart/subjects.dart';
-
+import './functions.dart';
 part './definitions.dart';
-part './functions.dart';
 part './base.dart';
 
 /// FireFlutter
@@ -119,6 +118,7 @@ class FireFlutter extends Base {
     @required String password,
     Map<String, Map<String, dynamic>> meta,
   }) async {
+    print('email: $email');
     UserCredential userCredential =
         await FirebaseAuth.instance.signInWithEmailAndPassword(
       email: email,
@@ -428,6 +428,15 @@ class FireFlutter extends Base {
 
     onSocialLogin(userCredential.user);
 
+    return userCredential.user;
+  }
+
+  Future<User> signInWithApple() async {
+    final oauthCred = await createAppleOAuthCred();
+    print(oauthCred);
+
+    UserCredential userCredential =
+        await FirebaseAuth.instance.signInWithCredential(oauthCred);
     return userCredential.user;
   }
 }
