@@ -176,7 +176,7 @@ class FireFlutter extends Base {
   ///
   /////////////////////////////////////////////////////////////////////////////
 
-  /// Add url to post or comment document.
+  /// Add url to post or comment document `files` field.
   ///
   /// Note: Same URL can be added twice. The user may upload same file twice.
   ///
@@ -185,17 +185,17 @@ class FireFlutter extends Base {
   /// // get url
   /// ff.addFile(url: url, path: 'post or comment path', files: comments['files'] );
   /// ```
-  addFile({
-    @required String url,
-    List<String> files,
-    @required String path,
-  }) {
-    if (files == null) files = [];
-    files.add(url);
-    final doc =
-        FirebaseFirestore.instance.doc('posts/{postId}/comments/{commentId');
-    doc.set({'files': files}, SetOptions(merge: true));
-  }
+  // addFiles({
+  //   @required String url,
+  //   List<String> files,
+  //   @required String path,
+  // }) {
+  //   if (files == null) files = [];
+  //   files.add(url);
+  //   final doc =
+  //       FirebaseFirestore.instance.doc(path);
+  //   doc.set({'files': files}, SetOptions(merge: true));
+  // }
 
   /// Get more posts from Firestore
   ///
@@ -299,6 +299,9 @@ class FireFlutter extends Base {
 
         /// post update
         else if (documentChange.type == DocumentChangeType.modified) {
+          print('post updated');
+          print(post.toString());
+
           final int i = forum.posts.indexWhere((p) => p['id'] == post['id']);
           if (i > -1) {
             forum.posts[i] = post;
