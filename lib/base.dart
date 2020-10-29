@@ -121,43 +121,42 @@ class Base {
     return jsonDecode(str);
   }
 
-  Future<void> initRemoteConfig(Map<String, dynamic> defaultConfigs) async {
+  Future<void> initRemoteConfig(
+      Map<String, dynamic> defaultConfigs, int minutes) async {
     RemoteConfig remoteConfig = await RemoteConfig.instance;
     // this will allow the fetch to server more than 5 per hour
-    await remoteConfig.setConfigSettings(RemoteConfigSettings(debugMode: true));
+    await remoteConfig
+        .setConfigSettings(RemoteConfigSettings(debugMode: kDebugMode));
+
+    if (minutes < 1) minutes = 1;
+    if (kReleaseMode && minutes < 15) {
+      minutes = 15;
+    }
 
     /// set default value if remoteconfig if fetch failed
     await remoteConfig.setDefaults(defaultConfigs);
 
+    // await remoteConfig.activateFetched();
+    // await remoteConfig.fetch(expiration: Duration(minutes: minutes));
+    // fetchRemoteConfig(minutes);
+    Timer.periodic(Duration(minutes: minutes), (timer) {
+      fetchRemoteConfig(minutes);
+    });
+  }
+
+  fetchRemoteConfig(int minutes) async {
+    RemoteConfig remoteConfig = await RemoteConfig.instance;
     // Using default duration to force fetching from remote server.
     // by default it will refetch after 12hrs.
-    await remoteConfig.fetch(expiration: const Duration(seconds: 10));
+    await remoteConfig.fetch(expiration: Duration(minutes: minutes));
     await remoteConfig.activateFetched();
 
-    // print('getAll config::');
     config = remoteConfig.getAll();
-    // print('config:');
-    // print(config);
-    // print('translations:');
-    // print(config['translations']);
 
     Map<String, dynamic> translations = getConfigAsMap('translations');
     if (translations != null) {
       configDownload.add(translations);
     }
-
-    // print(config['app_title'].asJson()['ko']);
-
-    // print('remoteConfig.getString: ' + remoteConfig.getString('app_title'));
-    // print(config['app_title'].asString());
-    // print(config['app_desc'].asString());
-
-    // var title = jsonDecode(config['app_title_json'].asString());
-    // print(title['en']);
-    // print(title['ko']);
-
-    // print(remoteConfig.getValue('app_title_json').asString());
-    // return config;
   }
 
   /// Update user meta data.
