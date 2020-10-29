@@ -289,8 +289,10 @@ class Base {
 
     print('SendNotification');
 
-    if (token == null && (tokens == null || tokens.length == 0)) return false;
-    if (topic == null) return false;
+    if (token == null &&
+        (tokens == null || tokens.length == 0) &&
+        topic == null) return false;
+    // if (topic == null) return false;
 
     final postUrl = 'https://fcm.googleapis.com/fcm/send';
 
