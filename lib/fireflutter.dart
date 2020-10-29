@@ -230,13 +230,14 @@ class FireFlutter extends Base {
               .listen((QuerySnapshot snapshot) {
             snapshot.docChanges.forEach((DocumentChange commentsChange) {
               final commentData = commentsChange.doc.data();
-              commentData['ud'] = commentsChange.doc.id;
+              commentData['id'] = commentsChange.doc.id;
 
               /// comment added
               if (commentsChange.type == DocumentChangeType.added) {
                 /// TODO For comments loading on post view, it does not need to loop.
                 /// TODO Only for newly created comment needs to have loop and find a position to insert.
                 if (post['comments'] == null) post['comments'] = [];
+
                 int found = (post['comments'] as List).indexWhere(
                     (c) => c['order'].compareTo(commentData['order']) < 0);
                 if (found == -1) {
@@ -244,6 +245,7 @@ class FireFlutter extends Base {
                 } else {
                   post['comments'].insert(found, commentData);
                 }
+
                 forum.render(RenderType.commentCreate);
               }
 
@@ -251,15 +253,16 @@ class FireFlutter extends Base {
               else if (commentsChange.type == DocumentChangeType.modified) {
                 final int ci = post['comments']
                     .indexWhere((c) => c['id'] == commentData['id']);
+
+                print('comment index : $ci');
                 if (ci > -1) {
-                  post['comments'][ci] = post;
-                  forum.render(RenderType.commentUpdate);
+                  post['comments'][ci] = commentData;
                 }
+                forum.render(RenderType.commentUpdate);
               }
 
               /// comment deleted
               else if (commentsChange.type == DocumentChangeType.removed) {
-                print('comment delete');
                 post['comments']
                     .removeWhere((c) => c['id'] == commentData['id']);
                 forum.render(RenderType.commentDelete);
@@ -268,15 +271,23 @@ class FireFlutter extends Base {
           });
 
           forum.fetchingPosts(RenderType.stopFetching);
-        } else if (documentChange.type == DocumentChangeType.modified) {
+        }
+
+        /// post update
+        else if (documentChange.type == DocumentChangeType.modified) {
           final int i = forum.posts.indexWhere((p) => p['id'] == post['id']);
-          if (i > 0) {
+          if (i > -1) {
             forum.posts[i] = post;
           }
-        } else if (documentChange.type == DocumentChangeType.removed) {
+          forum.render(RenderType.postUpdate);
+        }
+
+        /// post delete
+        else if (documentChange.type == DocumentChangeType.removed) {
           /// TODO: when post is deleted, also remove comment list subscription to avoid memory leak.
           forum.commentsSubcriptions[post['id']].cancel();
           forum.posts.removeWhere((p) => p['id'] == post['id']);
+          forum.render(RenderType.postDelete);
         } else {
           assert(false, 'This is error');
         }
@@ -289,6 +300,8 @@ class FireFlutter extends Base {
   /// `data['title']` and `data['content']` are needed to send push notification.
   Future editPost(Map<String, dynamic> data) async {
     /// TODO throw error if both of title and content are empty.
+    if (data['title'] == null && data['content'] == null)
+      throw "ERROR_TITLE_AND_CONTENT_EMPTY";
 
     if (data['id'] != null) {
       data['updatedAt'] = FieldValue.serverTimestamp();
@@ -321,11 +334,11 @@ class FireFlutter extends Base {
     final commentsCol = commentsCollection(post['id']);
     data.remove('postid');
 
-    print('ref.path: ' + commentsCol.path.toString());
+    // print('ref.path: ' + commentsCol.path.toString());
 
     /// update
     if (data['id'] != null) {
-      data['createdAt'] = FieldValue.serverTimestamp();
+      data['updatedAt'] = FieldValue.serverTimestamp();
       await commentsCol.doc(data['id']).set(data, SetOptions(merge: true));
     }
 
@@ -344,7 +357,7 @@ class FireFlutter extends Base {
 
       data['createdAt'] = FieldValue.serverTimestamp();
       data['updatedAt'] = FieldValue.serverTimestamp();
-      print('comment create data: $data');
+      // print('comment create data: $data');
       await commentsCol.add(data);
       sendCommentNotification(post, data);
     }
