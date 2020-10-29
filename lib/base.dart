@@ -104,6 +104,9 @@ class Base {
       'app_desc': 'SMS Description'
     };
 
+    // this will allow the fetch to server more than 5 per hour
+    await remoteConfig.setConfigSettings(RemoteConfigSettings(debugMode: true));
+
     // set default value if remoteconfig if fetch failed
     await remoteConfig.setDefaults(defaults);
 
