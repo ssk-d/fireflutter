@@ -617,8 +617,8 @@ class Base {
     ///     unless we specify the following on the AndroidManifest.xml:
     ///       - <uses-permission android:name="android.permission.CAMERA" />
     PermissionStatus permissionStatus = await permission.status;
-    print('permission status:');
-    print(permissionStatus);
+    // print('permission status:');
+    // print(permissionStatus);
 
     /// if permission is permanently denied,
     /// the only way to grant permission is changing in AppSettings.
@@ -634,7 +634,7 @@ class Base {
     /// check if the app have the permission to access camera or photos
     if (permissionStatus.isUndetermined || permissionStatus.isDenied) {
       /// request permission if not granted, or user haven't chosen permission yet.
-      print('requesting permisssion again');
+      // print('requesting permisssion again');
       // does not request permission again. (BUG: iOS)
       // await permission.request();
     }
@@ -647,7 +647,7 @@ class Base {
 
     // return null if user picked nothing.
     if (pickedFile == null) return null;
-    print('pickedFile.path: ${pickedFile.path} ');
+    // print('pickedFile.path: ${pickedFile.path} ');
 
     String localFile =
         await getAbsoluteTemporaryFilePath(getRandomString() + '.jpeg');

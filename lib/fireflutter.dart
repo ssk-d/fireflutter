@@ -200,9 +200,14 @@ class FireFlutter extends Base {
 
   /// Deletes a file from firebase storage.
   ///
-  Future<void> deleteFile(String url) async {
+  /// If the file is not found on the firebase storage, it will ignore the error.
+  Future deleteFile(String url) async {
     Reference ref = FirebaseStorage.instance.refFromURL(url);
-    return ref.delete();
+    await ref.delete().catchError((e) {
+      if (!e.toString().contains('object-not-found')) {
+        throw e;
+      }
+    });
   }
 
   /// Get more posts from Firestore
@@ -475,8 +480,6 @@ class FireFlutter extends Base {
     return userCredential.user;
   }
 
-  ///
-  ///
   /// [folder] is the folder name on Firebase Storage.
   /// [source] is the source of file input. It can be Camera or Gallery.
   /// [maxWidth] is the max width of image to upload.
@@ -504,6 +507,9 @@ class FireFlutter extends Base {
     if (file == null) throw 'upload-cancelled';
     // print('success: file picked: ${file.path}');
 
+    /// delete previous file to prevent having unused files in storage.
+    await deleteFile(user.photoURL);
+
     final ref = FirebaseStorage.instance
         .ref(folder + '/' + getFilenameFromPath(file.path));
 
@@ -515,7 +521,7 @@ class FireFlutter extends Base {
 
     await task;
     final url = await ref.getDownloadURL();
-    print('DOWNLOAD URL : $url');
+    // print('DOWNLOAD URL : $url');
     return url;
   }
 }
