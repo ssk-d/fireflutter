@@ -198,8 +198,14 @@ class FireFlutter extends Base {
   //   doc.set({'files': files}, SetOptions(merge: true));
   // }
 
-  /// Get more posts from Firestore
+  /// Deletes a file from firebase storage.
   ///
+  Future<void> deleteFile(String url) async {
+    Reference ref = FirebaseStorage.instance.refFromURL(url);
+    return ref.delete();
+  }
+
+  /// Get more posts from Firestore
   ///
   fetchPosts(ForumData forum) {
     if (forum.shouldNotFetch) return;
