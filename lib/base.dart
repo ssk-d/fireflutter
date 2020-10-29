@@ -56,7 +56,15 @@ class Base {
 
   Map<String, RemoteConfigValue> config;
 
-  PublishSubject configDownload = PublishSubject();
+  // PublishSubject configDownload = PublishSubject();
+
+  Map<String, dynamic> _settings;
+  // ignore: close_sinks
+  BehaviorSubject settingsChange = BehaviorSubject.seeded(null);
+
+  Map<String, dynamic> _translations;
+  // ignore: close_sinks
+  BehaviorSubject translationsChange = BehaviorSubject.seeded(null);
 
   initUser() {
     authStateChanges = FirebaseAuth.instance.authStateChanges();
@@ -119,44 +127,6 @@ class Base {
     String str = config[name].asString();
     if (str == null || str == '') return null;
     return jsonDecode(str);
-  }
-
-  Future<void> initRemoteConfig(
-      Map<String, dynamic> defaultConfigs, int minutes) async {
-    RemoteConfig remoteConfig = await RemoteConfig.instance;
-    // this will allow the fetch to server more than 5 per hour
-    await remoteConfig
-        .setConfigSettings(RemoteConfigSettings(debugMode: kDebugMode));
-
-    if (minutes < 1) minutes = 1;
-    if (kReleaseMode && minutes < 15) {
-      minutes = 15;
-    }
-
-    /// set default value if remoteconfig if fetch failed
-    await remoteConfig.setDefaults(defaultConfigs);
-
-    // await remoteConfig.activateFetched();
-    // await remoteConfig.fetch(expiration: Duration(minutes: minutes));
-    // fetchRemoteConfig(minutes);
-    Timer.periodic(Duration(minutes: minutes), (timer) {
-      fetchRemoteConfig(minutes);
-    });
-  }
-
-  fetchRemoteConfig(int minutes) async {
-    RemoteConfig remoteConfig = await RemoteConfig.instance;
-    // Using default duration to force fetching from remote server.
-    // by default it will refetch after 12hrs.
-    await remoteConfig.fetch(expiration: Duration(minutes: minutes));
-    await remoteConfig.activateFetched();
-
-    config = remoteConfig.getAll();
-
-    Map<String, dynamic> translations = getConfigAsMap('translations');
-    if (translations != null) {
-      configDownload.add(translations);
-    }
   }
 
   /// Update user meta data.
@@ -657,5 +627,30 @@ class Base {
     );
 
     return file;
+  }
+
+  /// Syncronize the Firebase `settings` collection to `this.settings`.
+  initSettings(Map<String, dynamic> defaultSettings) {
+    _settings = defaultSettings;
+    settingsChange.add(_settings);
+  }
+
+  ///
+  ///
+  initTranslations(Map<String, Map<String, String>> defaultTranslations) {
+    translationsChange.add(defaultTranslations);
+    FirebaseFirestore.instance
+        .collection('translations')
+        .snapshots()
+        .listen((QuerySnapshot snapshot) {
+      print('snapshot: ');
+      if (snapshot.size == 0) return;
+      Map lns = {};
+      snapshot.docs.forEach((DocumentSnapshot document) {
+        lns[document.id] = document.data();
+      });
+
+      translationsChange.add(lns);
+    });
   }
 }

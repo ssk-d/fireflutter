@@ -43,15 +43,17 @@ class FireFlutter extends Base {
   Future<void> init({
     bool enableNotification = false,
     String firebaseServerToken,
-    Map<String, dynamic> defaultConfigs,
-    int remoteConfigFetchInterval = 1,
+    Map<String, dynamic> settings,
+    Map<String, Map<String, String>> translations,
   }) async {
     this.enableNotification = enableNotification;
     this.firebaseServerToken = firebaseServerToken;
     await initFirebase();
     initUser();
     initFirebaseMessaging();
-    initRemoteConfig(defaultConfigs, remoteConfigFetchInterval);
+
+    initSettings(settings);
+    initTranslations(translations);
   }
 
   bool get isAdmin => this.data['isAdmin'] == true;

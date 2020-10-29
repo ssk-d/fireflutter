@@ -145,3 +145,12 @@ SignInWithAppleButton(
 
 - Kakao login is completely separated from `fireflutter` since it is not part of `Firebase`.
   - The sample app has an example code on how to do `Kakao login` and link to `Firebase Auth` account.
+
+## I18N
+
+- If you want to add another language,
+  - Add the language code in `Info.plist`
+  - Add the language on `translations`
+  - Add the lanugage on `FireFlutter.init()`
+  - Add the language on `FireFlutter.settingsChange`
+  - Add the language on Firebase `settings` collection.
