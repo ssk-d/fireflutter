@@ -50,10 +50,13 @@ class Base {
 
   BehaviorSubject<UserChangeType> userChange = BehaviorSubject.seeded(null);
 
-  /// [notificationHandler] will be invoked when a push notification arrives.
-  NotificationHandler notificationHandler;
+  /// [notification] will be fired whenever there is a push notification.
+  // ignore: close_sinks
+  PublishSubject notification = PublishSubject();
 
-  RemoteConfig remoteConfig;
+  Map<String, RemoteConfigValue> config;
+
+  PublishSubject configDownload = PublishSubject();
 
   initUser() {
     authStateChanges = FirebaseAuth.instance.authStateChanges();
@@ -91,49 +94,69 @@ class Base {
     FirebaseFirestore.instance.settings =
         Settings(cacheSizeBytes: Settings.CACHE_SIZE_UNLIMITED);
 
-    await getRemoteConfig();
-
     usersCol = FirebaseFirestore.instance.collection('users');
     postsCol = FirebaseFirestore.instance.collection('posts');
   }
 
-  Future<void> getRemoteConfig() async {
-    remoteConfig = await RemoteConfig.instance;
-    final defaults = <String, dynamic>{
-      'app_title': 'SMS Title',
-      'app_desc': 'SMS Description'
-    };
+  /// Get config as String
+  ///
+  /// ```
+  /// ff.getConfig('buttonName')
+  /// ```
+  String getConfig(String name) {
+    return config[name].asString();
+  }
 
+  /// Get config as Map
+  ///
+  /// ```
+  /// ff.getConfigAsMap('app_title')['ko']
+  /// ```
+  ///
+  /// Returns null when the [name] does not exist or the value of the string is empty.
+  Map<String, dynamic> getConfigAsMap(String name) {
+    if (config[name] == null) return null;
+    String str = config[name].asString();
+    if (str == null || str == '') return null;
+    return jsonDecode(str);
+  }
+
+  Future<void> initRemoteConfig(Map<String, dynamic> defaultConfigs) async {
+    RemoteConfig remoteConfig = await RemoteConfig.instance;
     // this will allow the fetch to server more than 5 per hour
     await remoteConfig.setConfigSettings(RemoteConfigSettings(debugMode: true));
 
-    // set default value if remoteconfig if fetch failed
-    await remoteConfig.setDefaults(defaults);
+    /// set default value if remoteconfig if fetch failed
+    await remoteConfig.setDefaults(defaultConfigs);
 
-    try {
-      // Using default duration to force fetching from remote server.
-      // by default it will refetch after 12hrs.
-      await remoteConfig.fetch(expiration: const Duration(seconds: 10));
-      await remoteConfig.activateFetched();
-    } on FetchThrottledException catch (exception) {
-      // Fetch throttled. if the duration is bypass this may happen from time to time.
-      print(exception);
-    } catch (exception) {
-      print('Unable to fetch remote config. Cached or default values will be '
-          'used');
+    // Using default duration to force fetching from remote server.
+    // by default it will refetch after 12hrs.
+    await remoteConfig.fetch(expiration: const Duration(seconds: 10));
+    await remoteConfig.activateFetched();
+
+    // print('getAll config::');
+    config = remoteConfig.getAll();
+    // print('config:');
+    // print(config);
+    // print('translations:');
+    // print(config['translations']);
+
+    Map<String, dynamic> translations = getConfigAsMap('translations');
+    if (translations != null) {
+      configDownload.add(translations);
     }
-    print('getAll config::');
-    Map<String, RemoteConfigValue> config = remoteConfig.getAll();
 
-    print(remoteConfig.getString('app_title'));
-    print(config['app_title'].asString());
-    print(config['app_desc'].asString());
+    // print(config['app_title'].asJson()['ko']);
 
-    var title = jsonDecode(config['app_title_json'].asString());
-    print(title['en']);
-    print(title['ko']);
+    // print('remoteConfig.getString: ' + remoteConfig.getString('app_title'));
+    // print(config['app_title'].asString());
+    // print(config['app_desc'].asString());
 
-    print(remoteConfig.getValue('app_title_json').asString());
+    // var title = jsonDecode(config['app_title_json'].asString());
+    // print(title['en']);
+    // print(title['ko']);
+
+    // print(remoteConfig.getValue('app_title_json').asString());
     // return config;
   }
 
@@ -167,13 +190,7 @@ class Base {
   }
 
   Future subscribeTopic(String topicName) async {
-    print('subscribeTopic $topicName');
-    try {
-      await FirebaseMessaging().subscribeToTopic(topicName);
-    } catch (e) {
-      print('subscribeTopic $topicName failed');
-      print(e);
-    }
+    await FirebaseMessaging().subscribeToTopic(topicName);
   }
 
   Future unsubscribeTopic(String topicName) async {
@@ -186,8 +203,8 @@ class Base {
     await _firebaseMessagingRequestPermission();
 
     firebaseMessagingToken = await firebaseMessaging.getToken();
-    print('token');
-    print(firebaseMessagingToken);
+    // print('token');
+    // print(firebaseMessagingToken);
     if (user != null) {
       updateToken(user);
     }
@@ -231,7 +248,9 @@ class Base {
       return;
     }
 
-    notificationHandler(notification, data, type);
+    this
+        .notification
+        .add({'notification': notification, 'data': data, 'type': type});
   }
 
   /// TODO This is a package that handles only backend works.
