@@ -279,14 +279,16 @@ class FireFlutter extends Base {
               if (commentsChange.type == DocumentChangeType.added) {
                 /// TODO For comments loading on post view, it does not need to loop.
                 /// TODO Only for newly created comment needs to have loop and find a position to insert.
+                //
+
                 if (post['comments'] == null) post['comments'] = [];
 
                 int found = (post['comments'] as List).indexWhere(
                     (c) => c['order'].compareTo(commentData['order']) < 0);
-                if (found == -1) {
-                  post['comments'].add(commentData);
-                } else {
+                if (found > -1) {
                   post['comments'].insert(found, commentData);
+                } else {
+                  post['comments'].add(commentData);
                 }
 
                 forum.render(RenderType.commentCreate);
