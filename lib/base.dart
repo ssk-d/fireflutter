@@ -276,11 +276,13 @@ class Base {
           print("notification failure");
         }
         print(response.data);
+        return true;
       } catch (e) {
         print('Dio error in sendNotification');
         print(e);
       }
     });
+    return false;
   }
 
   Map<String, dynamic> getCommentParent(
@@ -527,5 +529,71 @@ class Base {
 
   onLogin(User user) {
     updateToken(user);
+  }
+
+  /// Pick an image from Camera or Gallery,
+  /// then, compress
+  /// then, fix rotation.
+  ///
+  /// 'permission-restricted' may be thrown if the app has no permission.
+  Future<File> pickImage({
+    ImageSource source,
+    double maxWidth = 1024,
+    int quality = 80,
+  }) async {
+    /// instantiate image picker.
+    final picker = ImagePicker();
+
+    Permission permission =
+        source == ImageSource.camera ? Permission.camera : Permission.photos;
+
+    /// request permission status.
+    ///
+    /// Android:
+    ///   - Camera permission is automatically granted, meaning it will not ask for permission.
+    ///     unless we specify the following on the AndroidManifest.xml:
+    ///       - <uses-permission android:name="android.permission.CAMERA" />
+    PermissionStatus permissionStatus = await permission.status;
+    print('permission status:');
+    print(permissionStatus);
+
+    /// if permission is permanently denied,
+    /// the only way to grant permission is changing in AppSettings.
+    if (permissionStatus.isPermanentlyDenied) {
+      await openAppSettings();
+    }
+
+    /// alert the user if the permission is restricted.
+    if (permissionStatus.isRestricted) {
+      throw 'permission-restricted';
+    }
+
+    /// check if the app have the permission to access camera or photos
+    if (permissionStatus.isUndetermined || permissionStatus.isDenied) {
+      /// request permission if not granted, or user haven't chosen permission yet.
+      print('requesting permisssion again');
+      // does not request permission again. (BUG: iOS)
+      // await permission.request();
+    }
+
+    PickedFile pickedFile = await picker.getImage(
+      source: source,
+      maxWidth: maxWidth,
+      imageQuality: quality,
+    );
+
+    // return null if user picked nothing.
+    if (pickedFile == null) return null;
+    print('pickedFile.path: ${pickedFile.path} ');
+
+    String localFile =
+        await getAbsoluteTemporaryFilePath(getRandomString() + '.jpeg');
+    File file = await FlutterImageCompress.compressAndGetFile(
+      pickedFile.path, // source file
+      localFile, // target file. Overwrite the source with compressed.
+      quality: quality,
+    );
+
+    return file;
   }
 }

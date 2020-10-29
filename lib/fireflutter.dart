@@ -11,7 +11,10 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_facebook_auth/flutter_facebook_auth.dart';
+import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:rxdart/subjects.dart';
 import './functions.dart';
 part './definitions.dart';
@@ -172,6 +175,27 @@ class FireFlutter extends Base {
   /// Forum Functions
   ///
   /////////////////////////////////////////////////////////////////////////////
+
+  /// Add url to post or comment document.
+  ///
+  /// Note: Same URL can be added twice. The user may upload same file twice.
+  ///
+  /// ```
+  /// // after upload
+  /// // get url
+  /// ff.addFile(url: url, path: 'post or comment path', files: comments['files'] );
+  /// ```
+  addFile({
+    @required String url,
+    List<String> files,
+    @required String path,
+  }) {
+    if (files == null) files = [];
+    files.add(url);
+    final doc =
+        FirebaseFirestore.instance.doc('posts/{postId}/comments/{commentId');
+    doc.set({'files': files}, SetOptions(merge: true));
+  }
 
   /// Get more posts from Firestore
   ///
@@ -441,20 +465,37 @@ class FireFlutter extends Base {
     return userCredential.user;
   }
 
-
+  ///
+  ///
+  /// [folder] is the folder name on Firebase Storage.
+  /// [source] is the source of file input. It can be Camera or Gallery.
+  /// [maxWidth] is the max width of image to upload.
+  /// [quality] is the quality of the jpeg image.
+  ///
+  /// It will return a string of URL of uploaded file.
+  ///
+  /// 'upload-cancelled' may return when there is no return(no value) from file selection.
   Future<String> uploadFile({
-    @required String collection,
-    @required File file, 
+    @required String folder,
+    ImageSource source,
+    // @required File file,
+    double maxWidth = 1024,
+    int quality = 90,
     void progress(double progress),
   }) async {
+    /// select file.
+    File file = await pickImage(
+      source: source,
+      maxWidth: maxWidth,
+      quality: quality,
+    );
 
-    /// if collection doesn't end with a '/' add it.
-    if (collection.split('').last != '/') {
-      collection += '/';
-    }
+    /// if no file is selected then do nothing.
+    if (file == null) throw 'upload-cancelled';
+    // print('success: file picked: ${file.path}');
 
     final ref = FirebaseStorage.instance
-        .ref(collection + filenameFromPath(file.path) + '.jpg');
+        .ref(folder + '/' + getFilenameFromPath(file.path));
 
     UploadTask task = ref.putFile(file);
     task.snapshotEvents.listen((TaskSnapshot snapshot) {
