@@ -53,6 +53,8 @@ class Base {
   /// [notificationHandler] will be invoked when a push notification arrives.
   NotificationHandler notificationHandler;
 
+  RemoteConfig remoteConfig;
+
   initUser() {
     authStateChanges = FirebaseAuth.instance.authStateChanges();
 
@@ -89,8 +91,50 @@ class Base {
     FirebaseFirestore.instance.settings =
         Settings(cacheSizeBytes: Settings.CACHE_SIZE_UNLIMITED);
 
+    await getRemoteConfig();
+
     usersCol = FirebaseFirestore.instance.collection('users');
     postsCol = FirebaseFirestore.instance.collection('posts');
+  }
+
+  Future<void> getRemoteConfig() async {
+    remoteConfig = await RemoteConfig.instance;
+    final defaults = <String, dynamic>{
+      'app_title': 'SMS Title',
+      'app_desc': 'SMS Description'
+    };
+
+    // this will allow the fetch to server more than 5 per hour
+    await remoteConfig.setConfigSettings(RemoteConfigSettings(debugMode: true));
+
+    // set default value if remoteconfig if fetch failed
+    await remoteConfig.setDefaults(defaults);
+
+    try {
+      // Using default duration to force fetching from remote server.
+      // by default it will refetch after 12hrs.
+      await remoteConfig.fetch(expiration: const Duration(seconds: 10));
+      await remoteConfig.activateFetched();
+    } on FetchThrottledException catch (exception) {
+      // Fetch throttled. if the duration is bypass this may happen from time to time.
+      print(exception);
+    } catch (exception) {
+      print('Unable to fetch remote config. Cached or default values will be '
+          'used');
+    }
+    print('getAll config::');
+    Map<String, RemoteConfigValue> config = remoteConfig.getAll();
+
+    print(remoteConfig.getString('app_title'));
+    print(config['app_title'].asString());
+    print(config['app_desc'].asString());
+
+    var title = jsonDecode(config['app_title_json'].asString());
+    print(title['en']);
+    print(title['ko']);
+
+    print(remoteConfig.getValue('app_title_json').asString());
+    // return config;
   }
 
   /// Update user meta data.
