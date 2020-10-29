@@ -110,7 +110,7 @@ class Base {
     try {
       // Using default duration to force fetching from remote server.
       // by default it will refetch after 12hrs.
-      await remoteConfig.fetch(expiration: const Duration(seconds: 0));
+      await remoteConfig.fetch(expiration: const Duration(seconds: 10));
       await remoteConfig.activateFetched();
     } on FetchThrottledException catch (exception) {
       // Fetch throttled. if the duration is bypass this may happen from time to time.
@@ -120,7 +120,7 @@ class Base {
           'used');
     }
     print('getAll config::');
-    var config = remoteConfig.getAll();
+    Map<String, RemoteConfigValue> config = remoteConfig.getAll();
 
     print(remoteConfig.getString('app_title'));
     print(config['app_title'].asString());
