@@ -30,9 +30,12 @@
   - User can enable/disable to get notification when a user creates a comments under his post/comment.
   - User can subscribe/unsubscribe for new posts or comments under a forum.
 
-- Remote Realtime Configuration
+- Realtime App Settings
 
-  - Realtime contents update. Admin can update a page title and content.
+  - Update App Settings via Admin page.
+
+- Internalization (Localization)
+  - Texts in menu, screens can be translated via Admin page.
 
 ## Firestore Structure
 
