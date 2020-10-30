@@ -541,8 +541,12 @@ class FireFlutter extends Base {
   }
 
   /// [internationalNo] is the to send the code to.
+  /// 
   /// [resendToken] is optional, and can be used when requesting to resend the verification code
-  /// [codeSent] will be invoked once the code is generated and send to the number.
+  /// resendToken can be obtained from [onCodeSent]'s second return value.
+  /// 
+  /// [onCodeSent] will be invoked once the code is generated and send to the number.
+  /// 
   /// [onError] will be invoked when an error happen.
   ///
   ///
@@ -550,10 +554,7 @@ class FireFlutter extends Base {
   /// ```dart
   /// f.mobileAuthSendCode(
   ///     internationalNo,
-  ///     onCodeSent: (verificationID, codeResendToken) {
-  ///       /// do something ...
-  ///     },
-  ///     onError: (e) => Service.error(e),
+  ///     ...
   ///  );
   /// ```
   ///
@@ -562,10 +563,7 @@ class FireFlutter extends Base {
   ///  ff.mobileAuthSendCode(
   ///     internationalNo,
   ///     resendToken: codeResendToken,
-  ///     onCodeSent: (verificationID, codeResendToken) {
-  ///       /// do something ...
-  ///     },
-  ///     onError: (e) { /// handle error ... },
+  ///     ...
   ///  );
   /// ```
   ///
