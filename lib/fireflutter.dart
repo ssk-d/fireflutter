@@ -541,12 +541,38 @@ class FireFlutter extends Base {
   }
 
   /// [internationalNo] is the to send the code to.
+  /// [resendToken] is optional, and can be used when requesting to resend the verification code
   /// [codeSent] will be invoked once the code is generated and send to the number.
   /// [onError] will be invoked when an error happen.
   ///
+  ///
+  /// first time requesting for verification code
+  /// ```dart
+  /// f.mobileAuthSendCode(
+  ///     internationalNo,
+  ///     onCodeSent: (verificationID, codeResendToken) {
+  ///       /// do something ...
+  ///     },
+  ///     onError: (e) => Service.error(e),
+  ///  );
+  /// ```
+  ///
+  /// resending verification code.
+  /// ```dart
+  ///  ff.mobileAuthSendCode(
+  ///     internationalNo,
+  ///     resendToken: codeResendToken,
+  ///     onCodeSent: (verificationID, codeResendToken) {
+  ///       /// do something ...
+  ///     },
+  ///     onError: (e) { /// handle error ... },
+  ///  );
+  /// ```
+  ///
   Future mobileAuthSendCode(
     String internationalNo, {
-    onCodeSent(String verificationID),
+    int resendToken,
+    onCodeSent(String verificationID, int codeResendToken),
     onError(dynamic error),
   }) async {
     if (internationalNo == null || internationalNo == '') {
@@ -554,34 +580,35 @@ class FireFlutter extends Base {
     }
 
     await FirebaseAuth.instance.verifyPhoneNumber(
-      phoneNumber: internationalNo,
+        phoneNumber: internationalNo,
 
-      /// this will only be called after the automatic code retrieval is performed.
-      /// some phone may have the automatic code retrieval. some may not.
-      verificationCompleted: (PhoneAuthCredential credential) async {
-        /// we can handle linking here.
-        /// the user doesn't need to be redirected to code verification page.
-        /// TODO: handle automatic linking/updating of user phone number.
-        /// should we ?
-      },
+        /// this will only be called after the automatic code retrieval is performed.
+        /// some phone may have the automatic code retrieval. some may not.
+        verificationCompleted: (PhoneAuthCredential credential) {
+          /// we can handle linking here.
+          /// the user doesn't need to be redirected to code verification page.
+          /// TODO: handle automatic linking/updating of user phone number.
+        },
 
-      /// called after the user submitted the phone number.
-      codeSent: (String verID, [int forceResendToken]) async {
-        print('codeSent!');
-        onCodeSent(verID);
-      },
+        /// called after the user submitted the phone number.
+        codeSent: (String verID, [int forceResendToken]) async {
+          print('codeSent!');
+          onCodeSent(verID, forceResendToken);
+        },
 
-      /// called whenever error happens
-      verificationFailed: (FirebaseAuthException e) async {
-        print('verificationFailed!');
-        onError(e);
-      },
+        /// called whenever error happens
+        verificationFailed: (FirebaseAuthException e) async {
+          print('verificationFailed!');
+          onError(e);
+        },
+        codeAutoRetrievalTimeout: (String verID) {
+          print('codeAutoRetrievalTimeout');
+          // return verID;
+        },
+        timeout: const Duration(seconds: 40),
 
-      codeAutoRetrievalTimeout: (String verID) {
-        print('codeAutoRetrievalTimeout');
-        // return verID;
-      },
-    );
+        /// resend token can be null.
+        forceResendingToken: resendToken);
   }
 
   /// [code] is the verification code sent to user's given number.
