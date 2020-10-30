@@ -540,15 +540,15 @@ class FireFlutter extends Base {
     return url;
   }
 
-  /// [internationalNo] is the to send the code to.
+  /// [internationalNo] is the number to send the code to.
   ///
-  /// [resendToken] is optional, and can be used when requesting to resend the verification code
-  /// resendToken can be obtained from [onCodeSent]'s second return value.
+  /// [resendToken] is optional, and can be used when requesting to resend the verification code.
+  /// [resendToken] can be obtained from [onCodeSent]'s return value.
   ///
   /// [onCodeSent] will be invoked once the code is generated and send to the number.
+  /// It will include the [verificationID] and [codeResendToken].
   ///
-  /// [onError] will be invoked when an error happen.
-  ///
+  /// [onError] will be invoked when an error happen. It contains the error.
   ///
   /// first time requesting for verification code
   /// ```dart
@@ -611,8 +611,8 @@ class FireFlutter extends Base {
     );
   }
 
-  /// [code] is the verification code sent to user's given number.
-  /// [verificationId] is used to verify the current session.
+  /// [code] is the verification code sent to user's mobile number.
+  /// [verificationId] is used to verify the current session, which is associated with the user's mobile number.
   ///
   /// After phone is verified, it will link/update the current user's phone number.
   Future mobileAuthVerifyCode({
