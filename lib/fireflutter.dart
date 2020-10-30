@@ -546,7 +546,7 @@ class FireFlutter extends Base {
   ///
   Future mobileAuthSendCode(
     String internationalNo, {
-    codeSent(String verificationID),
+    onCodeSent(String verificationID),
     onError(dynamic error),
   }) async {
     if (internationalNo == null || internationalNo == '') {
@@ -558,17 +558,17 @@ class FireFlutter extends Base {
 
       /// this will only be called after the automatic code retrieval is performed.
       /// some phone may have the automatic code retrieval. some may not.
-      verificationCompleted: (PhoneAuthCredential credential) {
+      verificationCompleted: (PhoneAuthCredential credential) async {
         /// we can handle linking here.
         /// the user doesn't need to be redirected to code verification page.
-        /// TODO: handle automatic linking
-        print('verificationCompleted');
+        /// TODO: handle automatic linking/updating of user phone number.
+        /// should we ?
       },
 
       /// called after the user submitted the phone number.
       codeSent: (String verID, [int forceResendToken]) async {
         print('codeSent!');
-        codeSent(verID);
+        onCodeSent(verID);
       },
 
       /// called whenever error happens
@@ -582,5 +582,20 @@ class FireFlutter extends Base {
         // return verID;
       },
     );
+  }
+
+  /// [code] is the verification code sent to user's given number.
+  /// [verificationId] is used to verify the current session.
+  ///
+  /// After phone is verified, it will link/update the current user's phone number.
+  Future mobileAuthVerifyCode({
+    @required String code,
+    @required String verificationId,
+  }) async {
+    PhoneAuthCredential creds = PhoneAuthProvider.credential(
+      verificationId: verificationId,
+      smsCode: code,
+    );
+    await user.linkWithCredential(creds);
   }
 }
