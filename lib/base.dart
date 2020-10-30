@@ -689,4 +689,10 @@ class Base {
       return _settings['forum'][vote];
     return _settings[category][vote];
   }
+
+  /// Get setting
+  getSetting([String name]) {
+    if (name == null) return _settings;
+    return _settings[name];
+  }
 }

@@ -30,9 +30,12 @@
   - User can enable/disable to get notification when a user creates a comments under his post/comment.
   - User can subscribe/unsubscribe for new posts or comments under a forum.
 
-- Remote Realtime Configuration
+- Realtime App Settings
 
-  - Realtime contents update. Admin can update a page title and content.
+  - Update App Settings via Admin page.
+
+- Internalization (Localization)
+  - Texts in menu, screens can be translated via Admin page.
 
 ## Firestore Structure
 
@@ -148,9 +151,30 @@ SignInWithAppleButton(
 
 ## I18N
 
+- The app's i18n is managed by `GetX` i18n feature.
+
 - If you want to add another language,
+
   - Add the language code in `Info.plist`
   - Add the language on `translations`
   - Add the lanugage on `FireFlutter.init()`
   - Add the language on `FireFlutter.settingsChange`
   - Add the language on Firebase `settings` collection.
+
+- Default i18n translations(texts) can be set through `FireFlutter` initializatin and is overwritten by the `translations` collection of Firebase.
+  The Firestore is working offline mode, so overwriting with Firestore translation would happen so quickly.
+
+## Settings
+
+- Default settings can be set through `FireFlutter` initialization and is overwritten by `settings` collection of Firebase.
+  The Firestore is working offline mode, so overwriting with Firestore translation would happen so quickly.
+
+- To get `GcpApiKey`,
+  - Go to `GCP ==> Choose Project ==> APIs & Service ==> Credentials ==> API Kyes`
+  - `+ CREATE CREDENTIALS => RESTRICT KEY`
+  - Name it to `FireFlutterApiKey`
+  - Choose `None` under `Application restrictions`
+  - Choose `Don't restrict key` under `API restrctions`
+  - `Save`
+  - Copy the Api Key on `FireFlutterApiKey`.
+  - Paste it into `Firestore` => `/settings` collection => `app` document => `GcpApiKey`.
