@@ -632,6 +632,7 @@ class Base {
   }
 
   /// Syncronize the Firebase `settings` collection to `this.settings`.
+  ///
   initSettings(Map<String, dynamic> defaultSettings) {
     _settings = defaultSettings;
     settingsChange.add(_settings);
@@ -657,6 +658,12 @@ class Base {
   }
 
   /// Get setting
+  ///
+  /// ```dart
+  /// getSettings();          // returns the whole settings
+  /// getSettings("app");     // returns the app document under /settings collection.
+  /// ```
+  ///
   getSetting([String name]) {
     if (name == null) return _settings;
     return _settings[name];
