@@ -1,10 +1,14 @@
 # Fire Flutter
 
-⚡️ `FireFlutter` is a rapid development package for creating Social apps based on `Firebase`.
+`FireFlutter` is a rapid development package for creating Social apps based on `Firebase`.
+You may use FireFlutter package without Firestore security rules and Functions. This may be one way to test if this packages really works.
+But for production use, Firestore security rules and Funtions must be applied.
+
+If you wish to build web, you may use `FireWeb` npm node module which is Javascript version of `FireFlutter`.
 
 ## Features
 
-- User functionalities
+- User
 
   - User registration, login, profile update with email/password
   - Social logins
@@ -13,15 +17,15 @@
     - Facebook,
     - Kakao. Read `Kakao Login`.
   - User profile photo update
-  - Phone number authentication(x)
+  - Phone number authentication
 
-- Forum functionalities
+- Forum
 
-  - Post create, update, delete.
-  - Comment create, update, delete.
-  - File uploads on posts and comments. (x)
-  - Vote(like, dislkie) on posts and comments.
-  - Infinite scroll
+  - Complete forum functioanlities like Post and comment create/update/read/delete, likes/dislikes, file upload/delete. And any other extra functioanalties to compete forum feature.
+  - Infinite scroll.
+  - Everything works in real time.
+    - If a user create a comment, it will appear on other user's phone. And this goes same to all edit/delete, likes/dislikes.
+  - A category of forum could be redesigned for online shopping mall purpose.
 
 - Push notifications
 
@@ -30,12 +34,17 @@
   - User can enable/disable to get notification when a user creates a comments under his post/comment.
   - User can subscribe/unsubscribe for new posts or comments under a forum.
 
-- Realtime App Settings
+- Settings in real time.
 
   - Update App Settings via Admin page.
 
-- Internalization (Localization)
+- Internalization (Localization) in real time.
+
   - Texts in menu, screens can be translated via Admin page.
+
+- Security
+  - Tight Firestore security rules are applied.
+  - For some functionality that cannot be covered by Firestore security works in Functions.
 
 ## Firestore Structure
 
@@ -169,12 +178,14 @@ SignInWithAppleButton(
 - Default settings can be set through `FireFlutter` initialization and is overwritten by `settings` collection of Firebase.
   The Firestore is working offline mode, so overwriting with Firestore translation would happen so quickly.
 
-- To get `GcpApiKey`,
-  - Go to `GCP ==> Choose Project ==> APIs & Service ==> Credentials ==> API Kyes`
-  - `+ CREATE CREDENTIALS => RESTRICT KEY`
-  - Name it to `FireFlutterApiKey`
-  - Choose `None` under `Application restrictions`
-  - Choose `Don't restrict key` under `API restrctions`
-  - `Save`
-  - Copy the Api Key on `FireFlutterApiKey`.
-  - Paste it into `Firestore` => `/settings` collection => `app` document => `GcpApiKey`.
+- `GcpApiKey` is the GCP ApiKey and if you don't know what it is, then here is a simple tip. `GCP ApiKey` is a API Key to access GCP service and should be kept in secret. `Firebase` is a part of GCP Service and GCP ApiKey is needed to use Firebase functionality. And FireFlutter needs this key to access GCP service like phone number verification.
+  - To get `GcpApiKey`,
+    - Go to `GCP ==> Choose Project ==> APIs & Service ==> Credentials ==> API Kyes`
+    - `+ CREATE CREDENTIALS => RESTRICT KEY`
+    - Name it to `FireFlutterApiKey`
+    - Choose `None` under `Application restrictions`
+    - Choose `Don't restrict key` under `API restrctions`
+    - `Save`
+    - Copy the Api Key on `FireFlutterApiKey`.
+    - Paste it into `Firestore` => `/settings` collection => `app` document => `GcpApiKey`.
+  - You may put the `GcpApiKey` in the source code (as in FireFlutter initialization) but that's not recommended.
