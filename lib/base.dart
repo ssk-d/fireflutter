@@ -639,6 +639,7 @@ class Base {
 
   /// Syncronize the Firebase `settings` collection to `this.settings`.
   ///
+  /// Get settings in real time and merge(overwrite) it into the `_settings`.
   initSettings(Map<String, dynamic> defaultSettings) {
     if (defaultSettings != null) {
       mergeSettings(defaultSettings);
@@ -658,6 +659,7 @@ class Base {
     });
   }
 
+  /// TODO We have a function in translations.dart that does the same funtionality as it has. Make it a public function.
   mergeSettings(Map<dynamic, dynamic> defaultSettings) {
     defaultSettings.forEach((setting, config) {
       for (var name in config.keys) {
@@ -694,12 +696,29 @@ class Base {
   /// Get setting
   ///
   /// ```dart
-  /// getSettings();          // returns the whole settings
-  /// getSettings("app");     // returns the app document under /settings collection.
+  /// print(ff.getSetting());                   // returns the whole settings
+  /// Map appSettings = ff.getSetting("app");   // returns the app document under /settings collection.
+  /// if (appSettings != null)
+  ///   print('GcpApiKey: ' + appSettings['GcpApiKey'] ?? '');
   /// ```
   ///
   getSetting([String name]) {
     if (name == null) return _settings;
-    return _settings[name];
+    if (_settings == null) return null;
+    return _settings[name] ?? null;
+  }
+
+  /// Get app settings under `/settings/app` document.
+  ///
+  /// This is a simple helper function to get `app` settings easily.
+  /// If the key of the settings does not exist, it will return [defaultValue]
+  ///
+  /// ```dart
+  /// print('GcpApiKey: ' + ff.appSetting('GcpApiKey'));
+  /// ```
+  appSetting(String name, [defaultValue = '']) {
+    Map settings = getSetting("app");
+    if (settings == null) return defaultValue;
+    return settings[name] ?? defaultValue;
   }
 }
