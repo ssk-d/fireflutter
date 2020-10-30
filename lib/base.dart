@@ -216,16 +216,18 @@ class Base {
     }
 
     /// on `iOS`, `message` has all the `data properties`.
-    Map<String, dynamic> data = message['data'] ?? message;
+    Map<dynamic, dynamic> data = message['data'] ?? message;
 
     /// return if the senderUid is the owner.
     if (data != null && data['senderUid'] == user.uid) {
       return;
     }
 
-    this
-        .notification
-        .add({'notification': notification, 'data': data, 'type': type});
+    this.notification.add({
+      'notification': notification,
+      'data': data,
+      'type': type,
+    });
   }
 
   /// TODO This is a package that handles only backend works.
@@ -253,12 +255,13 @@ class Base {
   }
 
   Future<bool> sendNotification(
-    title,
-    body, {
-    route,
-    token,
+    String title,
+    String body, {
+    String id,
+    String screen,
+    String token,
     List<String> tokens,
-    topic,
+    String topic,
   }) async {
     if (enableNotification == false) return false;
 
@@ -274,7 +277,8 @@ class Base {
     final req = [];
     if (token != null) req.add({'key': 'to', 'value': token});
     if (topic != null) req.add({'key': 'to', 'value': "/topics/" + topic});
-    if (tokens != null) req.add({'key': 'registration_ids', 'value': tokens});
+    if (tokens != null && tokens.isNotEmpty)
+      req.add({'key': 'registration_ids', 'value': tokens});
 
     final headers = {
       HttpHeaders.contentTypeHeader: "application/json",
@@ -288,11 +292,12 @@ class Base {
         "priority": "high",
         "data": {
           "click_action": "FLUTTER_NOTIFICATION_CLICK",
-          "id": "1",
+          "id": id,
           "status": "done",
           "sound": 'default',
           "senderUid": user.uid,
-          'route': route,
+          'route': '/',
+          'screen': screen
         }
       };
       data[el['key']] = el['value'];
@@ -402,15 +407,14 @@ class Base {
 
     print('tokens');
     print(tokens);
-
     print(uidsForNotification);
 
     /// send notification with tokens and topic.
-    /// TODO: open the post.
     sendNotification(
       post['title'],
       data['content'],
-      route: post['category'],
+      id: post['id'],
+      screen: '/forumView',
       topic: topicKey,
       tokens: tokens,
     );

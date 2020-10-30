@@ -356,7 +356,6 @@ class FireFlutter extends Base {
   ///
   /// `data['title']` and `data['content']` are needed to send push notification.
   Future editPost(Map<String, dynamic> data) async {
-    /// TODO throw error if both of title and content are empty.
     if (data['title'] == null && data['content'] == null)
       throw "ERROR_TITLE_AND_CONTENT_EMPTY";
 
@@ -370,12 +369,13 @@ class FireFlutter extends Base {
       data.remove('id');
       data['createdAt'] = FieldValue.serverTimestamp();
       data['updatedAt'] = FieldValue.serverTimestamp();
-      await postsCol.add(data);
+      DocumentReference doc = await postsCol.add(data);
 
       sendNotification(
         data['title'],
         data['content'],
-        route: data['category'],
+        screen: '/forumView',
+        id: doc.id,
         topic: "notification_post_" + data['category'],
       );
     }
