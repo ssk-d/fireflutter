@@ -277,13 +277,12 @@ class FireFlutter extends Base {
               final commentData = commentsChange.doc.data();
               commentData['id'] = commentsChange.doc.id;
 
+              if (post['comments'] == null) post['comments'] = [];
+
               /// comment added
               if (commentsChange.type == DocumentChangeType.added) {
                 /// TODO For comments loading on post view, it does not need to loop.
                 /// TODO Only for newly created comment needs to have loop and find a position to insert.
-                //
-
-                if (post['comments'] == null) post['comments'] = [];
 
                 int found = (post['comments'] as List).indexWhere(
                     (c) => c['order'].compareTo(commentData['order']) < 0);
