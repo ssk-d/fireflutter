@@ -29,7 +29,7 @@ class ForumData {
   ForumData({
     @required this.category,
     @required this.render,
-    this.noOfPostsPerFetch = 10,
+    // this.noOfPostsPerFetch = 10, // Todo check if still needed
   });
 
   /// This is for infinite scrolling in forum screen.
@@ -46,7 +46,7 @@ class ForumData {
 
   String category;
   int pageNo = 0;
-  int noOfPostsPerFetch;
+  // int noOfPostsPerFetch; // Todo check if still needed
   List<Map<String, dynamic>> posts = [];
   Render render;
 

@@ -58,7 +58,13 @@ class Base {
 
   // PublishSubject configDownload = PublishSubject();
 
-  Map<String, dynamic> _settings;
+  Map<String, dynamic> _settings = {
+    "forum": {
+      "no-of-posts-per-fetch": 10,
+      "like": true,
+      "dislike": true,
+    },
+  };
   // ignore: close_sinks
   BehaviorSubject settingsChange = BehaviorSubject.seeded(null);
 
@@ -633,19 +639,41 @@ class Base {
 
   /// Syncronize the Firebase `settings` collection to `this.settings`.
   initSettings(Map<String, dynamic> defaultSettings) {
-    _settings = defaultSettings;
-    settingsChange.add(_settings);
+    if (defaultSettings != null) {
+      mergeSettings(defaultSettings);
+      settingsChange.add(_settings);
+    }
+    FirebaseFirestore.instance
+        .collection('settings')
+        .snapshots()
+        .listen((QuerySnapshot snapshot) {
+      if (snapshot.size == 0) return;
+      Map settingSnapshot = {};
+      snapshot.docs.forEach((DocumentSnapshot document) {
+        settingSnapshot[document.id] = document.data();
+      });
+      mergeSettings(settingSnapshot);
+      settingsChange.add(_settings);
+    });
   }
 
-  ///
-  ///
+  mergeSettings(Map<dynamic, dynamic> defaultSettings) {
+    defaultSettings.forEach((setting, config) {
+      for (var name in config.keys) {
+        if (_settings[setting] == null) _settings[setting] = {};
+        _settings[setting][name] = config[name];
+      }
+    });
+  }
+
+  /// set default translation then get translation to firestore 'translations'
+  /// then add to current translation
   initTranslations(Map<String, Map<String, String>> defaultTranslations) {
     translationsChange.add(defaultTranslations);
     FirebaseFirestore.instance
         .collection('translations')
         .snapshots()
         .listen((QuerySnapshot snapshot) {
-      print('snapshot: ');
       if (snapshot.size == 0) return;
       Map lns = {};
       snapshot.docs.forEach((DocumentSnapshot document) {
@@ -654,5 +682,11 @@ class Base {
 
       translationsChange.add(lns);
     });
+  }
+
+  bool isShowForumVote(String category, String vote) {
+    if (_settings[category] == null || _settings[category][vote] == null)
+      return _settings['forum'][vote];
+    return _settings[category][vote];
   }
 }

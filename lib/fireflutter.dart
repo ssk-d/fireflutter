@@ -232,7 +232,15 @@ class FireFlutter extends Base {
     /// Prepare query
     Query postsQuery = postsCol.where('category', isEqualTo: forum.category);
     postsQuery = postsQuery.orderBy('createdAt', descending: true);
-    postsQuery = postsQuery.limit(forum.noOfPostsPerFetch);
+    //set default limit
+    int limit = _settings['forum']['no-of-posts-per-fetch'];
+
+    //if it has specific limit on settings set the corresponding settings.
+    if (_settings[forum.category] != null &&
+        _settings[forum.category]['no-of-posts-per-fetch'] != null)
+      limit = _settings[forum.category]['no-of-posts-per-fetch'];
+    print(limit);
+    postsQuery = postsQuery.limit(limit);
 
     /// Fetch from the last post that had been fetched.
     if (forum.posts.isNotEmpty) {
