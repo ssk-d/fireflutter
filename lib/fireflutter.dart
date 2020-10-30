@@ -285,13 +285,12 @@ class FireFlutter extends Base {
               final commentData = commentsChange.doc.data();
               commentData['id'] = commentsChange.doc.id;
 
+              if (post['comments'] == null) post['comments'] = [];
+
               /// comment added
               if (commentsChange.type == DocumentChangeType.added) {
                 /// TODO For comments loading on post view, it does not need to loop.
                 /// TODO Only for newly created comment needs to have loop and find a position to insert.
-                //
-
-                if (post['comments'] == null) post['comments'] = [];
 
                 int found = (post['comments'] as List).indexWhere(
                     (c) => c['order'].compareTo(commentData['order']) < 0);
@@ -526,9 +525,6 @@ class FireFlutter extends Base {
     if (file == null) throw 'upload-cancelled';
     // print('success: file picked: ${file.path}');
 
-    /// delete previous file to prevent having unused files in storage.
-    await deleteFile(user.photoURL);
-
     final ref = FirebaseStorage.instance
         .ref(folder + '/' + getFilenameFromPath(file.path));
 
@@ -542,5 +538,49 @@ class FireFlutter extends Base {
     final url = await ref.getDownloadURL();
     // print('DOWNLOAD URL : $url');
     return url;
+  }
+
+  /// [internationalNo] is the to send the code to.
+  /// [codeSent] will be invoked once the code is generated and send to the number.
+  /// [onError] will be invoked when an error happen.
+  ///
+  Future mobileAuthSendCode(
+    String internationalNo, {
+    codeSent(String verificationID),
+    onError(dynamic error),
+  }) async {
+    if (internationalNo == null || internationalNo == '') {
+      onError('Input your number');
+    }
+
+    await FirebaseAuth.instance.verifyPhoneNumber(
+      phoneNumber: internationalNo,
+
+      /// this will only be called after the automatic code retrieval is performed.
+      /// some phone may have the automatic code retrieval. some may not.
+      verificationCompleted: (PhoneAuthCredential credential) {
+        /// we can handle linking here.
+        /// the user doesn't need to be redirected to code verification page.
+        /// TODO: handle automatic linking
+        print('verificationCompleted');
+      },
+
+      /// called after the user submitted the phone number.
+      codeSent: (String verID, [int forceResendToken]) async {
+        print('codeSent!');
+        codeSent(verID);
+      },
+
+      /// called whenever error happens
+      verificationFailed: (FirebaseAuthException e) async {
+        print('verificationFailed!');
+        onError(e);
+      },
+
+      codeAutoRetrievalTimeout: (String verID) {
+        print('codeAutoRetrievalTimeout');
+        // return verID;
+      },
+    );
   }
 }
