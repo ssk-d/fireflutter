@@ -68,7 +68,7 @@ class Base {
   // ignore: close_sinks
   BehaviorSubject settingsChange = BehaviorSubject.seeded(null);
 
-  Map<String, dynamic> _translations;
+  // Map<String, dynamic> _translations;
   // ignore: close_sinks
   BehaviorSubject translationsChange = BehaviorSubject.seeded(null);
 
@@ -254,6 +254,9 @@ class Base {
     );
   }
 
+  /// Send push notifications.
+  ///
+  /// Prevent its return type is `FutureOr` by returns right boolean value.
   Future<bool> sendNotification(
     String title,
     String body, {
@@ -286,6 +289,7 @@ class Base {
     };
 
     /// TODO: Limit title in 128 chars and content 512 chars.
+    bool success = true;
     req.forEach((el) async {
       final data = {
         "notification": {"body": body, "title": title},
@@ -319,15 +323,15 @@ class Base {
         } else {
           // on failure do
           print("notification failure");
+          success = false;
         }
         print(response.data);
-        return true;
       } catch (e) {
         print('Dio error in sendNotification');
         print(e);
       }
     });
-    return false;
+    return success;
   }
 
   Map<String, dynamic> getCommentParent(
