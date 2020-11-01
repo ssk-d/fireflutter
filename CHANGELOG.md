@@ -1,3 +1,7 @@
+## [0.0.6] - typo
+
+- fix typo warning
+
 ## [0.0.5] - voting
 
 - voting for posts and comments.
