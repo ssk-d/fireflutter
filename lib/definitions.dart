@@ -12,6 +12,7 @@ enum RenderType {
   fetching,
   stopFetching
 }
+
 typedef Render = void Function(RenderType x);
 const ERROR_SIGNIN_ABORTED = 'ERROR_SIGNIN_ABORTED';
 
@@ -64,4 +65,9 @@ class ForumData {
       });
     }
   }
+}
+
+class VoteChoice {
+  static String like = 'like';
+  static String dislike = 'dislike';
 }

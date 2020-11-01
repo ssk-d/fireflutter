@@ -501,12 +501,23 @@ class Base {
     return postsCollection().doc(id);
   }
 
+  DocumentReference postVoteDocument(String id) {
+    return postsCollection().doc(id).collection('votes').doc(user.uid);
+  }
+
   CollectionReference commentsCollection(String postId) {
     return postDocument(postId).collection('comments');
   }
 
   DocumentReference commentDocument(String postId, String commentId) {
     return commentsCollection(postId).doc(commentId);
+  }
+
+  DocumentReference commentVoteDocument(String postId, String commentId) {
+    return commentsCollection(postId)
+        .doc(commentId)
+        .collection('votes')
+        .doc(user.uid);
   }
 
   /// Returns the order string of the new comment
@@ -663,7 +674,7 @@ class Base {
     });
   }
 
-  /// TODO We have a function in translations.dart that does the same funtionality as it has. Make it a public function.
+  ///
   mergeSettings(Map<dynamic, dynamic> defaultSettings) {
     defaultSettings.forEach((setting, config) {
       for (var name in config.keys) {

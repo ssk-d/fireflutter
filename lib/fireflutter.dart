@@ -629,4 +629,99 @@ class FireFlutter extends Base {
     ///   2: the mobile number associated by the verificationId is already in linked with other user.
     await user.linkWithCredential(creds);
   }
+
+  // Future<String> _postVoteChoice(String id) async {
+  //   final doc = await postVoteDocument(id).get();
+  //   if (doc.exists) {
+  //     final data = doc.data();
+  //     return data['choice'];
+  //   } else {
+  //     return null;
+  //   }
+  // }
+
+  // Future<String> _commentVoteChoice(String postId, String commentId) async {
+  //   final doc = await commentVoteDocument(postId, commentId).get();
+  //   if (doc.exists) {
+  //     final data = doc.data();
+  //     return data['choice'];
+  //   } else {
+  //     return null;
+  //   }
+  // }
+
+  /// Returns previous choice
+  ///
+  /// If it's first time vote, returns null.
+  /// Or it returns the value of `choice`.
+  Future<String> _voteChoice(DocumentReference doc) async {
+    final snap = await doc.get();
+    if (snap.exists) {
+      final data = snap.data();
+      return data['choice'];
+    } else {
+      return null;
+    }
+  }
+
+  /// Returns vote document reference.
+  _voteDoc({String postId, String commentId}) {
+    DocumentReference voteDoc;
+    if (commentId == null)
+      voteDoc = postDocument(postId);
+    else
+      voteDoc = commentDocument(postId, commentId);
+    voteDoc = voteDoc.collection('votes').doc(user.uid);
+    return voteDoc;
+  }
+
+  /// Voting
+  ///
+  /// It supports post and comment.
+  Future vote({String postId, String commentId, String choice}) async {
+    if (choice != VoteChoice.like && choice != VoteChoice.dislike)
+      throw 'wrong-choice';
+    DocumentReference voteDoc = _voteDoc(postId: postId, commentId: commentId);
+
+    final String previousChoice = await _voteChoice(voteDoc);
+    if (previousChoice == null) {
+      return voteDoc.set({'choice': choice});
+    } else if (previousChoice == choice) {
+      return voteDoc.set({'choice': ''});
+    } else {
+      return voteDoc.set({'choice': choice});
+    }
+  }
+
+  // Future likePost(String id) async {
+  //   if (await _postVoteChoice(id) == 'like') {
+  //     return postVoteDocument(id).set({'choice': ''});
+  //   } else {
+  //     return postVoteDocument(id).set({'choice': 'like'});
+  //   }
+  // }
+
+  // Future dislikePost(String id) async {
+  //   if (await _postVoteChoice(id) == 'dislike') {
+  //     return postVoteDocument(id).set({'choice': ''});
+  //   } else {
+  //     return postVoteDocument(id).set({'choice': 'dislike'});
+  //   }
+  // }
+
+  // Future likeComment(String postId, String commentId) async {
+  //   if (await _commentVoteChoice(postId, commentId) == 'like') {
+  //     return commentVoteDocument(postId, commentId).set({'choice': ''});
+  //   } else {
+  //     return commentVoteDocument(postId, commentId).set({'choice': 'like'});
+  //   }
+  // }
+
+  // Future dislikeComment(String postId, String commentId) async {
+  //   if (await _commentVoteChoice(postId, commentId) == 'dislike') {
+  //     return commentVoteDocument(postId, commentId).set({'choice': ''});
+  //   } else {
+  //     return commentVoteDocument(postId, commentId).set({'choice': 'dislike'});
+  //   }
+  // }
 }
