@@ -60,19 +60,15 @@ class Base {
 
   // PublishSubject configDownload = PublishSubject();
 
-  Map<String, dynamic> _settings = {
-    "forum": {
-      "no-of-posts-per-fetch": 10,
-      "like": true,
-      "dislike": true,
-    },
-  };
+  Map<String, dynamic> _settings = {};
   // ignore: close_sinks
   BehaviorSubject settingsChange = BehaviorSubject.seeded(null);
 
   // Map<String, dynamic> _translations;
   // ignore: close_sinks
   BehaviorSubject translationsChange = BehaviorSubject.seeded(null);
+
+  Algolia algolia;
 
   initUser() {
     authStateChanges = FirebaseAuth.instance.authStateChanges();
@@ -661,11 +657,7 @@ class Base {
   /// Syncronize the Firebase `settings` collection to `this.settings`.
   ///
   /// Get settings in real time and merge(overwrite) it into the `_settings`.
-  initSettings(Map<String, dynamic> defaultSettings) {
-    if (defaultSettings != null) {
-      mergeSettings(defaultSettings);
-      settingsChange.add(_settings);
-    }
+  listenSettingsChange(Map<String, dynamic> defaultSettings) {
     FirebaseFirestore.instance
         .collection('settings')
         .snapshots()
@@ -692,8 +684,8 @@ class Base {
 
   /// set default translation then get translation to firestore 'translations'
   /// then add to current translation
-  initTranslations(Map<String, Map<String, String>> defaultTranslations) {
-    translationsChange.add(defaultTranslations);
+  listenTranslationsChange(
+      Map<String, Map<String, String>> defaultTranslations) {
     FirebaseFirestore.instance
         .collection('translations')
         .snapshots()
@@ -735,10 +727,12 @@ class Base {
   /// If the key of the settings does not exist, it will return [defaultValue]
   ///
   /// ```dart
+  /// appSettigns(); // returns all app settings.
   /// print('GcpApiKey: ' + ff.appSetting('GcpApiKey'));
   /// ```
-  appSetting(String name, [defaultValue = '']) {
+  appSetting([String name, defaultValue = '']) {
     Map settings = getSetting("app");
+    if (name == null) return settings;
     if (settings == null) return defaultValue;
     return settings[name] ?? defaultValue;
   }

@@ -35,6 +35,8 @@ dependencies:
 
   path_provider: ^1.6.21
 
+  algolia: ^0.1.7
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

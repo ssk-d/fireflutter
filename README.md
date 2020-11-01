@@ -178,7 +178,7 @@ SignInWithAppleButton(
 - Default settings can be set through `FireFlutter` initialization and is overwritten by `settings` collection of Firebase.
   The Firestore is working offline mode, so overwriting with Firestore translation would happen so quickly.
 
-- `GcpApiKey` is the GCP ApiKey and if you don't know what it is, then here is a simple tip. `GCP ApiKey` is a API Key to access GCP service and should be kept in secret. `Firebase` is a part of GCP Service and GCP ApiKey is needed to use Firebase functionality. And FireFlutter needs this key to access GCP service like phone number verification.
+<!-- - `GcpApiKey` is the GCP ApiKey and if you don't know what it is, then here is a simple tip. `GCP ApiKey` is a API Key to access GCP service and should be kept in secret. `Firebase` is a part of GCP Service and GCP ApiKey is needed to use Firebase functionality. And FireFlutter needs this key to access GCP service like phone number verification.
   - To get `GcpApiKey`,
     - Go to `GCP ==> Choose Project ==> APIs & Service ==> Credentials ==> API Kyes`
     - `+ CREATE CREDENTIALS => RESTRICT KEY`
@@ -188,4 +188,4 @@ SignInWithAppleButton(
     - `Save`
     - Copy the Api Key on `FireFlutterApiKey`.
     - Paste it into `Firestore` => `/settings` collection => `app` document => `GcpApiKey`.
-  - You may put the `GcpApiKey` in the source code (as in FireFlutter initialization) but that's not recommended.
+  - You may put the `GcpApiKey` in the source code (as in FireFlutter initialization) but that's not recommended. -->

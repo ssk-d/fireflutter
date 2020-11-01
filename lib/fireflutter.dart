@@ -18,6 +18,7 @@ import 'package:google_sign_in/google_sign_in.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:rxdart/subjects.dart';
+import 'package:algolia/algolia.dart';
 import './functions.dart';
 part './definitions.dart';
 part './base.dart';
@@ -48,12 +49,35 @@ class FireFlutter extends Base {
   }) async {
     this.enableNotification = enableNotification;
     this.firebaseServerToken = firebaseServerToken;
+
+    // Must be called before firebase init
+    if (settings != null) {
+      _settings = settings;
+      settingsChange.add(_settings);
+    }
+
+    translationsChange.add(translations); // Must be called before firebase init
+
     await initFirebase();
     initUser();
     initFirebaseMessaging();
+    listenSettingsChange(settings);
+    listenTranslationsChange(translations);
 
-    initSettings(settings);
-    initTranslations(translations);
+    /// Initialize or Re-initialize based on the setting's update.
+    settingsChange.listen((settings) {
+      // print('settingsChange.listen() on fireflutter::init() $settings');
+
+      // Initalize Algolia
+      String applicationId = appSetting('ALGOLIA_APP_ID');
+      String apiKey = appSetting('ALGOLIA_SEARCH_KEY');
+      if (applicationId != '' && apiKey != '') {
+        algolia = Algolia.init(
+          applicationId: applicationId,
+          apiKey: apiKey,
+        );
+      }
+    });
   }
 
   bool get isAdmin => this.data['isAdmin'] == true;
@@ -630,26 +654,6 @@ class FireFlutter extends Base {
     await user.linkWithCredential(creds);
   }
 
-  // Future<String> _postVoteChoice(String id) async {
-  //   final doc = await postVoteDocument(id).get();
-  //   if (doc.exists) {
-  //     final data = doc.data();
-  //     return data['choice'];
-  //   } else {
-  //     return null;
-  //   }
-  // }
-
-  // Future<String> _commentVoteChoice(String postId, String commentId) async {
-  //   final doc = await commentVoteDocument(postId, commentId).get();
-  //   if (doc.exists) {
-  //     final data = doc.data();
-  //     return data['choice'];
-  //   } else {
-  //     return null;
-  //   }
-  // }
-
   /// Returns previous choice
   ///
   /// If it's first time vote, returns null.
@@ -693,35 +697,20 @@ class FireFlutter extends Base {
     }
   }
 
-  // Future likePost(String id) async {
-  //   if (await _postVoteChoice(id) == 'like') {
-  //     return postVoteDocument(id).set({'choice': ''});
-  //   } else {
-  //     return postVoteDocument(id).set({'choice': 'like'});
-  //   }
-  // }
+  Future<List<Map<String, dynamic>>> search(String keyword) async {
+    String algoliaIndexName = appSetting('ALGOLIA_INDEX_NAME');
+    AlgoliaQuery query =
+        algolia.instance.index(algoliaIndexName).search(keyword);
+    AlgoliaQuerySnapshot snap = await query.getObjects();
+    // print('Result count: ${snap.nbHits}'); // no of results
+    List<AlgoliaObjectSnapshot> results = snap.hits; // search result.
 
-  // Future dislikePost(String id) async {
-  //   if (await _postVoteChoice(id) == 'dislike') {
-  //     return postVoteDocument(id).set({'choice': ''});
-  //   } else {
-  //     return postVoteDocument(id).set({'choice': 'dislike'});
-  //   }
-  // }
-
-  // Future likeComment(String postId, String commentId) async {
-  //   if (await _commentVoteChoice(postId, commentId) == 'like') {
-  //     return commentVoteDocument(postId, commentId).set({'choice': ''});
-  //   } else {
-  //     return commentVoteDocument(postId, commentId).set({'choice': 'like'});
-  //   }
-  // }
-
-  // Future dislikeComment(String postId, String commentId) async {
-  //   if (await _commentVoteChoice(postId, commentId) == 'dislike') {
-  //     return commentVoteDocument(postId, commentId).set({'choice': ''});
-  //   } else {
-  //     return commentVoteDocument(postId, commentId).set({'choice': 'dislike'});
-  //   }
-  // }
+    List<Map<String, dynamic>> searchResults = [];
+    results.forEach((object) {
+      Map<String, dynamic> data = object.data;
+      data['objectID'] = object.objectID;
+      searchResults.add(data);
+    });
+    return searchResults;
+  }
 }
