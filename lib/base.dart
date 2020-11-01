@@ -47,6 +47,8 @@ class Base {
   /// ```
   User user;
   Map<String, dynamic> data = {};
+  bool get loggedIn => user != null;
+  bool get notLoggedIn => !loggedIn;
 
   BehaviorSubject<UserChangeType> userChange = BehaviorSubject.seeded(null);
 
