@@ -1,3 +1,8 @@
+## [0.0.5] - voting
+
+- voting for posts and comments.
+- minor bug fixes.
+
 ## [0.0.4] - Forum CRUD, Push Notifications, User CRUD, Social Login
 
 - User CRUD.
