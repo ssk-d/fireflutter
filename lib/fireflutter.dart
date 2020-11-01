@@ -697,10 +697,14 @@ class FireFlutter extends Base {
     }
   }
 
-  Future<List<Map<String, dynamic>>> search(String keyword) async {
+  Future<List<Map<String, dynamic>>> search(String keyword,
+      {int hitsPerPage = 10, int pageNo = 0}) async {
     String algoliaIndexName = appSetting('ALGOLIA_INDEX_NAME');
-    AlgoliaQuery query =
-        algolia.instance.index(algoliaIndexName).search(keyword);
+    AlgoliaQuery query = algolia.instance
+        .index(algoliaIndexName)
+        .setPage(pageNo)
+        .setHitsPerPage(hitsPerPage)
+        .search(keyword);
     AlgoliaQuerySnapshot snap = await query.getObjects();
     // print('Result count: ${snap.nbHits}'); // no of results
     List<AlgoliaObjectSnapshot> results = snap.hits; // search result.
@@ -708,7 +712,7 @@ class FireFlutter extends Base {
     List<Map<String, dynamic>> searchResults = [];
     results.forEach((object) {
       Map<String, dynamic> data = object.data;
-      data['objectID'] = object.objectID;
+      data['path'] = object.objectID;
       searchResults.add(data);
     });
     return searchResults;
