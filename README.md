@@ -1,6 +1,6 @@
 # Fire Flutter
 
-A rapid development flutter package to build social apps, community apps, and more.
+A free, open source, rapid development flutter package to build social apps, community apps, and more.
 
 - This package has complete features (see Features below) that most of apps are needed.
 - `Simple, easy and the right way`.
@@ -63,16 +63,30 @@ A rapid development flutter package to build social apps, community apps, and mo
   Firebase does not support full text search which means users cannot search posts and comments.
   Algolia does it.
 
+## Installation
+
+- If you are not familiar with Firebase and Flutter, you may have difficulties to install it.
+  It is not a smple package that you add it into pubspec.yaml and go.
+
+  We will try to put it as demonstrative as it can be. And we also have a premium servie to support installation and development.
+
+### Firebase Installation
+
+#### Firebase Project
+
+- Create Firebase Project.
+
+#### Firestore Security
+
+### Flutter Installation
+
+### Algolia Installation
+
 ## Firestore Structure
 
 - `users/{uid}` is user's private data document.
   - `users/{uid}/meta/public` is user's public data document.
   - `users/{uid}/meta/tokens` is where the user's tokens are saved.
-
-## Packages
-
-- `rxdart` to update user state and user document changes.
-  - User login/logout can be observed by `FirebaseAuth.authStateChanges` but the app needs to observe user auth state together with user docuemnt update.
 
 ## Coding Guidelines
 
