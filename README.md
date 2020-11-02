@@ -57,7 +57,7 @@ A free, open source, rapid development flutter package to build social apps, com
 ## References
 
 - [FireFlutter Package](https://pub.dev/packages/fireflutter) - This package.
-- [FireFlutter Sample App](https://github.com/thruthesky/fireflutter-sample-app) - Sample flutter application.
+- [FireFlutter Sample App](https://github.com/thruthesky/fireflutter_sample_app) - Sample flutter application.
 - [FireFlutter Firebase Project](https://github.com/thruthesky/fireflutter-firebase) - Firebase project for Firestore security rules and Functions.
 
 ## Components
@@ -65,7 +65,7 @@ A free, open source, rapid development flutter package to build social apps, com
 - Firebase.
   Firebase is a leading cloud system powered by Google. It has lots of goods to build web and app.
 
-  - We first built it with Firebase and LEMP(Linux + Nginx + MySQL + PHP). Then, we realized maintaing two different systems would be a pressure for many of developers. So, We decided to remove LEMP and we built it again.
+  - We first built it with Firebase and LEMP(Linux + Nginx + MySQL + PHP). we realized maintaing two different systems would be a pressure for many of developers. So, We decided to remove LEMP and we built it again.
 
   - You may use Firebase as free plan for a test. But for production, you need `Pay as you go` plan since `Cloud Function` works only on `Pay as you go` plan.
     - You may not use `Cloud Function` for testing.
@@ -81,16 +81,82 @@ A free, open source, rapid development flutter package to build social apps, com
   - FireFlutter is not a smple package that you just add it into pubspec.yaml and ready to go.
   - Furthermore, the settings that are not directly from coming FireFlutter package like social login settings, Algolia setting, Android and iOS developer's accont settings are also hard to implement if you are not get used to them.
 
-  We cover all the settings and will try to put it as demonstrative as it can be.
-  We also have a premium paid servie to support installation and development.
+- We cover all the settings and will try to put it as demonstrative as it can be.
 
-### Firebase Installation
+  - We will begin with Firebase settings and contiue gradually with Flutter.
 
-#### Firebase Project Creation
+- If you have any difficulties on installatin, you may ask it on
+  [Git issues](https://github.com/thruthesky/fireflutter/issues).
 
-- Create Firebase Project.
+- We also have a premium paid servie to support installation and development.
 
-#### Firebase Authentication
+### Firebase Project Creation
+
+- You need to create a Firebase project for the first time. You may use existing Firebase project.
+
+- Go to Firebsae console, https://console.firebase.google.com/
+
+  - click `(+) Add project` menu.
+  - enter project name. You can enter any name. ex) fireflutter-test
+  - click `Continue` button.
+  - disable `Enable Google Analytics for this project`. You can eanble it if you can handle it.
+    - click `Continue` button.
+  - new Firebase project will be created for you in a few seconds.
+    - Tehn, click `Continue` button.
+
+- Read [Understand Firebase projects](https://firebase.google.com/docs/projects/learn-more) for details.
+
+### Firebase Email/Password Login
+
+- Go to Authentication => Sign-in Method
+- Click `Enable/Password` (without Email link).
+- It is your choice weather you would let users to register by their email and password or not. But for installation test, just enable it.
+
+- Refer [Firebase Authentication](https://firebase.google.com/docs/auth) and [FlutterFire Social Authenticatino](https://firebase.flutter.dev/docs/auth/social) for details.
+
+### Flutter Project Creation
+
+- Create a Flutter project like below;
+
+```
+$ flutter create fireflutter_sample_app
+$ cd fireflutter_sample_app
+$ flutter run
+```
+
+#### Setup Flutter to connect to Firebase
+
+##### iOS Setup
+
+- Click `iOS` icon on `Project Overview` page.
+- enter iOS Bundle ID. Ex) com.sonub.fireflutter
+  - From now on, we assume that your iOS Bundle ID is `com.sonub.fireflutter`.
+- click `Register app`.
+- click `Download GoogleService-Info.plist`
+  - And save it under `fireflutter_sample_app/ios/Runner` folder.
+- click `Next`.
+- click `Next` again.
+- click `Next` again.
+- click `Continue to console`.
+
+- open `fireflutter_sample_app/ios/Runner.xcworkspace` with Xcode.
+- click `Runner` on the top of left pane.
+- click `Runner` on TARGETS.
+- edit `Bundle Identifier` to `com.sonub.fireflutter`.
+- set `iOS 11.0` under Deployment Info.
+- Darg `fireflutter_sample_app/ios/Runner/GoogleService-Info.plist` file under `Runner/Runner` on left pane of Xcode.
+- Close Xcode.
+
+- You may open VSCode and do some registration code and test if every thing is set right. see Registration
+
+##### Android Setup
+
+### Flutter Installation
+
+- Add `fireflutter` to pubspec.yaml
+- see our [sample flutter app](https://github.com/thruthesky/fireflutter-sample-app).
+
+### Firebase Social Login
 
 - Under Authentication => Sign-in Methods, Enable
 
@@ -107,14 +173,14 @@ A free, open source, rapid development flutter package to build social apps, com
 
 - Refer [Firebase Authentication](https://firebase.google.com/docs/auth) and [FlutterFire Social Authenticatino](https://firebase.flutter.dev/docs/auth/social) for details.
 
-#### Firestore and Functions
+### Firestore and Functions
 
 - Enable(Start) Cloud Firestore by clicking the menu.
 - Choose `protected mode`
 - Choose your region.
 - Refer [Cloud Firestore](https://firebase.google.com/docs/firestore) for details.
 
-#### Firestore security and Functions Settings.
+### Firestore security and Functions Settings.
 
 - Firestore needs security rules and Functions needs functions to support FireFlutter package.
 
@@ -141,7 +207,7 @@ $ firebase login
 
 - Refer [Firestore Messaging](https://pub.dev/packages/firebase_messaging)
 
-#### Security Rules Testing
+### Security Rules Testing
 
 - If you wish to test Firestore security rules, you may do so with the following;
 
@@ -151,7 +217,7 @@ Run Firebase emualtor first.
 $ firebase emulators:start --only firestore
 ```
 
-Then, run the tests.
+run the tests.
 
 ```
 $ npm run test
@@ -165,7 +231,7 @@ $ npm run test:vote
 $ npm run test:user.token
 ```
 
-#### Funtions Test
+### Funtions Test
 
 - If you whish to test Functins, you may do so with the following;
 
@@ -174,20 +240,11 @@ $ cd functions
 $ npm test
 ```
 
-#### Issues
-
-- If you have an issues, please leave it on https://github.com/thruthesky/fireflutter-firebase/issues.
-
-### Flutter Installation
-
-- Add `fireflutter` to pubspec.yaml
-- see our [sample flutter app](https://github.com/thruthesky/fireflutter-sample-app).
-
 #### Localization
 
 - To add a language, the language needs to be set in Info.plist of iOS platform. No setting is needed on Android platform.
-- Then, you need to add the translation under Firestore `translations` collection.
-- Then, you need to use it in your app.
+- you need to add the translation under Firestore `translations` collection.
+- you need to use it in your app.
 - Localization could be used for menus, texts in screens.
 -
 
@@ -195,7 +252,7 @@ $ npm test
 
 - There are two settings for Algolia.
 - First, you need to put ALGOLIA_ID(Application ID), ALGOLIA_ADMIN_KEY, ALGOLIA_INDEX_NAME in `firebase-settings.js`.
-  - Then, deploy with `firebase deploy --only functions`.
+  - deploy with `firebase deploy --only functions`.
   - For testing, do `npm run test:algolia`.
 - Second, you need to add(or update) ALGOLIA_APP_ID(Application ID), ALGOLIA_SEARCH_KEY(Search Only Api Key), ALGOLIA_INDEX_NAME in Firestore `settings/app` document.
   Optionally, you can put the settings inside `FireFlutter.init()`.
@@ -220,7 +277,7 @@ $ npm test
 
 - Menus and page contents can be translated depending on user's device. Or developer can put a menu to let users to choose their languages.
 
-- When admin update the translation text in Firestore `translations` collectin, the will get the update in real time. The app, then, should update the screen.
+- When admin update the translation text in Firestore `translations` collectin, the will get the update in real time. The app, should update the screen.
 
 - The localization is managed by `GetX` package that is used for routing and state management on the sample code.
 
