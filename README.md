@@ -66,27 +66,113 @@ A free, open source, rapid development flutter package to build social apps, com
 ## Installation
 
 - If you are not familiar with Firebase and Flutter, you may have difficulties to install it.
-  It is not a smple package that you add it into pubspec.yaml and go.
 
-  We will try to put it as demonstrative as it can be. And we also have a premium servie to support installation and development.
+  - FireFlutter is not a smple package that you just add it into pubspec.yaml and ready to go.
+  - Furthermore, the settings that are not directly from coming FireFlutter package like social login settings, Algolia setting, Android and iOS developer's accont settings are also hard to implement if you are not get used to them.
+
+  We cover all the settings and will try to put it as demonstrative as it can be.
+  We also have a premium paid servie to support installation and development.
 
 ### Firebase Installation
 
-#### Firebase Project
+#### Firebase Project Creation
 
 - Create Firebase Project.
 
-#### Firestore Security
+#### Firebase Authentication
+
+- Under Authentication => Sign-in Methods, Enable
+
+  - Email/Password
+  - Google
+  - Apple
+  - Facebook
+  - Phone
+    All of them are optional. You may only enable those you want to provide for user login.
+
+  Refer [Firebase Authentication](https://firebase.google.com/docs/auth) and [FlutterFire Social Authenticatino](https://firebase.flutter.dev/docs/auth/social) for details.
+
+#### Firestore and Functions
+
+- Enable(Start) Cloud Firestore by clicking the menu.
+- Choose `protected mode`
+- Choose your region.
+- Refer [Cloud Firestore](https://firebase.google.com/docs/firestore) for details.
+
+#### Firestore security and Functions Settings.
+
+- Firestore needs security rules and Functions needs functions to support FireFlutter package.
+
+  - If you wish, you can continue without this settings. But it's not secure and some functionality may not work.
+
+- Install firebase tools.
+
+```
+# npm install -g firebase-tools
+$ cd firebase
+$ firebase login
+```
+
+- Git clone(or fork) https://github.com/thruthesky/fireflutter-firebase and install with `npm i`
+- Update Firebase project ID in `.firebaserc ==> projects ==> default`.
+- Save `Firebase SDK Admin Service Key` to `firebase-service-account-key.json`.
+- Run `firebase deploy --only firestore,functions`. You will need Firebase `Pay as you go` plan to deploy it.
+
+#### Security Rules Testing
+
+- If you wish to test Firestore security rules, you may do so with the following;
+
+```
+$ npm run test
+$ npm run test:basic
+$ npm run test:user
+$ npm run test:admin
+$ npm run test:category
+$ npm run test:post
+$ npm run test:comment
+$ npm run test:vote
+$ npm run test:user.token
+```
+
+#### Funtions Test
+
+- If you whish to test Functins, you may do so with the following;
+
+```
+$ cd functions
+$ npm test
+```
+
+#### Issues
+
+- If you have an issues, please leave it on https://github.com/thruthesky/fireflutter-firebase/issues.
 
 ### Flutter Installation
 
+- Add `fireflutter` to pubspec.yaml
+- see our [sample flutter app](https://github.com/thruthesky/fireflutter-sample-app).
+
 ### Algolia Installation
 
-## Firestore Structure
+- There are two settings for Algolia.
+- First, you need to put ALGOLIA_ID(Application ID), ALGOLIA_ADMIN_KEY, ALGOLIA_INDEX_NAME in `firebase-settings.js`.
+  - Then, deploy with `firebase deploy --only functions`.
+  - For testing, do `npm run test:algolia`.
+- Second, you need to add(or update) ALGOLIA_APP_ID(Application ID), ALGOLIA_SEARCH_KEY(Search Only Api Key), ALGOLIA_INDEX_NAME in Firestore `settings/app` document.
+- Algolia free account give you 10,000 free search every months. This is good enough for small sized projects.
+
+## For Developers
+
+### Firestore Structure
+
+- Principle. Properties and sub collections(documents) of a document should be under that document.
 
 - `users/{uid}` is user's private data document.
+
   - `users/{uid}/meta/public` is user's public data document.
   - `users/{uid}/meta/tokens` is where the user's tokens are saved.
+
+- `/posts/{postId}`
 
 ## Coding Guidelines
 
