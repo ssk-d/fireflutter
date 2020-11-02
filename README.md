@@ -23,6 +23,7 @@ A free, open source, rapid development flutter package to build social apps, com
 - Forum
 
   - Complete forum functioanlities.
+    - Forum category add/update/delete in admin page.
     - Post and comment create/update/read/delete, likes/dislikes, file upload/delete. And any other extra functioanalties to compete forum feature.
   - Forum search with Algolia.
   - Infinite scroll.
@@ -46,8 +47,12 @@ A free, open source, rapid development flutter package to build social apps, com
   - Texts in menu, text screens could be translated/update at any via Admin page and it appears in the app immediately.
 
 - Security
+
   - Tight Firestore security rules are applied.
   - For some functionalities that cannot be covered by Firestore security are covered by Cloud Functions.
+
+- Fully Customizable
+  - FireFlutter package does not involve in any of part application's login or UI. It is completely separated from the app. Thus, it's highly customizable.
 
 ## Components
 
@@ -90,7 +95,11 @@ A free, open source, rapid development flutter package to build social apps, com
   - Phone
     All of them are optional. You may only enable those you want to provide for user login.
 
-  Refer [Firebase Authentication](https://firebase.google.com/docs/auth) and [FlutterFire Social Authenticatino](https://firebase.flutter.dev/docs/auth/social) for details.
+- Settings for Firebase Social login are in Android and iOS platform already done app. You need to set the settings on Apple, Facebook.
+
+  - If you are not going to use the sample app, you need to setup by yourself.
+
+- Refer [Firebase Authentication](https://firebase.google.com/docs/auth) and [FlutterFire Social Authenticatino](https://firebase.flutter.dev/docs/auth/social) for details.
 
 #### Firestore and Functions
 
@@ -118,9 +127,25 @@ $ firebase login
 - Save `Firebase SDK Admin Service Key` to `firebase-service-account-key.json`.
 - Run `firebase deploy --only firestore,functions`. You will need Firebase `Pay as you go` plan to deploy it.
 
+### Push Notification
+
+- Settings of push notification on Android and iOS platform are done in the sample app.
+
+  - If you are not going to use the sample app, you need to setup by yourself.
+
+- Refer [Firestore Messaging](https://pub.dev/packages/firebase_messaging)
+
 #### Security Rules Testing
 
 - If you wish to test Firestore security rules, you may do so with the following;
+
+Run Firebase emualtor first.
+
+```
+$ firebase emulators:start --only firestore
+```
+
+Then, run the tests.
 
 ```
 $ npm run test
@@ -152,6 +177,14 @@ $ npm test
 - Add `fireflutter` to pubspec.yaml
 - see our [sample flutter app](https://github.com/thruthesky/fireflutter-sample-app).
 
+#### Localization
+
+- To add a language, the language needs to be set in Info.plist of iOS platform. No setting is needed on Android platform.
+- Then, you need to add the translation under Firestore `translations` collection.
+- Then, you need to use it in your app.
+- Localization could be used for menus, texts in screens.
+-
+
 ### Algolia Installation
 
 - There are two settings for Algolia.
@@ -159,9 +192,44 @@ $ npm test
   - Then, deploy with `firebase deploy --only functions`.
   - For testing, do `npm run test:algolia`.
 - Second, you need to add(or update) ALGOLIA_APP_ID(Application ID), ALGOLIA_SEARCH_KEY(Search Only Api Key), ALGOLIA_INDEX_NAME in Firestore `settings/app` document.
+  Optionally, you can put the settings inside `FireFlutter.init()`.
 - Algolia free account give you 10,000 free search every months. This is good enough for small sized projects.
 
+### Admin Account Setting
+
+- Any user who has `isAdmin` property with `true`.
+- Admin property is protected by Firestore security rules and cannot be edited by client app.
+
+## App Management
+
+- The app management here is based on the sample code and app.
+- FireFlutter is a flutter package to build social apps and is fully customizable. When you may build your own customized app, we recommend to use our sample codes.
+
+### App Settings
+
+- Developers can set default settings on `FireFlutter.init()`.
+- Admin can overwrite all the settings by updating Firestore `settings` docuemnts.
+
+### Internalization (Localization)
+
+- Menus and page contents can be translated depending on user's device. Or developer can put a menu to let users to choose their languages.
+
+- When admin update the translation text in Firestore `translations` collectin, the will get the update in real time. The app, then, should update the screen.
+
+- The localization is managed by `GetX` package that is used for routing and state management on the sample code.
+
+### Forum Management
+
+#### Forum Category Management
+
+- You can create forum categories in admin screen.
+
 ## For Developers
+
+### FireFlutter package initialization
+
+- app settings
+- translations
 
 ### Firestore Structure
 
@@ -182,6 +250,10 @@ $ npm test
 - `auth` event will be fired for the first time on `FirebaseAuth.authChagnes`.
 
 ### User
+
+- Private user information is saved under `/users/{uid}` documentation.
+- User's notification subscription information is saved under `/users/{uid}/meta/public` documents.
+- Push notification tokens are saved under `/users/{uid}/meta/tokens` document.
 
 ### Forum
 
