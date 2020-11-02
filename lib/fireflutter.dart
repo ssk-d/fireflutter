@@ -373,9 +373,10 @@ class FireFlutter extends Base {
 
           final int i = forum.posts.indexWhere((p) => p['id'] == post['id']);
           if (i > -1) {
-            final comments = forum.posts[i]['comments']; 
+            /// after post is updated, it doesn't have the 'comments' data.
+            /// so it needs to be re-inserted.
+            post['comments'] = forum.posts[i]['comments'];
             forum.posts[i] = post;
-            forum.posts[i]['comments'] = comments;
           }
           forum.render(RenderType.postUpdate);
         }
