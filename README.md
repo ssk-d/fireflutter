@@ -1,10 +1,11 @@
 # Fire Flutter
 
-`FireFlutter` is a rapid development package for creating Social apps based on `Firebase`.
-You may use FireFlutter package without Firestore security rules and Functions. This may be one way to test if this packages really works.
-But for production use, Firestore security rules and Funtions must be applied.
+A free, open source, rapid development flutter package to build social apps, community apps, and more.
 
-If you wish to build web, you may use `FireWeb` npm node module which is Javascript version of `FireFlutter`.
+- This package has complete features (see Features below) that most of apps are needed.
+- `Simple, easy and the right way`.
+  We want it to be really simple but right way for ourselves and for builders in the world.
+  We know when it gets complicated, developers' lives would get even more complicated.
 
 ## Features
 
@@ -15,47 +16,77 @@ If you wish to build web, you may use `FireWeb` npm node module which is Javascr
     - Google,
     - Apple (only on iOS),
     - Facebook,
-    - Kakao. Read `Kakao Login`.
+    - Developers can their own social login. see `Kakao Login` example.
   - User profile photo update
   - Phone number authentication
 
 - Forum
 
-  - Complete forum functioanlities like Post and comment create/update/read/delete, likes/dislikes, file upload/delete. And any other extra functioanalties to compete forum feature.
+  - Complete forum functioanlities.
+    - Post and comment create/update/read/delete, likes/dislikes, file upload/delete. And any other extra functioanalties to compete forum feature.
+  - Forum search with Algolia.
   - Infinite scroll.
-  - Everything works in real time.
+  - Real time.
     - If a user create a comment, it will appear on other user's phone. And this goes same to all edit/delete, likes/dislikes.
-  - A category of forum could be redesigned for online shopping mall purpose.
+  - A category of forum could be re-designed for online shopping mall purpose.
 
 - Push notifications
 
   - Admin can send push notifications to all users.
-  - Admin can send push notifications to users of a forum.(x)
-  - User can enable/disable to get notification when a user creates a comments under his post/comment.
+  - Admin can send push notifications to users of a forum.
+  - User can enable/disable to get notification when other users creates comments under his posts/comments.
   - User can subscribe/unsubscribe for new posts or comments under a forum.
 
 - Settings in real time.
 
-  - Update App Settings via Admin page.
+  - Admin can update app settings via Admin page and the change will apply to app immediately.
 
 - Internalization (Localization) in real time.
 
-  - Texts in menu, screens can be translated via Admin page.
+  - Texts in menu, text screens could be translated/update at any via Admin page and it appears in the app immediately.
 
 - Security
   - Tight Firestore security rules are applied.
-  - For some functionality that cannot be covered by Firestore security works in Functions.
+  - For some functionalities that cannot be covered by Firestore security are covered by Cloud Functions.
+
+## Components
+
+- Firebase.
+  Firebase is a leading cloud system powered by Google. It has lots of goods to build web and app.
+
+  - We first built it with Firebase and LEMP(Linux + Nginx + MySQL + PHP). Then, we realized maintaing two different systems would be a pressure for many of developers. So, We decided to remove LEMP and we built it again.
+
+  - You may use Firebase as free plan for a test. But for production, you need `Pay as you go` plan since `Cloud Function` works only on `Pay as you go` plan.
+    - You may not use `Cloud Function` for testing.
+
+- Algolia.
+  Firebase does not support full text search which means users cannot search posts and comments.
+  Algolia does it.
+
+## Installation
+
+- If you are not familiar with Firebase and Flutter, you may have difficulties to install it.
+  It is not a smple package that you add it into pubspec.yaml and go.
+
+  We will try to put it as demonstrative as it can be. And we also have a premium servie to support installation and development.
+
+### Firebase Installation
+
+#### Firebase Project
+
+- Create Firebase Project.
+
+#### Firestore Security
+
+### Flutter Installation
+
+### Algolia Installation
 
 ## Firestore Structure
 
 - `users/{uid}` is user's private data document.
   - `users/{uid}/meta/public` is user's public data document.
   - `users/{uid}/meta/tokens` is where the user's tokens are saved.
-
-## Packages
-
-- `rxdart` to update user state and user document changes.
-  - User login/logout can be observed by `FirebaseAuth.authStateChanges` but the app needs to observe user auth state together with user docuemnt update.
 
 ## Coding Guidelines
 
