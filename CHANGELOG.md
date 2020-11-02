@@ -1,3 +1,9 @@
+## [0.0.8] - Refactoring, minor bug fixes, document update.
+
+- Refactoring codes on push notification, removing unused packages.
+- Bug fixes.
+- Document updates.
+
 ## [0.0.7] - App settings, localizations
 
 - App settings and localizations are updated in real time.

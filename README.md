@@ -114,7 +114,16 @@ A free, open source, rapid development flutter package to build social apps, com
 
 - Refer [Firebase Authentication](https://firebase.google.com/docs/auth) and [FlutterFire Social Authenticatino](https://firebase.flutter.dev/docs/auth/social) for details.
 
-### Flutter Project Creation
+### Create Firestore Database
+
+- Go to `Cloud Firestore` menu.
+- Click `Create Database`.
+- Choose `Start in test mode`. We will change it to `production mode` later.
+- Click `Next`.
+- Choose nearest `Cloud Firestore location`.
+- Click `Enable`.
+
+### Create Flutter Project
 
 - Create a Flutter project like below;
 
@@ -372,8 +381,20 @@ void main() async {
 - When the submit button is pressed, you would write codes like below for the user to actually register into Firebase.
 
 ```dart
-
+try {
+  User user = await ff.register({
+    'email': emailController.text,
+    'password': passwordController.text,
+    'displayName': displayNameController.text,
+    'favoriteColor': favoriteColorController.text
+  });
+  // register success. App may redirect to home screen.
+} catch (e) {
+  // do error handling
+}
 ```
+
+- After registration, you will see there is a new record under Users in Firebase console => Authentication page.
 
 ### Forum
 

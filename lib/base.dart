@@ -145,6 +145,7 @@ class Base {
   ///   after login but before `Firebase.AuthStateChange()` and when it happens,
   ///   the user appears not to be logged in even if the user already logged in.
   updateToken(User user) {
+    if (enableNotification == false) return;
     if (firebaseMessagingToken == null) return;
     FirebaseFirestore.instance
         .collection('users')
