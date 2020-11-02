@@ -554,8 +554,8 @@ class FireFlutter extends Base {
 
     UploadTask task = ref.putFile(file);
     task.snapshotEvents.listen((TaskSnapshot snapshot) {
-      double p = (snapshot.totalBytes / snapshot.bytesTransferred) * 100;
-      progress(p);
+        double p = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+        progress(p);
     });
 
     await task;
