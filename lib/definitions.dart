@@ -42,6 +42,7 @@ class ForumData {
   }
 
   bool noMorePosts = false;
+  bool noPostsYet = false;
   bool get shouldFetch => inLoading == false && noMorePosts == false;
   bool get shouldNotFetch => !shouldFetch;
 

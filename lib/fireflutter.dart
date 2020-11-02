@@ -81,6 +81,8 @@ class FireFlutter extends Base {
   }
 
   bool get isAdmin => this.data['isAdmin'] == true;
+  bool get userIsLoggedIn => user != null;
+  bool get userIsLoggedOut => !userIsLoggedIn;
 
   /// Register into Firebase with email/password
   ///
@@ -274,7 +276,20 @@ class FireFlutter extends Base {
     /// Listen to coming posts.
     forum.postQuerySubscription =
         postsQuery.snapshots().listen((QuerySnapshot snapshot) {
-      if (snapshot.size == 0) return;
+      if (snapshot.docs.length < limit) {
+        forum.noMorePosts = true;
+      }
+
+      // if snapshot size is 0, means no documents has been fetched.
+      if (snapshot.size == 0) {
+        if (forum.pageNo == 1) {
+          forum.noPostsYet = true;
+        } else {
+          forum.noMorePosts = true;
+        }
+        forum.fetchingPosts(RenderType.stopFetching);
+      }
+
       snapshot.docChanges.forEach((DocumentChange documentChange) {
         final post = documentChange.doc.data();
         post['id'] = documentChange.doc.id;
@@ -299,6 +314,8 @@ class FireFlutter extends Base {
             forum.posts.add(post);
           }
 
+          if (post['comments'] == null) post['comments'] = [];
+
           /// TODO: have a placeholder for all the posts' comments change subscription.
           forum.commentsSubcriptions[post['id']] = FirebaseFirestore.instance
               .collection('posts/${post['id']}/comments')
@@ -308,8 +325,6 @@ class FireFlutter extends Base {
             snapshot.docChanges.forEach((DocumentChange commentsChange) {
               final commentData = commentsChange.doc.data();
               commentData['id'] = commentsChange.doc.id;
-
-              if (post['comments'] == null) post['comments'] = [];
 
               /// comment added
               if (commentsChange.type == DocumentChangeType.added) {
@@ -358,7 +373,9 @@ class FireFlutter extends Base {
 
           final int i = forum.posts.indexWhere((p) => p['id'] == post['id']);
           if (i > -1) {
+            final comments = forum.posts[i]['comments']; 
             forum.posts[i] = post;
+            forum.posts[i]['comments'] = comments;
           }
           forum.render(RenderType.postUpdate);
         }
@@ -554,7 +571,7 @@ class FireFlutter extends Base {
 
     UploadTask task = ref.putFile(file);
     task.snapshotEvents.listen((TaskSnapshot snapshot) {
-      double p = (snapshot.totalBytes / snapshot.bytesTransferred) * 100;
+      double p = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
       progress(p);
     });
 
