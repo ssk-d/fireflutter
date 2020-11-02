@@ -81,6 +81,8 @@ class FireFlutter extends Base {
   }
 
   bool get isAdmin => this.data['isAdmin'] == true;
+  bool get userIsLoggedIn => user != null;
+  bool get userIsLoggedOut => !userIsLoggedIn;
 
   /// Register into Firebase with email/password
   ///
@@ -312,6 +314,8 @@ class FireFlutter extends Base {
             forum.posts.add(post);
           }
 
+          if (post['comments'] == null) post['comments'] = [];
+
           /// TODO: have a placeholder for all the posts' comments change subscription.
           forum.commentsSubcriptions[post['id']] = FirebaseFirestore.instance
               .collection('posts/${post['id']}/comments')
@@ -321,8 +325,6 @@ class FireFlutter extends Base {
             snapshot.docChanges.forEach((DocumentChange commentsChange) {
               final commentData = commentsChange.doc.data();
               commentData['id'] = commentsChange.doc.id;
-
-              if (post['comments'] == null) post['comments'] = [];
 
               /// comment added
               if (commentsChange.type == DocumentChangeType.added) {
@@ -371,7 +373,9 @@ class FireFlutter extends Base {
 
           final int i = forum.posts.indexWhere((p) => p['id'] == post['id']);
           if (i > -1) {
+            final comments = forum.posts[i]['comments']; 
             forum.posts[i] = post;
+            forum.posts[i]['comments'] = comments;
           }
           forum.render(RenderType.postUpdate);
         }
