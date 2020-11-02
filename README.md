@@ -147,7 +147,8 @@ $ flutter run
 - Darg `fireflutter_sample_app/ios/Runner/GoogleService-Info.plist` file under `Runner/Runner` on left pane of Xcode.
 - Close Xcode.
 
-- You may open VSCode and do some registration code and test if every thing is set right. see Registration
+- You may want to test if the settings are alright.
+  - Open VSCode and do [FireFlutter Initialization](#fireflutter-initialization) do some registration code. see [User Registration](#user-email-and-password-registration) for more details.
 
 ##### Android Setup
 
@@ -289,10 +290,50 @@ $ npm test
 
 ## For Developers
 
-### FireFlutter package initialization
+### General Setup
 
-- app settings
-- translations
+- Add latest version of [FireFlutter](https://pub.dev/packages/fireflutter) in pubspec.yaml
+- Add latest version of [GetX](https://pub.dev/packages/get).
+  - We have chosen `GetX` package for routing, state management, localization and other functionalities.
+    - GetX is really simple. We recommed you to use it.
+    - All the code explained here is with GetX.
+    - You may choose different packages and that's very fine.
+
+#### FireFlutter Initialization
+
+- Open `main.dart`
+- Add the following code;
+
+```dart
+import 'package:fireflutter/fireflutter.dart';
+
+FireFlutter ff = FireFlutter();
+void main() async {
+  await ff.init();
+  runApp(MainApp());
+}
+```
+
+- The variable `ff` is an instace of `FireFlutter` and should be shared across all the screens.
+
+- Create a `global_variables.dart` on the same folder of main.dart.
+
+  - And move the `ff` variable into `global_variables.dart`.
+
+- The complete code is on [fireflutter-initialization branch](https://github.com/thruthesky/fireflutter_sample_app/tree/fireflutter-initialization/lib) of sample app.
+
+- todo: app settings
+- todo: translations
+
+#### Add GetX to main.dart
+
+- To add GetX to Flutter app,
+  - open main.dart
+  - split `Home Screen` into `lib/screens/home/home.screen.dart`.
+  - and replace `MaterialApp` with `GetMaterialApp`.
+  - add `initialRotue: 'home'`
+  - add HomeScreen to route.
+  - To see the complete code, visit [getx branch of sample app](https://github.com/thruthesky/fireflutter_sample_app/tree/getx).
 
 ### Firestore Structure
 
@@ -317,6 +358,22 @@ $ npm test
 - Private user information is saved under `/users/{uid}` documentation.
 - User's notification subscription information is saved under `/users/{uid}/meta/public` documents.
 - Push notification tokens are saved under `/users/{uid}/meta/tokens` document.
+
+#### User Email And Password Registration
+
+- Do [General Setup](#general-setup).
+- Create register screen with `lib/screens/register/register.screen.dart` file.
+- Put a route named `register`
+- And put a button for opening register screen.
+- Then, add email input box, password input box and a submit button.
+
+  - For the complete code, see [register branch in sample app](https://github.com/thruthesky/fireflutter_sample_app/tree/register/lib).
+
+- When the submit button is pressed, you would write codes like below for the user to actually register into Firebase.
+
+```dart
+
+```
 
 ### Forum
 

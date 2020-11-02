@@ -73,8 +73,6 @@ class Base {
   // ignore: close_sinks
   PublishSubject notification = PublishSubject();
 
-  Map<String, RemoteConfigValue> config;
-
   // PublishSubject configDownload = PublishSubject();
 
   Map<String, dynamic> _settings = {};
@@ -125,29 +123,6 @@ class Base {
 
     usersCol = FirebaseFirestore.instance.collection('users');
     postsCol = FirebaseFirestore.instance.collection('posts');
-  }
-
-  /// Get config as String
-  ///
-  /// ```
-  /// ff.getConfig('buttonName')
-  /// ```
-  String getConfig(String name) {
-    return config[name].asString();
-  }
-
-  /// Get config as Map
-  ///
-  /// ```
-  /// ff.getConfigAsMap('app_title')['ko']
-  /// ```
-  ///
-  /// Returns null when the [name] does not exist or the value of the string is empty.
-  Map<String, dynamic> getConfigAsMap(String name) {
-    if (config[name] == null) return null;
-    String str = config[name].asString();
-    if (str == null || str == '') return null;
-    return jsonDecode(str);
   }
 
   /// Update user meta data.
