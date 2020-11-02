@@ -44,7 +44,7 @@ class FireFlutter extends Base {
     bool enableNotification = false,
     String firebaseServerToken,
     Map<String, dynamic> pushNotificationOption,
-    Map<String, dynamic> settings,
+    Map<String, Map<dynamic, dynamic>> settings,
     Map<String, Map<String, String>> translations,
   }) async {
     this.enableNotification = enableNotification;
@@ -62,7 +62,7 @@ class FireFlutter extends Base {
     await initFirebase();
     initUser();
     initFirebaseMessaging();
-    listenSettingsChange(settings);
+    listenSettingsChange();
     listenTranslationsChange(translations);
 
     /// Initialize or Re-initialize based on the setting's update.

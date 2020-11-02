@@ -670,27 +670,28 @@ class Base {
   /// Syncronize the Firebase `settings` collection to `this.settings`.
   ///
   /// Get settings in real time and merge(overwrite) it into the `_settings`.
-  listenSettingsChange(Map<String, dynamic> defaultSettings) {
+  listenSettingsChange() {
     FirebaseFirestore.instance
         .collection('settings')
         .snapshots()
         .listen((QuerySnapshot snapshot) {
       if (snapshot.size == 0) return;
-      Map settingSnapshot = {};
+      Map temp = {};
       snapshot.docs.forEach((DocumentSnapshot document) {
-        settingSnapshot[document.id] = document.data();
+        temp[document.id] = document.data();
       });
-      mergeSettings(settingSnapshot);
+      mergeSettings(temp);
       settingsChange.add(_settings);
     });
   }
 
   ///
-  mergeSettings(Map<dynamic, dynamic> defaultSettings) {
-    defaultSettings.forEach((setting, config) {
-      for (var name in config.keys) {
-        if (_settings[setting] == null) _settings[setting] = {};
-        _settings[setting][name] = config[name];
+  mergeSettings(Map<dynamic, dynamic> settingsFromFirestore) {
+    settingsFromFirestore.forEach((key, document) {
+      // _settings[key] = document;
+      for (String name in document.keys) {
+        if (_settings[key] == null) _settings[key] = {};
+        _settings[key][name] = document[name];
       }
     });
   }
