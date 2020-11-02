@@ -5,6 +5,7 @@ class Base {
 
   /// To send push notification
   String firebaseServerToken;
+  Map<String, dynamic> pushNotificationOption;
 
   /// User document realtime update.
   StreamSubscription userSubscription;
@@ -53,6 +54,22 @@ class Base {
   BehaviorSubject<UserChangeType> userChange = BehaviorSubject.seeded(null);
 
   /// [notification] will be fired whenever there is a push notification.
+  /// the return data will the following and can be use when user receive notifications.
+  /// ```
+  /// {
+  ///   "notification": {"body": body, "title": title},
+  ///   "priority": "high",
+  ///   "data": {
+  ///     "click_action": "FLUTTER_NOTIFICATION_CLICK",
+  ///     "id": id,
+  ///     "status": "done",
+  ///     "sound": 'default',
+  ///     "senderUid": user.uid,
+  ///     'route': '/',
+  ///     'screen': screen
+  ///   }
+  /// }
+  /// ```
   // ignore: close_sinks
   PublishSubject notification = PublishSubject();
 
@@ -217,9 +234,9 @@ class Base {
     Map<dynamic, dynamic> data = message['data'] ?? message;
 
     /// return if the senderUid is the owner.
-    if (data != null && data['senderUid'] == user.uid) {
-      return;
-    }
+    // if (data != null && data['senderUid'] == user.uid) {
+    //   return;
+    // }
 
     this.notification.add({
       'notification': notification,
@@ -275,6 +292,7 @@ class Base {
 
     final postUrl = 'https://fcm.googleapis.com/fcm/send';
 
+    /// Check if it will send notification via single token, set of tokens and topic.
     final req = [];
     if (token != null) req.add({'key': 'to', 'value': token});
     if (topic != null) req.add({'key': 'to', 'value': "/topics/" + topic});
@@ -286,22 +304,34 @@ class Base {
       HttpHeaders.authorizationHeader: "key=" + firebaseServerToken
     };
 
-    /// TODO: Limit title in 128 chars and content 512 chars.
     bool success = true;
+
     req.forEach((el) async {
       final data = {
-        "notification": {"body": body, "title": title},
+        "notification": {
+          "body": body.length > 512 ? body.substring(0, 512) : body,
+          "title": title.length > 128 ? title.substring(0, 128) : title,
+          "sound": getNotificationSound('android'),
+        },
         "priority": "high",
         "data": {
           "click_action": "FLUTTER_NOTIFICATION_CLICK",
           "id": id,
           "status": "done",
-          "sound": 'default',
           "senderUid": user.uid,
           'route': '/',
           'screen': screen
+        },
+        "apns": {
+          "payload": {
+            "aps": {
+              "sound": getNotificationSound('ios'),
+            }
+          }
         }
       };
+
+      print(data);
       data[el['key']] = el['value'];
       final encodeData = jsonEncode(data);
       var dio = Dio();
@@ -330,6 +360,14 @@ class Base {
       }
     });
     return success;
+  }
+
+  String getNotificationSound(String platform) {
+    return pushNotificationOption != null &&
+            pushNotificationOption[platform] != null &&
+            pushNotificationOption[platform]['sound'] != null
+        ? pushNotificationOption[platform]['sound']
+        : 'default';
   }
 
   Map<String, dynamic> getCommentParent(
