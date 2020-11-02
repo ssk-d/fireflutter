@@ -172,9 +172,11 @@ $ npm test
   - `users/{uid}/meta/public` is user's public data document.
   - `users/{uid}/meta/tokens` is where the user's tokens are saved.
 
-- `/posts/{postId}`
+- `/posts/{postId}` is the post document.
+  - `/posts/{postId}/votes/{uid}` is the vote document of each user.
+  - `/posts/{postId}/comments/{commentId}` is the comment document under of the post document.
 
-## Coding Guidelines
+### Coding Guidelines
 
 - `null` event will be fired for the first time on `FireFlutter.userChange.listen`.
 - `auth` event will be fired for the first time on `FirebaseAuth.authChagnes`.
@@ -210,6 +212,24 @@ class _ForumScreenState extends State<ForumScreen> {
 
 ```
 
+### Logic for Vote
+
+- Post voting and comment voting have same logic and same(similiar) document structure.
+- Choice of vote could be one of `empty string('')`, `like`, `dislike`. Otherwise, permission error will happen.
+- When a user votes for the first time, choice must be one of `like` or `dislike`. Otherwise, permission error will happen.
+- Properties names of like and dislike in post and comment documents are in plural forms that are `likes` and `dislikes`.
+- `likes` and `dislikes` may not exists in the document or could be set to 0.
+- For votes under post, `/posts/{postId}/votes/{uid}` is the document path.
+- For votes under comments, `/posts/{postId}/comments/{commentId}/votes/{uid}` is the document path.
+- User can vote on his posts and comments.
+- A user voted `like` and the user vote `like` again, he means, he wants to cancel the vote. The client should save empty string('').
+- A user voted `like` and the user vote `dislike`, then `likes` will be decreased by 1 and `dislikes` will be increased by 1.
+- Admin should not fix vote document manually, since it may produce wierd results.
+- Voting works asynchronously.
+  - When a user votes in the order of `like => dislike => like => dislike`,
+    the server(Firestore) may receive in the order of `like => like => dislike => dislike` since it is **asynchronous**.
+    So, client app should block the user not to vote again while voting is in progress.
+
 ### Push Notification
 
 - Must be enableNotification `true` on main on FireFlutter init
@@ -239,7 +259,7 @@ RaisedButton(
 )
 ```
 
-### Facebook Login
+#### Facebook Login
 
 - Follow the instructions on how to setup Facebook project.
 
@@ -250,7 +270,7 @@ RaisedButton(
 );
 ```
 
-### Apple Login
+#### Apple Login
 
 - Follow the instructions on how to setup Apple project.
 - Enable `Apple` in Sign-in Method.
@@ -268,9 +288,9 @@ SignInWithAppleButton(
 ),
 ```
 
-## External Logins
+### External Logins
 
-### Kakao Login
+#### Kakao Login
 
 - Kakao login is completely separated from `fireflutter` since it is not part of `Firebase`.
   - The sample app has an example code on how to do `Kakao login` and link to `Firebase Auth` account.
