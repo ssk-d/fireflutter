@@ -54,6 +54,12 @@ A free, open source, rapid development flutter package to build social apps, com
 - Fully Customizable
   - FireFlutter package does not involve in any of part application's login or UI. It is completely separated from the app. Thus, it's highly customizable.
 
+## References
+
+- [FireFlutter Package](https://pub.dev/packages/fireflutter) - This package.
+- [FireFlutter Sample App](https://github.com/thruthesky/fireflutter-sample-app) - Sample flutter application.
+- [FireFlutter Firebase Project](https://github.com/thruthesky/fireflutter-firebase) - Firebase project for Firestore security rules and Functions.
+
 ## Components
 
 - Firebase.

@@ -1,3 +1,8 @@
+## [0.0.7] - App settings, localizations
+
+- App settings and localizations are updated in real time.
+- Document update.
+
 ## [0.0.6] - typo
 
 - fix typo warning
