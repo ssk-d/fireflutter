@@ -710,6 +710,8 @@ Scaffold(
   ),
 ```
 
+- To change
+
 ## Push Notification Setup
 
 - Settings of push notification on Android and iOS platform are done in the sample app.
