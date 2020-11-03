@@ -9,7 +9,81 @@ A free, open source, rapid development flutter package to build social apps, com
   We want it to be really simple but right way for ourselves and for the builders in the world.
   We know when it gets complicated, developers' lives would get even more complicated.
 
-## Features
+# Table of Contents
+
+<!-- TOC -->
+
+- [Fire Flutter](#fire-flutter)
+- [Table of Contents](#table-of-contents)
+- [Features](#features)
+- [References](#references)
+- [Components](#components)
+- [Requirements](#requirements)
+- [Installation](#installation)
+  - [Firebase Project Creation](#firebase-project-creation)
+  - [Firebase Email/Password Login](#firebase-emailpassword-login)
+  - [Create Firestore Database](#create-firestore-database)
+  - [Create Flutter project](#create-flutter-project)
+    - [Setup Flutter to connect to Firebase](#setup-flutter-to-connect-to-firebase)
+      - [iOS Setup](#ios-setup)
+      - [Android Setup](#android-setup)
+  - [Create a keystore](#create-a-keystore)
+    - [Debug hash key](#debug-hash-key)
+      - [Debug hash key base64](#debug-hash-key-base64)
+    - [Release hash key](#release-hash-key)
+      - [Release hash key base64](#release-hash-key-base64)
+  - [Add fireflutter package to Flutter project](#add-fireflutter-package-to-flutter-project)
+  - [Firebase Social Login](#firebase-social-login)
+    - [Google Sign-in Setup](#google-sign-in-setup)
+    - [Google Sign-in Setup for iOS](#google-sign-in-setup-for-ios)
+    - [Google Sign-in Setup for Android](#google-sign-in-setup-for-android)
+    - [Facebook Sign In Setup](#facebook-sign-in-setup)
+      - [Facebook Sign In Setup for Android](#facebook-sign-in-setup-for-android)
+      - [Facebook Sign In Setup for iOS](#facebook-sign-in-setup-for-ios)
+    - [Apple Sign In Setup for iOS](#apple-sign-in-setup-for-ios)
+  - [Firestore security rules](#firestore-security-rules)
+    - [Security Rules Testing](#security-rules-testing)
+  - [Cloud Functions](#cloud-functions)
+  - [Funtions Test](#funtions-test)
+  - [Push Notification](#push-notification)
+  - [Localization](#localization)
+  - [Algolia Installation](#algolia-installation)
+  - [Admin Account Setting](#admin-account-setting)
+- [App Management](#app-management)
+  - [App Settings](#app-settings)
+  - [Internalization (Localization)](#internalization-localization)
+  - [Forum Management](#forum-management)
+    - [Forum Category Management](#forum-category-management)
+- [For Developers](#for-developers)
+  - [General Setup](#general-setup)
+    - [FireFlutter Initialization](#fireflutter-initialization)
+    - [Add GetX](#add-getx)
+  - [Firestore Structure](#firestore-structure)
+  - [Coding Guidelines](#coding-guidelines)
+  - [User](#user)
+  - [Create Register Screen](#create-register-screen)
+  - [Create Login Screen](#create-login-screen)
+  - [Create Profile Screen](#create-profile-screen)
+    - [User Email And Password Registration](#user-email-and-password-registration)
+  - [Display User Login](#display-user-login)
+  - [Forum](#forum)
+  - [Logic for Vote](#logic-for-vote)
+  - [Push Notification](#push-notification-1)
+  - [Social Login](#social-login)
+    - [Google Sign-in](#google-sign-in)
+    - [Facebook Sign In](#facebook-sign-in)
+    - [Apple Sign In](#apple-sign-in)
+  - [External Logins](#external-logins)
+    - [Kakao Login](#kakao-login)
+- [I18N](#i18n)
+- [Settings](#settings)
+  - [Trouble Shotting](#trouble-shotting)
+    - [MissingPluginException google_sign_in](#missingpluginexception-google_sign_in)
+    - [sign_in_failed](#sign_in_failed)
+
+<!-- /TOC -->
+
+# Features
 
 - User
 
@@ -56,13 +130,13 @@ A free, open source, rapid development flutter package to build social apps, com
 - Fully Customizable
   - FireFlutter package does not involve in any of part application's login or UI. It is completely separated from the app. Thus, it's highly customizable.
 
-## References
+# References
 
 - [FireFlutter Package](https://pub.dev/packages/fireflutter) - This package.
 - [FireFlutter Sample App](https://github.com/thruthesky/fireflutter_sample_app) - Sample flutter application.
 - [FireFlutter Firebase Project](https://github.com/thruthesky/fireflutter-firebase) - Firebase project for Firestore security rules and Functions.
 
-## Components
+# Components
 
 - Firebase.
   Firebase is a leading cloud system powered by Google. It has lots of goods to build web and app.
@@ -76,14 +150,14 @@ A free, open source, rapid development flutter package to build social apps, com
   Firebase does not support full text search which means users cannot search posts and comments.
   Algolia does it.
 
-## Requirements
+# Requirements
 
 - Basic understanding of Firebase.
 - Basic understanding of Flutter and Dart.
 - OS: Windows or Mac.
 - Editor: VSCode, Xcode(for Mac OS). Our primary editor si VSCode and we use Xcode for Flutter settings. We found it more easy to do the settings with Xcode for iOS development.
 
-## Installation
+# Installation
 
 - If you are not familiar with Firebase and Flutter, you may have difficulties to install it.
 
@@ -103,7 +177,7 @@ A free, open source, rapid development flutter package to build social apps, com
 
 - We also have a premium paid servie to support installation and development.
 
-### Firebase Project Creation
+## Firebase Project Creation
 
 - You need to create a Firebase project for the first time. You may use existing Firebase project.
 
@@ -119,7 +193,7 @@ A free, open source, rapid development flutter package to build social apps, com
 
 - Read [Understand Firebase projects](https://firebase.google.com/docs/projects/learn-more) for details.
 
-### Firebase Email/Password Login
+## Firebase Email/Password Login
 
 - Go to Authentication => Sign-in Method
 - Click `Enable/Password` (without Email link).
@@ -127,7 +201,7 @@ A free, open source, rapid development flutter package to build social apps, com
 
 - Refer [Firebase Authentication](https://firebase.google.com/docs/auth) and [FlutterFire Social Authenticatino](https://firebase.flutter.dev/docs/auth/social) for details.
 
-### Create Firestore Database
+## Create Firestore Database
 
 - Go to `Cloud Firestore` menu.
 - Click `Create Database`.
@@ -136,7 +210,7 @@ A free, open source, rapid development flutter package to build social apps, com
 - Choose nearest `Cloud Firestore location`.
 - Click `Enable`.
 
-### Create Flutter project
+## Create Flutter project
 
 - Create a Flutter project like below;
 
@@ -146,9 +220,9 @@ $ cd fireflutter_sample_app
 $ flutter run
 ```
 
-#### Setup Flutter to connect to Firebase
+### Setup Flutter to connect to Firebase
 
-##### iOS Setup
+#### iOS Setup
 
 - Click `iOS` icon on `Project Overview` page to add `iOS` app to Firebase.
 - Enter iOS Bundle ID. Ex) com.sonub.fireflutter
@@ -172,7 +246,7 @@ $ flutter run
 - You may want to test if the settings are alright.
   - Open VSCode and do [FireFlutter Initialization](#fireflutter-initialization) do some registration code. see [User Registration](#user-email-and-password-registration) for more details.
 
-##### Android Setup
+#### Android Setup
 
 - Click `Android` icon on `Project Overview` page to add `Android` app to Firebase.
   - If you don't see `Android` icon, look for `+ Add app` button and click, then you would see `Android` icon.
@@ -214,7 +288,7 @@ dependencies {
 - You may want to test if the settings are alright.
   - Open VSCode and do [FireFlutter Initialization](#fireflutter-initialization) do some registration code. see [User Registration](#user-email-and-password-registration) for more details.
 
-### Create a keystore
+## Create a keystore
 
 You will need to create a keystore file for Android platform. Keystore file is used to upload and to update app binary file to Playstore and is alos used to generate hash keys for interacting with 3rd party service like facebook login.
 
@@ -228,7 +302,7 @@ keytool -genkey -v -keystore keystore.key -keyalg RSA -keysize 2048 -validity 10
 
 - Refer [Flutter - Create a keystore](https://flutter.dev/docs/deployment/android#create-a-keystore) for details.
 
-#### Debug hash key
+### Debug hash key
 
 - To get debug hash key (SHA1 and others), enter the command below,
 
@@ -238,7 +312,7 @@ keytool -genkey -v -keystore keystore.key -keyalg RSA -keysize 2048 -validity 10
 keytool -list -v -alias androiddebugkey -keystore ~/.android/debug.keystore
 ```
 
-##### Debug hash key base64
+#### Debug hash key base64
 
 - Some 3rd party service like Facebook may ask base64 encrypted hash key, you can get it with the following command
 
@@ -248,7 +322,7 @@ keytool -list -v -alias androiddebugkey -keystore ~/.android/debug.keystore
 keytool -exportcert -alias androiddebugkey -keystore ~/.android/debug.keystore | openssl sha1 -binary | openssl base64
 ```
 
-#### Release hash key
+### Release hash key
 
 - To get release hash key (SHA1 and others), enter the command below,
 
@@ -260,7 +334,7 @@ keytool -exportcert -list -v -alias [key] -keystore [keystore.key]
 
 You can replace `[key]` with real key and `[keystore.key]` with real keystore file path.
 
-##### Release hash key base64
+#### Release hash key base64
 
 - Some 3rd party service like Facebook may ask base64 encrypted hash key, you can get it with the following command
 
@@ -272,7 +346,7 @@ keytool -exportcert -alias YOUR_RELEASE_KEY_ALIAS -keystore YOUR_RELEASE_KEY_PAT
 
 - It's important to know that Playstore will generate another Keystore for publish. And you need to input the hash key of it.
 
-### Add fireflutter package to Flutter project
+## Add fireflutter package to Flutter project
 
 - Add `fireflutter` to pubspec.yaml
   - fireflutter package contains other packages like algolia, dio, firebase related packages, and more as its dependency. You don't have to install the same packages again in your pubspec.yaml
@@ -282,7 +356,7 @@ keytool -exportcert -alias YOUR_RELEASE_KEY_ALIAS -keystore YOUR_RELEASE_KEY_PAT
 - See [FireFlutter Initialization](#fireflutter-initialization) to initialize `fireflutter` package.
 - See [Add GetX](#add-getx) to use route, state management, localization and more.
 
-### Firebase Social Login
+## Firebase Social Login
 
 - Social login is one of difficult part of settings.
   Each social login takes its own settings.
@@ -296,7 +370,7 @@ keytool -exportcert -alias YOUR_RELEASE_KEY_ALIAS -keystore YOUR_RELEASE_KEY_PAT
 
 - Refer [Firebase Authentication](https://firebase.google.com/docs/auth) and [FlutterFire Social Authentication](https://firebase.flutter.dev/docs/auth/social) for details.
 
-#### Google Sign-in Setup
+### Google Sign-in Setup
 
 - Go to Authentication => Sign-in method
 - Click Google
@@ -304,7 +378,7 @@ keytool -exportcert -alias YOUR_RELEASE_KEY_ALIAS -keystore YOUR_RELEASE_KEY_PAT
 - Choose your email address in Project support email.
 - Click Save.
 
-#### Google Sign-in Setup for iOS
+### Google Sign-in Setup for iOS
 
 - Open Xcode with the project.
 - Add `REVERSE_CLIENT_ID` in URL Schemes box in `URL Types under Runner (on top of left pain) => Runner (under TARGETS) => Info => URL Types => (+)`
@@ -315,7 +389,7 @@ keytool -exportcert -alias YOUR_RELEASE_KEY_ALIAS -keystore YOUR_RELEASE_KEY_PAT
 
 - To see if this setting works, try the code in [Google Sign-in](#google-sign-in) section.
 
-#### Google Sign-in Setup for Android
+### Google Sign-in Setup for Android
 
 - Generate debug hash and get SHA1 as described in [Debug hash key](#debug-hash-key)
 - Add it into `Firebase => Project Settings => General => Your apps => Android apps => com.sonub.fireflutter => Add finger print`
@@ -328,9 +402,9 @@ keytool -exportcert -alias YOUR_RELEASE_KEY_ALIAS -keystore YOUR_RELEASE_KEY_PAT
 
 - Warning: If you meet error `MissingPluginException(No implementation found for method init on channel plugins.flutter.io/google_sign_in)`, see the [MissingPluginException google_sign_in](#missingpluginexception-google_sign_in)
 
-#### Facebook Sign In Setup
+### Facebook Sign In Setup
 
-##### Facebook Sign In Setup for Android
+#### Facebook Sign In Setup for Android
 
 In this chapter, Facebook sign in setup for Android is explanined in detail.
 
@@ -404,11 +478,12 @@ All the information is coming from [flutter_facebook_auth](https://pub.dev/packa
 ```
 
 - Add `Privacy Policy URL` uin `Settings => Basic => Privacy Policy URL`.
-- Click `Save Changes`
+  - Click `Save Changes`
 - Click `Use this package name` if you see it.
 - Click `In development` to enable live mode.
-- Choose app category.
-- Click `Switch Mode`.
+
+  - Choose app category.
+  - Click `Switch Mode`.
 
 - Go to Facebook App => Settings => Basic
 - Get App ID and App Secret
@@ -423,7 +498,7 @@ All the information is coming from [flutter_facebook_auth](https://pub.dev/packa
 - Click `Save Changes`.
 - That's it. To test the settings, try the code in [Facebook Sign In](#facebook-sign-in)
 
-##### Facebook Sign In Setup for iOS
+#### Facebook Sign In Setup for iOS
 
 - Open `ios/Podfile`
 - Uncomment the `platform` line and update it to 11.0 like below
@@ -459,7 +534,7 @@ platform :ios, '11.0'
 
 - That's it. To test the settings, try the code in [Facebook Sign In](#facebook-sign-in)
 
-#### Apple Sign In Setup for iOS
+### Apple Sign In Setup for iOS
 
 It is a mandatory to add Apple Sign In if the app has other social sign in method. Or you app will be rejected on iOS app review.
 
@@ -478,7 +553,7 @@ We add `Apple sign in` only on iOS platform.
 
 - Refer [Eanble Sign In with App](https://help.apple.com/xcode/mac/11.0/#/dev50571b902) for details.
 
-### Firestore security rules
+## Firestore security rules
 
 - Firestore needs security rules and Functions needs functions to support FireFlutter package.
 
@@ -497,7 +572,7 @@ $ firebase login
 - Save `Firebase SDK Admin Service Key` to `firebase-service-account-key.json`.
 - Run `firebase deploy --only firestore,functions`. You will need Firebase `Pay as you go` plan to deploy it.
 
-#### Security Rules Testing
+### Security Rules Testing
 
 - If you wish to test Firestore security rules, you may do so with the following;
 
@@ -521,13 +596,13 @@ $ npm run test:vote
 $ npm run test:user.token
 ```
 
-### Cloud Functions
+## Cloud Functions
 
 - We tried to limit the usage of Cloud Functions as less as possible. But there are some functionalities we cannot acheive without it.
 
   - One of the reason why we use Cloud Funtions is to enable like and dislike functionality. It is a simple functionality but when it comes with Firestore security rule, it's not an easy work. And Cloud Functions does better with it.
 
-### Funtions Test
+## Funtions Test
 
 - If you whish to test Functins, you may do so with the following;
 
@@ -536,7 +611,7 @@ $ cd functions
 $ npm test
 ```
 
-### Push Notification
+## Push Notification
 
 - Settings of push notification on Android and iOS platform are done in the sample app.
 
@@ -544,7 +619,7 @@ $ npm test
 
 - Refer [Firestore Messaging](https://pub.dev/packages/firebase_messaging)
 
-### Localization
+## Localization
 
 - To add a language, the language needs to be set in Info.plist of iOS platform. No setting is needed on Android platform.
 - you need to add the translation under Firestore `translations` collection.
@@ -552,7 +627,7 @@ $ npm test
 - Localization could be used for menus, texts in screens.
 -
 
-### Algolia Installation
+## Algolia Installation
 
 - There are two settings for Algolia.
 - First, you need to put ALGOLIA_ID(Application ID), ALGOLIA_ADMIN_KEY, ALGOLIA_INDEX_NAME in `firebase-settings.js`.
@@ -562,22 +637,22 @@ $ npm test
   Optionally, you can put the settings inside `FireFlutter.init()`.
 - Algolia free account give you 10,000 free search every months. This is good enough for small sized projects.
 
-### Admin Account Setting
+## Admin Account Setting
 
 - Any user who has `isAdmin` property with `true`.
 - Admin property is protected by Firestore security rules and cannot be edited by client app.
 
-## App Management
+# App Management
 
 - The app management here is based on the sample code and app.
 - FireFlutter is a flutter package to build social apps and is fully customizable. When you may build your own customized app, we recommend to use our sample codes.
 
-### App Settings
+## App Settings
 
 - Developers can set default settings on `FireFlutter.init()`.
 - Admin can overwrite all the settings by updating Firestore `settings` docuemnts.
 
-### Internalization (Localization)
+## Internalization (Localization)
 
 - Menus and page contents can be translated depending on user's device. Or developer can put a menu to let users to choose their languages.
 
@@ -585,15 +660,15 @@ $ npm test
 
 - The localization is managed by `GetX` package that is used for routing and state management on the sample code.
 
-### Forum Management
+## Forum Management
 
-#### Forum Category Management
+### Forum Category Management
 
 - You can create forum categories in admin screen.
 
-## For Developers
+# For Developers
 
-### General Setup
+## General Setup
 
 - Add latest version of [FireFlutter](https://pub.dev/packages/fireflutter) in pubspec.yaml
 - Add latest version of [GetX](https://pub.dev/packages/get).
@@ -602,7 +677,7 @@ $ npm test
     - All the code explained here is with GetX.
     - You may choose different packages and that's very fine.
 
-#### FireFlutter Initialization
+### FireFlutter Initialization
 
 - Open `main.dart`
 - Add the following code;
@@ -629,7 +704,7 @@ void main() async {
 - todo: translations
 - todo: how to use settings.
 
-#### Add GetX
+### Add GetX
 
 - To add GetX to Flutter app,
   - open main.dart
@@ -639,7 +714,7 @@ void main() async {
   - add HomeScreen to route.
   - To see the complete code, visit [getx branch of sample app](https://github.com/thruthesky/fireflutter_sample_app/tree/getx).
 
-### Firestore Structure
+## Firestore Structure
 
 - Principle. Properties and sub collections(documents) of a document should be under that document.
 
@@ -652,33 +727,33 @@ void main() async {
   - `/posts/{postId}/votes/{uid}` is the vote document of each user.
   - `/posts/{postId}/comments/{commentId}` is the comment document under of the post document.
 
-### Coding Guidelines
+## Coding Guidelines
 
 - `null` event will be fired for the first time on `FireFlutter.userChange.listen`.
 - `auth` event will be fired for the first time on `FirebaseAuth.authChagnes`.
 
-### User
+## User
 
 - Private user information is saved under `/users/{uid}` documentation.
 - User's notification subscription information is saved under `/users/{uid}/meta/public` documents.
 - Push notification tokens are saved under `/users/{uid}/meta/tokens` document.
 
-### Create Register Screen
+## Create Register Screen
 
 - Do [General Setup](#general-setup).
 - Create register screen with `lib/screens/register/register.screen.dart` file.
 - Put a route named `register`
 - See complete code on [route banch of sample app](https://github.com/thruthesky/fireflutter_sample_app/tree/routes)
 
-### Create Login Screen
+## Create Login Screen
 
 - See complete code on [route banch of sample app](https://github.com/thruthesky/fireflutter_sample_app/tree/routes)
 
-### Create Profile Screen
+## Create Profile Screen
 
 - See complete code on [route banch of sample app](https://github.com/thruthesky/fireflutter_sample_app/tree/routes)
 
-#### User Email And Password Registration
+### User Email And Password Registration
 
 - Open register.screen.dart
 - Put a button for opening register screen.
@@ -737,14 +812,14 @@ User user = await ff.register({
 - There is another branch for more complete regration sample code. See [register-2 branch](https://github.com/thruthesky/fireflutter_sample_app/tree/register-2) for more complete regiration code.
 - We recommend you to copy the sample code and apply it into your own project.
 
-### Display User Login
+## Display User Login
 
 Let's display user login information on home screen.
 
 - Open home screen with Xcode
 - Code like below
 
-### Forum
+## Forum
 
 - To fetch posts and listing, you need to declare `ForumData` object.
   - How to declare forum data.
@@ -773,7 +848,7 @@ class _ForumScreenState extends State<ForumScreen> {
 
 ```
 
-### Logic for Vote
+## Logic for Vote
 
 - Post voting and comment voting have same logic and same(similiar) document structure.
 - Choice of vote could be one of `empty string('')`, `like`, `dislike`. Otherwise, permission error will happen.
@@ -791,7 +866,7 @@ class _ForumScreenState extends State<ForumScreen> {
     the server(Firestore) may receive in the order of `like => like => dislike => dislike` since it is **asynchronous**.
     So, client app should block the user not to vote again while voting is in progress.
 
-### Push Notification
+## Push Notification
 
 - Must be enableNotification `true` on main on FireFlutter init
   - to handble notification you can pass method via notificationHandler.
@@ -807,9 +882,9 @@ ff.init(
   );
 ```
 
-### Social Login
+## Social Login
 
-#### Google Sign-in
+### Google Sign-in
 
 - [Google Sign In Setup for Android](#google-sign-in-setup-for-android) and [Facebook Sign In Setup for Android](#facebook-sign-in-setup-for-android) are required.
 - Open login.screen.dart or create following [Create Login Screen](#create-login-screen)
@@ -834,7 +909,7 @@ RaisedButton(
 
 - Tip: you may customize your registration page to put a button saying `Login with social accounts`. When it is touched, redirect the user to login screen where actual social login buttons are appear.
 
-#### Facebook Sign In
+### Facebook Sign In
 
 - [Google Sign In Setup for Android](#google-sign-in-setup-for-android) and [Facebook Sign In Setup for Android](#facebook-sign-in-setup-for-android) are required.
 - Open login.screen.dart or create following [Create Login Screen](#create-login-screen)
@@ -854,7 +929,7 @@ RaisedButton(
 ),
 ```
 
-#### Apple Sign In
+### Apple Sign In
 
 - Do [Apple Sign In Setup for iOS](#apple-sign-in-setup-for-ios).
 - Apple sign in may not work for some versions of simualtor. We recommend you to test the code in real device.
@@ -873,14 +948,14 @@ if (GetPlatform.isIOS)
   )
 ```
 
-### External Logins
+## External Logins
 
-#### Kakao Login
+### Kakao Login
 
 - Kakao login is completely separated from `fireflutter` since it is not part of `Firebase`.
   - The sample app has an example code on how to do `Kakao login` and link to `Firebase Auth` account.
 
-## I18N
+# I18N
 
 - The app's i18n is managed by `GetX` i18n feature.
 
@@ -895,7 +970,7 @@ if (GetPlatform.isIOS)
 - Default i18n translations(texts) can be set through `FireFlutter` initializatin and is overwritten by the `translations` collection of Firebase.
   The Firestore is working offline mode, so overwriting with Firestore translation would happen so quickly.
 
-## Settings
+# Settings
 
 - Default settings can be set through `FireFlutter` initialization and is overwritten by `settings` collection of Firebase.
   The Firestore is working offline mode, so overwriting with Firestore translation would happen so quickly.
