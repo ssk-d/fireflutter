@@ -230,7 +230,7 @@ keytool -genkey -v -keystore keystore.key -keyalg RSA -keysize 2048 -validity 10
 
 #### Debug hash key
 
-- To get debug hash key, enter the command below,
+- To get debug hash key (SHA1 and others), enter the command below,
 
   - Just press enter if it asks password,
 
@@ -250,7 +250,7 @@ keytool -exportcert -alias androiddebugkey -keystore ~/.android/debug.keystore |
 
 #### Release hash key
 
-- To get release hash key, enter the command below,
+- To get release hash key (SHA1 and others), enter the command below,
 
   - Just press enter if it asks password,
 
@@ -317,21 +317,24 @@ keytool -exportcert -alias YOUR_RELEASE_KEY_ALIAS -keystore YOUR_RELEASE_KEY_PAT
 
 #### Google Sign-in Setup for Android
 
-- Generate debug SHA1
+- Generate debug hash and get SHA1 as described in [Debug hash key](#debug-hash-key)
 - Add it into `Firebase => Project Settings => General => Your apps => Android apps => com.sonub.fireflutter => Add finger print`
 - Click save.
 
-- Important: you need to generate upload SHA1 and deploy SHA1 for production app.
+- It's important to know that you need to generate two release SHA1 keys for production app. One for upload SHA1, the other for deploy SHA1.
+- [Facebook Sign In Setup for Android](#facebook-sign-in-setup-for-android) is required to sign in with Google (in our case).
 
 - To see if this setting works, try the code in [Google Sign-in](#google-sign-in) section.
 
 - Warning: If you meet error `MissingPluginException(No implementation found for method init on channel plugins.flutter.io/google_sign_in)`, see the [MissingPluginException google_sign_in](#missingpluginexception-google_sign_in)
 
-#### Facebook Login Setup
+#### Facebook Sign In Setup
 
-##### Facebook Login Setup for Android
+##### Facebook Sign In Setup for iOS
 
-In this chapter, Facebook login setup for Android is explanined in detail.
+##### Facebook Sign In Setup for Android
+
+In this chapter, Facebook sign in setup for Android is explanined in detail.
 
 All the information is coming from [flutter_facebook_auth](https://pub.dev/packages/flutter_facebook_auth) which is the package we use for Facebook login.
 
@@ -744,6 +747,7 @@ ff.init(
 
 #### Google Sign-in
 
+- [Google Sign In Setup for Android](#google-sign-in-setup-for-android) and [Facebook Sign In Setup for Android](#facebook-sign-in-setup-for-android) is required to sign in with Google.
 - Open login.screen.dart or create following [Create Login Screen](#create-login-screen)
 - Code like below,
   - You can use the social Login by calling fireflutter `signInWithGoogle` method.
@@ -766,7 +770,7 @@ RaisedButton(
 
 - Tip: you may customize your registration page to put a button saying `Login with social accounts`. When it is touched, redirect the user to login screen where actual social login buttons are appear.
 
-#### Facebook Login
+#### Facebook Sign In
 
 - Follow the instructions on how to setup Facebook project.
 
@@ -845,3 +849,9 @@ SignInWithAppleButton(
 `MissingPluginException(No implementation found for method init on channel plugins.flutter.io/google_sign_in)`
 
 This error happens (at least in our case) when Flutter has google_sign_in package and facebook sign in package. If facebook sign in is depending on google_sign_in package, setting for facebok sign in is mandatory to use google_sign_in. In short, do the settings for both google sign in and facebook sign in.
+
+### sign_in_failed
+
+`PlatformException(sign_in_failed, com.google.android.gms.common.api.ApiException: 12500: , null, null)`
+
+This error may happens when you didn't input SHA1 key on Android app in Firebase.
