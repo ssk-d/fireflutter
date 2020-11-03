@@ -718,6 +718,8 @@ Scaffold(
 
   - If you are not going to use the sample app, you need to setup by yourself.
 
+- To test the setup, try the code in [Push Notification](#push-notification)
+
 - Refer [Firestore Messaging](https://pub.dev/packages/firebase_messaging)
 
 ## Algolia Installation
