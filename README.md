@@ -1,10 +1,12 @@
 # Fire Flutter
 
+[한국어 설명 보기](readme.ko.md)
+
 A free, open source, rapid development flutter package to build social apps, community apps, and more.
 
 - This package has complete features (see Features below) that most of apps are needed.
 - `Simple, easy and the right way`.
-  We want it to be really simple but right way for ourselves and for builders in the world.
+  We want it to be really simple but right way for ourselves and for the builders in the world.
   We know when it gets complicated, developers' lives would get even more complicated.
 
 ## Features
@@ -123,7 +125,7 @@ A free, open source, rapid development flutter package to build social apps, com
 - Choose nearest `Cloud Firestore location`.
 - Click `Enable`.
 
-### Create Flutter Project
+### Create Flutter project
 
 - Create a Flutter project like below;
 
@@ -137,8 +139,8 @@ $ flutter run
 
 ##### iOS Setup
 
-- Click `iOS` icon on `Project Overview` page.
-- enter iOS Bundle ID. Ex) com.sonub.fireflutter
+- Click `iOS` icon on `Project Overview` page to add `iOS` app to Firebase.
+- Enter iOS Bundle ID. Ex) com.sonub.fireflutter
   - From now on, we assume that your iOS Bundle ID is `com.sonub.fireflutter`.
 - click `Register app`.
 - click `Download GoogleService-Info.plist`
@@ -161,10 +163,54 @@ $ flutter run
 
 ##### Android Setup
 
-### Flutter Installation
+- Click `Android` icon on `Project Overview` page to add `Android` app to Firebase.
+  - If you don't see `Android` icon, look for `+ Add app` button and click, then you would see `Android` icon.
+- Enter `iOS Bundle ID` into `Android package name`. `iOS Bundle ID` and `Android package name` should be kept in idendentical name for easy to maintain. In our case, it is `com.sonub.fireflutter`.
+- Click `Register app` button.
+- Click `Download google-services.json` file to downlaod
+- And save it under `fireflutter_sample_app/android/app` folder.
+- Click `Next`
+- Click `Next`
+- Click `Continue to console`.
+- Open VSCode with `fireflutter_sample_app` project.
+- Open `fireflutter_sample_app/android/app/build.gradle` file.
+- Update `minSdkVersion 16` to `minSdkVersion 21`.
+- Add below to the end of `fireflutter_sample_app/android/app/build.gradle`. This is for Flutter to read `google-services.json`.
+
+```gradle
+apply plugin: 'com.google.gms.google-services'
+```
+
+- Open `fireflutter_sample_app/android/build.gradle`. Do not confuse with the other build.gradle.
+- Add the dependency below in the buildscript tag.
+
+```gradle
+dependencies {
+  // ...
+  classpath 'com.google.gms:google-services:4.3.3' // Add this line.
+}
+```
+
+- Open the 5 files and update the package name to `com.sonub.fireflutter`.
+
+  - android/app/src/main/AndroidManifest.xml
+  - android/app/src/debug/AndroidManifest.xml
+  - android/app/src/profile/AndroidManifest.xml
+  - android/app/build.gradle
+  - android/app/src/main/kotlin/….MainActivity.kt
+
+- That's it.
+- You may want to test if the settings are alright.
+  - Open VSCode and do [FireFlutter Initialization](#fireflutter-initialization) do some registration code. see [User Registration](#user-email-and-password-registration) for more details.
+
+### Add fireflutter package to Flutter project
 
 - Add `fireflutter` to pubspec.yaml
-- see our [sample flutter app](https://github.com/thruthesky/fireflutter-sample-app).
+  - fireflutter package contains other packages like algolia, dio, firebase related packages, and more as its dependency. You don't have to install the same packages again in your pubspec.yaml
+  - See [the pubspect.yaml in sample app](https://github.com/thruthesky/fireflutter_sample_app/blob/fireflutter-initialization/pubspec.yaml).
+  - You need to update the latest version of `fireflutter`.
+- See [FireFlutter Initialization](#fireflutter-initialization) to initialize `fireflutter` package.
+- See [Add GetX](#add-getx) to use route, state management, localization and more.
 
 ### Firebase Social Login
 
@@ -183,14 +229,21 @@ $ flutter run
 
 - Refer [Firebase Authentication](https://firebase.google.com/docs/auth) and [FlutterFire Social Authenticatino](https://firebase.flutter.dev/docs/auth/social) for details.
 
-### Firestore and Functions
+#### Google Login Setup
 
-- Enable(Start) Cloud Firestore by clicking the menu.
-- Choose `protected mode`
-- Choose your region.
-- Refer [Cloud Firestore](https://firebase.google.com/docs/firestore) for details.
+- Go to Authentication => Sign-in method
+- Click Google
+- Click Enable
+- Choose your email address in Project support email.
+- Click Save.
 
-### Firestore security and Functions Settings.
+- That's it. If you want to test the setting, try to code in [Google Login](#google-login) section.
+
+#### Facebook Login Setup
+
+#### Apple Login Setup
+
+### Firestore security rules
 
 - Firestore needs security rules and Functions needs functions to support FireFlutter package.
 
@@ -209,15 +262,7 @@ $ firebase login
 - Save `Firebase SDK Admin Service Key` to `firebase-service-account-key.json`.
 - Run `firebase deploy --only firestore,functions`. You will need Firebase `Pay as you go` plan to deploy it.
 
-### Push Notification
-
-- Settings of push notification on Android and iOS platform are done in the sample app.
-
-  - If you are not going to use the sample app, you need to setup by yourself.
-
-- Refer [Firestore Messaging](https://pub.dev/packages/firebase_messaging)
-
-### Security Rules Testing
+#### Security Rules Testing
 
 - If you wish to test Firestore security rules, you may do so with the following;
 
@@ -241,6 +286,12 @@ $ npm run test:vote
 $ npm run test:user.token
 ```
 
+### Cloud Functions
+
+- We tried to limit the usage of Cloud Functions as less as possible. But there are some functionalities we cannot acheive without it.
+
+  - One of the reason why we use Cloud Funtions is to enable like and dislike functionality. It is a simple functionality but when it comes with Firestore security rule, it's not an easy work. And Cloud Functions does better with it.
+
 ### Funtions Test
 
 - If you whish to test Functins, you may do so with the following;
@@ -250,7 +301,15 @@ $ cd functions
 $ npm test
 ```
 
-#### Localization
+### Push Notification
+
+- Settings of push notification on Android and iOS platform are done in the sample app.
+
+  - If you are not going to use the sample app, you need to setup by yourself.
+
+- Refer [Firestore Messaging](https://pub.dev/packages/firebase_messaging)
+
+### Localization
 
 - To add a language, the language needs to be set in Info.plist of iOS platform. No setting is needed on Android platform.
 - you need to add the translation under Firestore `translations` collection.
@@ -333,8 +392,9 @@ void main() async {
 
 - todo: app settings
 - todo: translations
+- todo: how to use settings.
 
-#### Add GetX to main.dart
+#### Add GetX
 
 - To add GetX to Flutter app,
   - open main.dart
@@ -368,13 +428,24 @@ void main() async {
 - User's notification subscription information is saved under `/users/{uid}/meta/public` documents.
 - Push notification tokens are saved under `/users/{uid}/meta/tokens` document.
 
-#### User Email And Password Registration
+### Create Register Screen
 
 - Do [General Setup](#general-setup).
 - Create register screen with `lib/screens/register/register.screen.dart` file.
 - Put a route named `register`
-- And put a button for opening register screen.
+
+### Create Login Screen
+
+### Create Profile Screen
+
+#### User Email And Password Registration
+
+- Open register.screen.dart
+- Put a button for opening register screen.
 - Then, add email input box, password input box and a submit button.
+
+  - You may add more input box for displaName and other informations.
+  - You may put a profile photo upload button.
 
   - For the complete code, see [register branch in sample app](https://github.com/thruthesky/fireflutter_sample_app/tree/register/lib).
 
@@ -394,7 +465,37 @@ try {
 }
 ```
 
+- It may take serveral seconds depending on the user's internet connectivity.
+  - And FireFlutter package does a lot of works under the hood.
+    - When the `register()` method invoked, it does,
+      - create account in Firebase Auth,
+      - update displayName,
+      - update extra user data into Firestore,
+      - reload Firebase Auth account,
+      - push notification token saving,
+        thus, it may take more than a second. It is recommended to put a progress spinner while registration.
+- As you may know, you can save email, display name, profile photo url in Firebase Auth. Other information goes into `/users/{uid}` firebase.
 - After registration, you will see there is a new record under Users in Firebase console => Authentication page.
+
+- Visit [register branch of sample app](https://github.com/thruthesky/fireflutter_sample_app/tree/register) for registration sample code.
+
+- You can add some extra public data like below.
+  - User's information is private and is not available for other.
+  - User's public data is open to the world. But it can only be updated by the user.
+
+```dart
+User user = await ff.register({
+  // ...
+}, meta: {
+  "public": {
+    "notifyPost": true,
+    "notifyComment": true,
+  }
+});
+```
+
+- There is another branch for more complete regration sample code. See [register-2 branch](https://github.com/thruthesky/fireflutter_sample_app/tree/register-2) for more complete regiration code.
+- We recommend you to copy the sample code and apply it into your own project.
 
 ### Forum
 
@@ -463,6 +564,7 @@ ff.init(
 
 #### Google Login
 
+- Open login.screen.dart or create following [Create Login Screen](#create-login-screen)
 - You can use the social Login by calling signInWithGoogle.
 
 ```dart
@@ -471,6 +573,8 @@ RaisedButton(
   onPressed: ff.signInWithGoogle,
 )
 ```
+
+- Tip: you may customize your registration page to put a button saying `Login with social accounts`. When it is touched, redirect the user to login screen where actual social login buttons are appear.
 
 #### Facebook Login
 
