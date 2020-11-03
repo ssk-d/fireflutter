@@ -16,6 +16,7 @@ A free, open source, rapid development flutter package to build social apps, com
 - [Fire Flutter](#fire-flutter)
 - [Table of Contents](#table-of-contents)
 - [Features](#features)
+- [TODOs](#todos)
 - [References](#references)
 - [Components](#components)
 - [Requirements](#requirements)
@@ -49,7 +50,7 @@ A free, open source, rapid development flutter package to build social apps, com
     - [Funtions Test](#funtions-test)
   - [Localization Setup](#localization-setup)
   - [Push Notification Setup](#push-notification-setup)
-  - [Algolia Installation](#algolia-installation)
+  - [Algolia Setup](#algolia-setup)
   - [Admin Account Setting](#admin-account-setting)
 - [App Management](#app-management)
   - [App Settings](#app-settings)
@@ -61,14 +62,15 @@ A free, open source, rapid development flutter package to build social apps, com
     - [FireFlutter Initialization](#fireflutter-initialization)
     - [Add GetX](#add-getx)
   - [Firestore Structure](#firestore-structure)
-  - [Coding Guidelines](#coding-guidelines)
   - [User](#user)
   - [Create Register Screen](#create-register-screen)
   - [Create Login Screen](#create-login-screen)
   - [Create Profile Screen](#create-profile-screen)
     - [User Email And Password Registration](#user-email-and-password-registration)
   - [Display User Login](#display-user-login)
-  - [Forum](#forum)
+  - [Forum Coding](#forum-coding)
+    - [Creating forum admin page](#creating-forum-admin-page)
+    - [Forum list page](#forum-list-page)
   - [Logic for Vote](#logic-for-vote)
   - [Push Notification](#push-notification)
   - [Social Login](#social-login)
@@ -132,6 +134,11 @@ A free, open source, rapid development flutter package to build social apps, com
 
 - Fully Customizable
   - FireFlutter package does not involve in any of part application's login or UI. It is completely separated from the app. Thus, it's highly customizable.
+
+# TODOs
+
+- Adding sample code for user profile update
+- Adding sample code for live change of user language.
 
 # References
 
@@ -710,7 +717,32 @@ Scaffold(
   ),
 ```
 
-- To change
+- If you want to set device language as the display langauge, you can do so like below.
+  - If `ui.window.locale` is not available, it will fall back to Korean.
+
+```dart
+import 'dart:ui' as ui;
+// ...
+@override
+Widget build(BuildContext context) {
+  return GetMaterialApp(
+    locale: ui.window.locale ?? Locale('ko'),
+    fallbackLocale: Locale('ko'),
+```
+
+- User may want to choose what language they want to use.
+  - Display selection box and when a user choose his langauge, then update the language like below.
+
+```dart
+Get.updateLocale(Locale('ko'));
+```
+
+- Admin can overwrite the translated texts simply by updating it under `/translations` collection in Firestore.
+  - Go to Firestore
+  - Create `translations` collection if it is not existing.
+  - Create `en` document if not existing.
+  - Add(or update) `app-name` property in `en` document.
+  - And you will see the `app-name` has changed on the app.
 
 ## Push Notification Setup
 
@@ -722,9 +754,17 @@ Scaffold(
 
 - Refer [Firestore Messaging](https://pub.dev/packages/firebase_messaging)
 
-## Algolia Installation
+## Algolia Setup
 
-- There are two settings for Algolia.
+Firestore does not support full text search, which means users cannot search the title or content of posts and comments. And this is a must functionality for community and blog apps.
+
+One option(recomended by Firebase team) to solve this matter is to use Algolia. Algolia has free service and that's what we are going to use it.
+
+Before setup Algolia, you may try forum code as described in [Forum Coding](#forum-coding) to test if this settings work.
+
+- Go to Algolia site.
+- Register.
+- Create app.
 - First, you need to put ALGOLIA_ID(Application ID), ALGOLIA_ADMIN_KEY, ALGOLIA_INDEX_NAME in `firebase-settings.js`.
   - deploy with `firebase deploy --only functions`.
   - For testing, do `npm run test:algolia`.
@@ -734,8 +774,26 @@ Scaffold(
 
 ## Admin Account Setting
 
-- Any user who has `isAdmin` property with `true`.
-- Admin property is protected by Firestore security rules and cannot be edited by client app.
+You can set a user to admin by updating user document of Firestore directly. Admin property is protected by Firestore security rules and cannot be edited by client app.
+
+- Do [User Email And Password Registration](#user-email-and-password-registration) and register with a user as `admin@user.com`.
+
+  - You may add a user manually by entering email and password under Users in Firebase Authentication. But we recommend you to create a user account through the app after coding registration page.
+
+- Open Firebase => Authentication => Users
+  - And Copy `User UID` of `admin@user.com`.
+- Open Firebase => Firestore
+
+  - You will see `users` collection under data tab. Click `users`
+  - Search the `User UID` of `admin@user.com`
+    - And click the `User UID`.
+  - Click `+ Add field`.
+  - Input `isAdmin` in Field.
+  - Select `boolean` in Type.
+  - Select `true` as Value.
+  - Click Add
+
+- Now the user is an admin.
 
 # App Management
 
@@ -822,12 +880,10 @@ void main() async {
   - `/posts/{postId}/votes/{uid}` is the vote document of each user.
   - `/posts/{postId}/comments/{commentId}` is the comment document under of the post document.
 
-## Coding Guidelines
+## User
 
 - `null` event will be fired for the first time on `FireFlutter.userChange.listen`.
 - `auth` event will be fired for the first time on `FirebaseAuth.authChagnes`.
-
-## User
 
 - Private user information is saved under `/users/{uid}` documentation.
 - User's notification subscription information is saved under `/users/{uid}/meta/public` documents.
@@ -914,7 +970,19 @@ Let's display user login information on home screen.
 - Open home screen with Xcode
 - Code like below
 
-## Forum
+## Forum Coding
+
+FireFlutter does not involve any of the app's in UI/UX. Because of this, you can customize your app as whatever you like.
+
+There are many works to do to complete forum functionality.
+
+### Creating forum admin page
+
+- Do [Admin Account Setting](#admin-account-setting)
+- Login as the admin account.
+- ////
+
+### Forum list page
 
 - To fetch posts and listing, you need to declare `ForumData` object.
   - How to declare forum data.
@@ -1064,6 +1132,8 @@ if (GetPlatform.isIOS)
 
 - Default i18n translations(texts) can be set through `FireFlutter` initializatin and is overwritten by the `translations` collection of Firebase.
   The Firestore is working offline mode, so overwriting with Firestore translation would happen so quickly.
+
+- You may optionally omit `translations` in `FireFlutter.init()` if you are going to set `translations` in `GetMaterialApp` since the same initial translated texts will be merged into.
 
 # Settings
 

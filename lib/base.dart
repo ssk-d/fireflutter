@@ -85,7 +85,7 @@ class Base {
 
   // Map<String, dynamic> _translations;
   // ignore: close_sinks
-  BehaviorSubject translationsChange = BehaviorSubject.seeded(null);
+  BehaviorSubject translationsChange = BehaviorSubject.seeded({});
 
   Algolia algolia;
 
