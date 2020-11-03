@@ -330,8 +330,6 @@ keytool -exportcert -alias YOUR_RELEASE_KEY_ALIAS -keystore YOUR_RELEASE_KEY_PAT
 
 #### Facebook Sign In Setup
 
-##### Facebook Sign In Setup for iOS
-
 ##### Facebook Sign In Setup for Android
 
 In this chapter, Facebook sign in setup for Android is explanined in detail.
@@ -412,7 +410,73 @@ All the information is coming from [flutter_facebook_auth](https://pub.dev/packa
 - Choose app category.
 - Click `Switch Mode`.
 
-#### Apple Login Setup
+- Go to Facebook App => Settings => Basic
+- Get App ID and App Secret
+- Go to Firebase => Authentication => Sign in method
+- Click Facebook
+- Enable
+- Paste App ID and App Secret into the relative input boxes.
+- And copy `OAuth redirect URI` (before save)
+- Save
+- Go to Facebook Ap => Facebook Login => Settings
+- Paste the `OAuth Redirect URI` into `Valid OAuth Redirect URI` box.
+- Click `Save Changes`.
+- That's it. To test the settings, try the code in [Facebook Sign In](#facebook-sign-in)
+
+##### Facebook Sign In Setup for iOS
+
+- Open `ios/Podfile`
+- Uncomment the `platform` line and update it to 11.0 like below
+
+```Podfile
+platform :ios, '11.0'
+```
+
+- Add the following into Info.plist with proper values
+
+```xml
+<key>CFBundleURLTypes</key>
+<array>
+  <dict>
+    <key>CFBundleURLSchemes</key>
+    <array>
+      <string>fb{your-app-id}</string>
+    </array>
+  </dict>
+</array>
+<key>FacebookAppID</key>
+<string>{your-app-id}</string>
+<key>FacebookDisplayName</key>
+<string>{your-app-name}</string>
+<key>LSApplicationQueriesSchemes</key>
+<array>
+  <string>fbapi</string>
+  <string>fb-messenger-share-api</string>
+  <string>fbauth2</string>
+  <string>fbshareextension</string>
+</array>
+```
+
+- That's it. To test the settings, try the code in [Facebook Sign In](#facebook-sign-in)
+
+#### Apple Sign In Setup for iOS
+
+It is a mandatory to add Apple Sign In if the app has other social sign in method. Or you app will be rejected on iOS app review.
+
+We add `Apple sign in` only on iOS platform.
+
+- Open Xcode with the project
+
+- Click `+ Capability` under `Runner(left pane) => Runner(TARGETS) => Signing & Capabilities`.
+- Click(or double click) to enable `Sign in with Apple`.
+- If you see `Signing for "Runner" requires a development team.` then, you need to apply proper signing.
+- Go to Firebase => Authentication => Sign-in method
+- Click Apple
+- Click Enable
+- Click Save
+- That's it. To test the settings, try the code in [Apple Sign In](#apple-sign-in)
+
+- Refer [Eanble Sign In with App](https://help.apple.com/xcode/mac/11.0/#/dev50571b902) for details.
 
 ### Firestore security rules
 
@@ -747,7 +811,7 @@ ff.init(
 
 #### Google Sign-in
 
-- [Google Sign In Setup for Android](#google-sign-in-setup-for-android) and [Facebook Sign In Setup for Android](#facebook-sign-in-setup-for-android) is required to sign in with Google.
+- [Google Sign In Setup for Android](#google-sign-in-setup-for-android) and [Facebook Sign In Setup for Android](#facebook-sign-in-setup-for-android) are required.
 - Open login.screen.dart or create following [Create Login Screen](#create-login-screen)
 - Code like below,
   - You can use the social Login by calling fireflutter `signInWithGoogle` method.
@@ -772,31 +836,41 @@ RaisedButton(
 
 #### Facebook Sign In
 
-- Follow the instructions on how to setup Facebook project.
+- [Google Sign In Setup for Android](#google-sign-in-setup-for-android) and [Facebook Sign In Setup for Android](#facebook-sign-in-setup-for-android) are required.
+- Open login.screen.dart or create following [Create Login Screen](#create-login-screen)
+- Code like below,
 
 ```dart
 RaisedButton(
   child: Text('Facebook Sign-in'),
-  onPressed: ff.signInWithFacebook,
-);
-```
-
-#### Apple Login
-
-- Follow the instructions on how to setup Apple project.
-- Enable `Apple` in Sign-in Method.
-
-```dart
-SignInWithAppleButton(
   onPressed: () async {
     try {
-      await ff.signInWithApple();
-      Get.toNamed(RouteNames.home);
+      await ff.signInWithFacebook();
+      Get.toNamed('home');
     } catch (e) {
-      Service.error(e);
+      Get.snackbar('Error', e.toString());
     }
   },
 ),
+```
+
+#### Apple Sign In
+
+- Do [Apple Sign In Setup for iOS](#apple-sign-in-setup-for-ios).
+- Apple sign in may not work for some versions of simualtor. We recommend you to test the code in real device.
+
+```dart
+if (GetPlatform.isIOS)
+  SignInWithAppleButton(
+    onPressed: () async {
+      try {
+        await ff.signInWithApple();
+        Get.toNamed('home');
+      } catch (e) {
+        Get.snackbar('Error', e.toString());
+      }
+    },
+  )
 ```
 
 ### External Logins
