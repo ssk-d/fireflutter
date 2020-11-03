@@ -51,6 +51,10 @@ class Base {
   bool get loggedIn => user != null;
   bool get notLoggedIn => !loggedIn;
 
+  /// [userChange] event fires whenever user information changes like when
+  /// user logs in, logs out, or update his profile.
+  /// It is important to know that [authStateChanges] event happens only when
+  /// user logs in or logs out.
   BehaviorSubject<UserChangeType> userChange = BehaviorSubject.seeded(null);
 
   /// [notification] will be fired whenever there is a push notification.
@@ -92,6 +96,8 @@ class Base {
     authStateChanges.listen(
       (User user) {
         this.user = user;
+
+        /// [userChange] event fires when user is logs in or logs out.
         userChange.add(UserChangeType.auth);
 
         if (this.user == null) {

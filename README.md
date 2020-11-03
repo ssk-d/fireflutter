@@ -76,6 +76,13 @@ A free, open source, rapid development flutter package to build social apps, com
   Firebase does not support full text search which means users cannot search posts and comments.
   Algolia does it.
 
+## Requirements
+
+- Basic understanding of Firebase.
+- Basic understanding of Flutter and Dart.
+- OS: Windows or Mac.
+- Editor: VSCode, Xcode(for Mac OS). Our primary editor si VSCode and we use Xcode for Flutter settings. We found it more easy to do the settings with Xcode for iOS development.
+
 ## Installation
 
 - If you are not familiar with Firebase and Flutter, you may have difficulties to install it.
@@ -87,8 +94,10 @@ A free, open source, rapid development flutter package to build social apps, com
 
   - We will begin with Firebase settings and contiue gradually with Flutter.
 
-- If you have any difficulties on installatin, you may ask it on
+- If you have any difficulties on installation, you may ask it on
   [Git issues](https://github.com/thruthesky/fireflutter/issues).
+
+- And please let us know if there is any mistake on the installation.
 
 - We also have a premium paid servie to support installation and development.
 
@@ -207,6 +216,7 @@ dependencies {
 
 - Add `fireflutter` to pubspec.yaml
   - fireflutter package contains other packages like algolia, dio, firebase related packages, and more as its dependency. You don't have to install the same packages again in your pubspec.yaml
+  - To check what versions of the packages are installed, see pubspec.lock file.
   - See [the pubspect.yaml in sample app](https://github.com/thruthesky/fireflutter_sample_app/blob/fireflutter-initialization/pubspec.yaml).
   - You need to update the latest version of `fireflutter`.
 - See [FireFlutter Initialization](#fireflutter-initialization) to initialize `fireflutter` package.
@@ -214,22 +224,19 @@ dependencies {
 
 ### Firebase Social Login
 
-- Under Authentication => Sign-in Methods, Enable
+- Social login is one of difficult part of settings.
+  Each social login takes its own settings.
+  For instance, you will need to create an app in Facebook developer account and do settings there.
+  And then do settings in Firebase to relate both.
 
-  - Email/Password
-  - Google
-  - Apple
-  - Facebook
-  - Phone
-    All of them are optional. You may only enable those you want to provide for user login.
+- We will cover Google, Apple, Facebook social logins.
+  You can customise to remove some of the social logins or add other social logins.
 
-- Settings for Firebase Social login are in Android and iOS platform already done app. You need to set the settings on Apple, Facebook.
+- [FireFlutter sample app](https://github.com/thruthesky/fireflutter_sample_app) has social login settings, but only on Flutter part. You still need to set the settings on Firebase and the social service site.
 
-  - If you are not going to use the sample app, you need to setup by yourself.
+- Refer [Firebase Authentication](https://firebase.google.com/docs/auth) and [FlutterFire Social Authentication](https://firebase.flutter.dev/docs/auth/social) for details.
 
-- Refer [Firebase Authentication](https://firebase.google.com/docs/auth) and [FlutterFire Social Authenticatino](https://firebase.flutter.dev/docs/auth/social) for details.
-
-#### Google Login Setup
+#### Google Sign-in Setup
 
 - Go to Authentication => Sign-in method
 - Click Google
@@ -237,9 +244,47 @@ dependencies {
 - Choose your email address in Project support email.
 - Click Save.
 
-- That's it. If you want to test the setting, try to code in [Google Login](#google-login) section.
+#### Google Sign-in Setup for iOS
+
+- Open Xcode with the project.
+- Add `REVERSE_CLIENT_ID` in URL Schemes box in `URL Types under Runner (on top of left pain) => Runner (under TARGETS) => Info => URL Types => (+)`
+  - You can get the REVERSE_CLIENT_ID from GoogleService-Info.plist under `Runner => Runner on left pane`.
+- Add `BUNDLE_ID` in URL Schemes box in `URL Types under Runner (on top of left pain) => Runner (under TARGETS) => Info => URL Types => (+)`
+
+  - You can get the REVERSE_CLIENT_ID from GoogleService-Info.plist under `Runner => Runner on left pane`.
+
+- To see if this setting works, try the code in [Google Sign-in](#google-sign-in) section.
+
+#### Google Sign-in Setup for Android
+
+- Generate debug SHA1
+- Add it into `Firebase => Project Settings => General => Your apps => Android apps => com.sonub.fireflutter => Add finger print`
+- Click save.
+
+- Important: you need to generate upload SHA1 and deploy SHA1 for production app.
+
+- To see if this setting works, try the code in [Google Sign-in](#google-sign-in) section.
+
+- Warning: If you meet error `MissingPluginException(No implementation found for method init on channel plugins.flutter.io/google_sign_in)`, see the [MissingPluginException google_sign_in](#missingpluginexception-google_sign_in)
 
 #### Facebook Login Setup
+
+##### Facebook Login Setup for Android
+
+In this chapter, Facebook login setup for Android is explanined in detail.
+
+All the information is coming from [flutter_facebook_auth](https://pub.dev/packages/flutter_facebook_auth) which is the package we use for Facebook login.
+
+- Go to [Facebook developers account app page](https://developers.facebook.com/apps/)
+- Create a new app (Or you may click existing one to use the app)
+  - Choose `Build Connected Experiences`
+  - Click continue
+  - Input `App Display Name`
+  - Click `Create App`
+    - Then, you will be redirected to the app page
+- Click `Setup` under `Dashboard ==> Add Products to Your App ==> Facebook Login`.
+- Click `Android`
+-
 
 #### Apple Login Setup
 
@@ -433,10 +478,15 @@ void main() async {
 - Do [General Setup](#general-setup).
 - Create register screen with `lib/screens/register/register.screen.dart` file.
 - Put a route named `register`
+- See complete code on [route banch of sample app](https://github.com/thruthesky/fireflutter_sample_app/tree/routes)
 
 ### Create Login Screen
 
+- See complete code on [route banch of sample app](https://github.com/thruthesky/fireflutter_sample_app/tree/routes)
+
 ### Create Profile Screen
+
+- See complete code on [route banch of sample app](https://github.com/thruthesky/fireflutter_sample_app/tree/routes)
 
 #### User Email And Password Registration
 
@@ -496,6 +546,13 @@ User user = await ff.register({
 
 - There is another branch for more complete regration sample code. See [register-2 branch](https://github.com/thruthesky/fireflutter_sample_app/tree/register-2) for more complete regiration code.
 - We recommend you to copy the sample code and apply it into your own project.
+
+### Display User Login
+
+Let's display user login information on home screen.
+
+- Open home screen with Xcode
+- Code like below
 
 ### Forum
 
@@ -562,17 +619,27 @@ ff.init(
 
 ### Social Login
 
-#### Google Login
+#### Google Sign-in
 
 - Open login.screen.dart or create following [Create Login Screen](#create-login-screen)
-- You can use the social Login by calling signInWithGoogle.
+- Code like below,
+  - You can use the social Login by calling fireflutter `signInWithGoogle` method.
 
 ```dart
 RaisedButton(
   child: Text('Google Sign-in'),
-  onPressed: ff.signInWithGoogle,
-)
+  onPressed: () async {
+    try {
+      await ff.signInWithGoogle();
+      Get.toNamed('home');
+    } catch (e) {
+      Get.snackbar('Error', e.toString());
+    }
+  },
+),
 ```
+
+- After login, the user will be redirected to home screen. Add some code like what is described in [Display User Login](#display-user-login).
 
 - Tip: you may customize your registration page to put a button saying `Login with social accounts`. When it is touched, redirect the user to login screen where actual social login buttons are appear.
 
