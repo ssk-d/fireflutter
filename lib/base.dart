@@ -240,15 +240,15 @@ class Base {
     /// - exited
     firebaseMessaging.configure(
       onMessage: (Map<String, dynamic> message) async {
-        print('onMessage');
+        // print('onMessage');
         _notifyApp(message, NotificationType.onMessage);
       },
       onLaunch: (Map<String, dynamic> message) async {
-        print('onLaunch');
+        // print('onLaunch');
         _notifyApp(message, NotificationType.onLaunch);
       },
       onResume: (Map<String, dynamic> message) async {
-        print('onResume');
+        // print('onResume');
         _notifyApp(message, NotificationType.onResume);
       },
     );
@@ -268,7 +268,7 @@ class Base {
   }) async {
     if (enableNotification == false) return false;
 
-    print('SendNotification');
+    // print('SendNotification');
 
     if (token == null &&
         (tokens == null || tokens.length == 0) &&
