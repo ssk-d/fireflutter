@@ -17,7 +17,7 @@ class Base {
 
   /// Device token for Firebase messaging.
   ///
-  /// This will be available by default on Android. For iOS, this will be only
+  /// This will be available by default on Android. For iOS, this will be only\'
   /// available when user accepts the permission request.
   String firebaseMessagingToken;
 
@@ -204,6 +204,9 @@ class Base {
   /// Do some sanitizing and call `notificationHandler` to deliver
   /// notification to app.
   _notifyApp(Map<String, dynamic> message, NotificationType type) {
+    print('notifyApp');
+    print(message);
+
     Map<String, dynamic> notification =
         jsonDecode(jsonEncode(message['notification']));
 
@@ -293,24 +296,29 @@ class Base {
         "notification": {
           "body": body.length > 512 ? body.substring(0, 512) : body,
           "title": title.length > 128 ? title.substring(0, 128) : title,
-          "sound": getNotificationSound('android'),
         },
         "priority": "high",
         "data": {
-          "click_action": "FLUTTER_NOTIFICATION_CLICK",
           "id": id,
           "status": "done",
           "senderUid": user.uid,
-          'route': '/',
-          'screen': screen
+          "route": "/",
+          "screen": screen,
+        },
+        "android": {
+          "notification": {
+            "sound": getNotificationSound('android'),
+            "click_action": "OPEN_ACTIVITY_1"
+          }
         },
         "apns": {
           "payload": {
+            "sound": getNotificationSound('android'),
             "aps": {
               "sound": getNotificationSound('ios'),
             }
           }
-        }
+        },
       };
 
       print(data);
