@@ -1,3 +1,7 @@
+## [0.0.10] - Updating documents and minor fixes
+
+- Updating documents and minor fixes
+
 ## [0.0.9] - document.
 
 - Updating documents

@@ -68,9 +68,11 @@ A free, open source, rapid development flutter package to build social apps, com
   - [Create Profile Screen](#create-profile-screen)
     - [User Email And Password Registration](#user-email-and-password-registration)
   - [Display User Login](#display-user-login)
+  - [Create admin page](#create-admin-page)
   - [Forum Coding](#forum-coding)
-    - [Creating forum admin page](#creating-forum-admin-page)
-    - [Forum list page](#forum-list-page)
+    - [Create forum category management page](#create-forum-category-management-page)
+    - [Create post edit page](#create-post-edit-page)
+    - [Create post list page](#create-post-list-page)
   - [Logic for Vote](#logic-for-vote)
   - [Push Notification](#push-notification)
   - [Social Login](#social-login)
@@ -737,6 +739,14 @@ Widget build(BuildContext context) {
 Get.updateLocale(Locale('ko'));
 ```
 
+- Updating translations in real time.
+  - You can code like below in `initState()` of `MainApp`.
+  - It listens for the changes in Firestore translations collection and update the screen with the translations.
+
+```dart
+ff.translationsChange.listen((x) => setState(() => updateTranslations(x)));
+```
+
 - Admin can overwrite the translated texts simply by updating it under `/translations` collection in Firestore.
   - Go to Firestore
   - Create `translations` collection if it is not existing.
@@ -970,19 +980,79 @@ Let's display user login information on home screen.
 - Open home screen with Xcode
 - Code like below
 
+## Create admin page
+
+- Do [Admin Account Setting](#admin-account-setting)
+- Login as the admin account.
+- Add a button on home screen like below.
+
+```dart
+if (ff.isAdmin) ...[
+  Divider(),
+  RaisedButton(
+    onPressed: () => Get.toNamed('admin'),
+    child: Text('Admin Screen'),
+  ),
+],
+```
+
+- Create admin.screen.dart under lib/screens/admin foler.
+  - And code like below
+
+```dart
+import 'package:flutter/material.dart';
+
+class AdminScreen extends StatefulWidget {
+  @override
+  _AdminScreenState createState() => _AdminScreenState();
+}
+
+class _AdminScreenState extends State<AdminScreen> {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Admin Screen'),
+      ),
+      body: Container(),
+    );
+  }
+}
+```
+
+- Add admin screen route like below in main.dart
+
+```dart
+GetMateriaApp(
+  getPages: [
+    GetPage(name: 'admin', page: () => AdminScreen()),
+  ]
+)
+```
+
+- Now, you will be able to login admin page. A user may accidentally enter admin page but he cannot see administrative information since Firestore security rules are in blocking the middle.
+
+- See [admin-page branch of sample app](https://github.com/thruthesky/fireflutter_sample_app/tree/admin-page) for complete code.
+
 ## Forum Coding
 
 FireFlutter does not involve any of the app's in UI/UX. Because of this, you can customize your app as whatever you like.
 
 There are many works to do to complete forum functionality.
 
-### Creating forum admin page
+### Create forum category management page
 
 - Do [Admin Account Setting](#admin-account-setting)
 - Login as the admin account.
-- ////
+- Do [Create admin page](#create-admin-page)
+- And see [forum-admin branch of sample app](https://github.com/thruthesky/fireflutter_sample_app/tree/forum-admin) for the code of forum category management page.
+  - The code is in `lib/screens/admin/admin.category.screen.dart`.
 
-### Forum list page
+### Create post edit page
+
+//// to be continued...
+
+### Create post list page
 
 - To fetch posts and listing, you need to declare `ForumData` object.
   - How to declare forum data.
