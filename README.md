@@ -1,10 +1,12 @@
 # Fire Flutter
 
+[한국어 설명 보기](readme.ko.md)
+
 A free, open source, rapid development flutter package to build social apps, community apps, and more.
 
 - This package has complete features (see Features below) that most of apps are needed.
 - `Simple, easy and the right way`.
-  We want it to be really simple but right way for ourselves and for builders in the world.
+  We want it to be really simple but right way for ourselves and for the builders in the world.
   We know when it gets complicated, developers' lives would get even more complicated.
 
 ## Features
@@ -74,19 +76,30 @@ A free, open source, rapid development flutter package to build social apps, com
   Firebase does not support full text search which means users cannot search posts and comments.
   Algolia does it.
 
+## Requirements
+
+- Basic understanding of Firebase.
+- Basic understanding of Flutter and Dart.
+- OS: Windows or Mac.
+- Editor: VSCode, Xcode(for Mac OS). Our primary editor si VSCode and we use Xcode for Flutter settings. We found it more easy to do the settings with Xcode for iOS development.
+
 ## Installation
 
 - If you are not familiar with Firebase and Flutter, you may have difficulties to install it.
 
   - FireFlutter is not a smple package that you just add it into pubspec.yaml and ready to go.
   - Furthermore, the settings that are not directly from coming FireFlutter package like social login settings, Algolia setting, Android and iOS developer's accont settings are also hard to implement if you are not get used to them.
+  - And for release, you will need to have extra settgins.
+  - Most of developers are having troubles with settings. You are not the only one.
 
 - We cover all the settings and will try to put it as demonstrative as it can be.
 
   - We will begin with Firebase settings and contiue gradually with Flutter.
 
-- If you have any difficulties on installatin, you may ask it on
+- If you have any difficulties on installation, you may ask it on
   [Git issues](https://github.com/thruthesky/fireflutter/issues).
+
+- And please let us know if there is any mistake on the installation.
 
 - We also have a premium paid servie to support installation and development.
 
@@ -123,7 +136,7 @@ A free, open source, rapid development flutter package to build social apps, com
 - Choose nearest `Cloud Firestore location`.
 - Click `Enable`.
 
-### Create Flutter Project
+### Create Flutter project
 
 - Create a Flutter project like below;
 
@@ -137,8 +150,8 @@ $ flutter run
 
 ##### iOS Setup
 
-- Click `iOS` icon on `Project Overview` page.
-- enter iOS Bundle ID. Ex) com.sonub.fireflutter
+- Click `iOS` icon on `Project Overview` page to add `iOS` app to Firebase.
+- Enter iOS Bundle ID. Ex) com.sonub.fireflutter
   - From now on, we assume that your iOS Bundle ID is `com.sonub.fireflutter`.
 - click `Register app`.
 - click `Download GoogleService-Info.plist`
@@ -161,36 +174,247 @@ $ flutter run
 
 ##### Android Setup
 
-### Flutter Installation
+- Click `Android` icon on `Project Overview` page to add `Android` app to Firebase.
+  - If you don't see `Android` icon, look for `+ Add app` button and click, then you would see `Android` icon.
+- Enter `iOS Bundle ID` into `Android package name`. `iOS Bundle ID` and `Android package name` should be kept in idendentical name for easy to maintain. In our case, it is `com.sonub.fireflutter`.
+- Click `Register app` button.
+- Click `Download google-services.json` file to downlaod
+- And save it under `fireflutter_sample_app/android/app` folder.
+- Click `Next`
+- Click `Next`
+- Click `Continue to console`.
+- Open VSCode with `fireflutter_sample_app` project.
+- Open `fireflutter_sample_app/android/app/build.gradle` file.
+- Update `minSdkVersion 16` to `minSdkVersion 21`.
+- Add below to the end of `fireflutter_sample_app/android/app/build.gradle`. This is for Flutter to read `google-services.json`.
+
+```gradle
+apply plugin: 'com.google.gms.google-services'
+```
+
+- Open `fireflutter_sample_app/android/build.gradle`. Do not confuse with the other build.gradle.
+- Add the dependency below in the buildscript tag.
+
+```gradle
+dependencies {
+  // ...
+  classpath 'com.google.gms:google-services:4.3.3' // Add this line.
+}
+```
+
+- Open the 5 files and update the package name to `com.sonub.fireflutter`.
+
+  - android/app/src/main/AndroidManifest.xml
+  - android/app/src/debug/AndroidManifest.xml
+  - android/app/src/profile/AndroidManifest.xml
+  - android/app/build.gradle
+  - android/app/src/main/kotlin/….MainActivity.kt
+
+- That's it.
+- You may want to test if the settings are alright.
+  - Open VSCode and do [FireFlutter Initialization](#fireflutter-initialization) do some registration code. see [User Registration](#user-email-and-password-registration) for more details.
+
+### Create a keystore
+
+You will need to create a keystore file for Android platform. Keystore file is used to upload and to update app binary file to Playstore and is alos used to generate hash keys for interacting with 3rd party service like facebook login.
+
+It's important to know that Playstore will generate another Keystore file for publishing and you may need the hash key of it to interact with 3rd party.
+
+- Enter the command below and input what it asks.
+
+```sh
+keytool -genkey -v -keystore keystore.key -keyalg RSA -keysize 2048 -validity 10000 -alias key
+```
+
+- Refer [Flutter - Create a keystore](https://flutter.dev/docs/deployment/android#create-a-keystore) for details.
+
+#### Debug hash key
+
+- To get debug hash key (SHA1 and others), enter the command below,
+
+  - Just press enter if it asks password,
+
+```sh
+keytool -list -v -alias androiddebugkey -keystore ~/.android/debug.keystore
+```
+
+##### Debug hash key base64
+
+- Some 3rd party service like Facebook may ask base64 encrypted hash key, you can get it with the following command
+
+  - Just press enter if it asks password,
+
+```sh
+keytool -exportcert -alias androiddebugkey -keystore ~/.android/debug.keystore | openssl sha1 -binary | openssl base64
+```
+
+#### Release hash key
+
+- To get release hash key (SHA1 and others), enter the command below,
+
+  - Just press enter if it asks password,
+
+```sh
+keytool -exportcert -list -v -alias [key] -keystore [keystore.key]
+```
+
+You can replace `[key]` with real key and `[keystore.key]` with real keystore file path.
+
+##### Release hash key base64
+
+- Some 3rd party service like Facebook may ask base64 encrypted hash key, you can get it with the following command
+
+  - Just press enter if it asks password,
+
+```sh
+keytool -exportcert -alias YOUR_RELEASE_KEY_ALIAS -keystore YOUR_RELEASE_KEY_PATH | openssl sha1 -binary | openssl base64
+```
+
+- It's important to know that Playstore will generate another Keystore for publish. And you need to input the hash key of it.
+
+### Add fireflutter package to Flutter project
 
 - Add `fireflutter` to pubspec.yaml
-- see our [sample flutter app](https://github.com/thruthesky/fireflutter-sample-app).
+  - fireflutter package contains other packages like algolia, dio, firebase related packages, and more as its dependency. You don't have to install the same packages again in your pubspec.yaml
+  - To check what versions of the packages are installed, see pubspec.lock file.
+  - See [the pubspect.yaml in sample app](https://github.com/thruthesky/fireflutter_sample_app/blob/fireflutter-initialization/pubspec.yaml).
+  - You need to update the latest version of `fireflutter`.
+- See [FireFlutter Initialization](#fireflutter-initialization) to initialize `fireflutter` package.
+- See [Add GetX](#add-getx) to use route, state management, localization and more.
 
 ### Firebase Social Login
 
-- Under Authentication => Sign-in Methods, Enable
+- Social login is one of difficult part of settings.
+  Each social login takes its own settings.
+  For instance, you will need to create an app in Facebook developer account and do settings there.
+  And then do settings in Firebase to relate both.
 
-  - Email/Password
-  - Google
-  - Apple
-  - Facebook
-  - Phone
-    All of them are optional. You may only enable those you want to provide for user login.
+- We will cover Google, Apple, Facebook social logins.
+  You can customise to remove some of the social logins or add other social logins.
 
-- Settings for Firebase Social login are in Android and iOS platform already done app. You need to set the settings on Apple, Facebook.
+- [FireFlutter sample app](https://github.com/thruthesky/fireflutter_sample_app) has social login settings, but only on Flutter part. You still need to set the settings on Firebase and the social service site.
 
-  - If you are not going to use the sample app, you need to setup by yourself.
+- Refer [Firebase Authentication](https://firebase.google.com/docs/auth) and [FlutterFire Social Authentication](https://firebase.flutter.dev/docs/auth/social) for details.
 
-- Refer [Firebase Authentication](https://firebase.google.com/docs/auth) and [FlutterFire Social Authenticatino](https://firebase.flutter.dev/docs/auth/social) for details.
+#### Google Sign-in Setup
 
-### Firestore and Functions
+- Go to Authentication => Sign-in method
+- Click Google
+- Click Enable
+- Choose your email address in Project support email.
+- Click Save.
 
-- Enable(Start) Cloud Firestore by clicking the menu.
-- Choose `protected mode`
-- Choose your region.
-- Refer [Cloud Firestore](https://firebase.google.com/docs/firestore) for details.
+#### Google Sign-in Setup for iOS
 
-### Firestore security and Functions Settings.
+- Open Xcode with the project.
+- Add `REVERSE_CLIENT_ID` in URL Schemes box in `URL Types under Runner (on top of left pain) => Runner (under TARGETS) => Info => URL Types => (+)`
+  - You can get the REVERSE_CLIENT_ID from GoogleService-Info.plist under `Runner => Runner on left pane`.
+- Add `BUNDLE_ID` in URL Schemes box in `URL Types under Runner (on top of left pain) => Runner (under TARGETS) => Info => URL Types => (+)`
+
+  - You can get the REVERSE_CLIENT_ID from GoogleService-Info.plist under `Runner => Runner on left pane`.
+
+- To see if this setting works, try the code in [Google Sign-in](#google-sign-in) section.
+
+#### Google Sign-in Setup for Android
+
+- Generate debug hash and get SHA1 as described in [Debug hash key](#debug-hash-key)
+- Add it into `Firebase => Project Settings => General => Your apps => Android apps => com.sonub.fireflutter => Add finger print`
+- Click save.
+
+- It's important to know that you need to generate two release SHA1 keys for production app. One for upload SHA1, the other for deploy SHA1.
+- [Facebook Sign In Setup for Android](#facebook-sign-in-setup-for-android) is required to sign in with Google (in our case).
+
+- To see if this setting works, try the code in [Google Sign-in](#google-sign-in) section.
+
+- Warning: If you meet error `MissingPluginException(No implementation found for method init on channel plugins.flutter.io/google_sign_in)`, see the [MissingPluginException google_sign_in](#missingpluginexception-google_sign_in)
+
+#### Facebook Sign In Setup
+
+##### Facebook Sign In Setup for iOS
+
+##### Facebook Sign In Setup for Android
+
+In this chapter, Facebook sign in setup for Android is explanined in detail.
+
+All the information is coming from [flutter_facebook_auth](https://pub.dev/packages/flutter_facebook_auth) which is the package we use for Facebook login.
+
+- Go to [Facebook developers account app page](https://developers.facebook.com/apps/)
+- Create a new app (Or you may click existing one to use the app)
+  - Choose `Build Connected Experiences`
+  - Click continue
+  - Input `App Display Name`
+  - Click `Create App`
+    - Then, you will be redirected to the app page
+- Click `Setup` under `Dashboard ==> Add Products to Your App ==> Facebook Login`.
+- Click `Android`
+- Click `Next`. No need to download SDK.
+- Click `Next`. No need to import the SDK.
+- Input the package name. In our case, it is `com.sonub.fireflutter`.
+- Input `com.sonub.fireflutter.MainActivity` into `Default Activity Class Name`.
+  - You need to replace `com.sonub.comfirefluter` to your package name and add the main activity class that is stated in AndroidManifest.xml. Default is `.MainActivity`.
+- Click save.
+- Click `use this package naem` if you see it.
+- Click continue.
+- Get debug hash key and release hash key as described in [Debug hash key base64](#debug-hash-key-base64) and [Release hash key base64](#release-hash-key-base64)
+  - And add them into `Key Hashes`
+- Click save
+- Click continue
+- Enable Sing Sing On. Set it to Yes.
+- Click save
+- Click next
+- You will see some settings for Android platform in Flutter.
+- Open `android/app/src/main/AndroidManifest.xml`
+- Set `android:label` to `@string/app_name` in application tag like below.
+
+```xml
+<application ... android:label="@string/app_name" ...>
+```
+
+- Open `/android/app/src/main/res/values/strings.xml` ( or create if it is not existing)
+- And copy facebook_app_id and fb_login_protocol_scheme, past into the XML file like below.
+  - Replace `xxxxxxxxxxxxxxxxx` with right value.
+
+```xml
+<resources>
+    <string name="app_name">SMS APP</string>
+    <string name="facebook_app_id">xxxxxxxxxxxxxxxxx</string>
+    <string name="fb_login_protocol_scheme">xxxxxxxxxxxxxxxxx</string>
+</resources>
+```
+
+- Open `android/app/src/main/AndroidManifest.xml`
+- Add the following uses-permission element after the application element (outside application tag)
+
+```xml
+  <uses-permission android:name="android.permission.INTERNET"/>
+```
+
+- Add the following meta-data element, an activity for Facebook, and an activity and intent filter for Chrome Custom Tabs inside your application element:
+
+```xml
+<meta-data android:name="com.facebook.sdk.ApplicationId" android:value="@string/facebook_app_id"/>
+<activity android:name="com.facebook.FacebookActivity" android:configChanges=
+            "keyboard|keyboardHidden|screenLayout|screenSize|orientation" android:label="@string/app_name" />
+<activity android:name="com.facebook.CustomTabActivity" android:exported="true">
+  <intent-filter>
+    <action android:name="android.intent.action.VIEW" />
+    <category android:name="android.intent.category.DEFAULT" />
+    <category android:name="android.intent.category.BROWSABLE" />
+    <data android:scheme="@string/fb_login_protocol_scheme" />
+  </intent-filter>
+</activity>
+```
+
+- Add `Privacy Policy URL` uin `Settings => Basic => Privacy Policy URL`.
+- Click `Save Changes`
+- Click `Use this package name` if you see it.
+- Click `In development` to enable live mode.
+- Choose app category.
+- Click `Switch Mode`.
+
+#### Apple Login Setup
+
+### Firestore security rules
 
 - Firestore needs security rules and Functions needs functions to support FireFlutter package.
 
@@ -209,15 +433,7 @@ $ firebase login
 - Save `Firebase SDK Admin Service Key` to `firebase-service-account-key.json`.
 - Run `firebase deploy --only firestore,functions`. You will need Firebase `Pay as you go` plan to deploy it.
 
-### Push Notification
-
-- Settings of push notification on Android and iOS platform are done in the sample app.
-
-  - If you are not going to use the sample app, you need to setup by yourself.
-
-- Refer [Firestore Messaging](https://pub.dev/packages/firebase_messaging)
-
-### Security Rules Testing
+#### Security Rules Testing
 
 - If you wish to test Firestore security rules, you may do so with the following;
 
@@ -241,6 +457,12 @@ $ npm run test:vote
 $ npm run test:user.token
 ```
 
+### Cloud Functions
+
+- We tried to limit the usage of Cloud Functions as less as possible. But there are some functionalities we cannot acheive without it.
+
+  - One of the reason why we use Cloud Funtions is to enable like and dislike functionality. It is a simple functionality but when it comes with Firestore security rule, it's not an easy work. And Cloud Functions does better with it.
+
 ### Funtions Test
 
 - If you whish to test Functins, you may do so with the following;
@@ -250,7 +472,15 @@ $ cd functions
 $ npm test
 ```
 
-#### Localization
+### Push Notification
+
+- Settings of push notification on Android and iOS platform are done in the sample app.
+
+  - If you are not going to use the sample app, you need to setup by yourself.
+
+- Refer [Firestore Messaging](https://pub.dev/packages/firebase_messaging)
+
+### Localization
 
 - To add a language, the language needs to be set in Info.plist of iOS platform. No setting is needed on Android platform.
 - you need to add the translation under Firestore `translations` collection.
@@ -333,8 +563,9 @@ void main() async {
 
 - todo: app settings
 - todo: translations
+- todo: how to use settings.
 
-#### Add GetX to main.dart
+#### Add GetX
 
 - To add GetX to Flutter app,
   - open main.dart
@@ -368,13 +599,29 @@ void main() async {
 - User's notification subscription information is saved under `/users/{uid}/meta/public` documents.
 - Push notification tokens are saved under `/users/{uid}/meta/tokens` document.
 
-#### User Email And Password Registration
+### Create Register Screen
 
 - Do [General Setup](#general-setup).
 - Create register screen with `lib/screens/register/register.screen.dart` file.
 - Put a route named `register`
-- And put a button for opening register screen.
+- See complete code on [route banch of sample app](https://github.com/thruthesky/fireflutter_sample_app/tree/routes)
+
+### Create Login Screen
+
+- See complete code on [route banch of sample app](https://github.com/thruthesky/fireflutter_sample_app/tree/routes)
+
+### Create Profile Screen
+
+- See complete code on [route banch of sample app](https://github.com/thruthesky/fireflutter_sample_app/tree/routes)
+
+#### User Email And Password Registration
+
+- Open register.screen.dart
+- Put a button for opening register screen.
 - Then, add email input box, password input box and a submit button.
+
+  - You may add more input box for displaName and other informations.
+  - You may put a profile photo upload button.
 
   - For the complete code, see [register branch in sample app](https://github.com/thruthesky/fireflutter_sample_app/tree/register/lib).
 
@@ -394,7 +641,44 @@ try {
 }
 ```
 
+- It may take serveral seconds depending on the user's internet connectivity.
+  - And FireFlutter package does a lot of works under the hood.
+    - When the `register()` method invoked, it does,
+      - create account in Firebase Auth,
+      - update displayName,
+      - update extra user data into Firestore,
+      - reload Firebase Auth account,
+      - push notification token saving,
+        thus, it may take more than a second. It is recommended to put a progress spinner while registration.
+- As you may know, you can save email, display name, profile photo url in Firebase Auth. Other information goes into `/users/{uid}` firebase.
 - After registration, you will see there is a new record under Users in Firebase console => Authentication page.
+
+- Visit [register branch of sample app](https://github.com/thruthesky/fireflutter_sample_app/tree/register) for registration sample code.
+
+- You can add some extra public data like below.
+  - User's information is private and is not available for other.
+  - User's public data is open to the world. But it can only be updated by the user.
+
+```dart
+User user = await ff.register({
+  // ...
+}, meta: {
+  "public": {
+    "notifyPost": true,
+    "notifyComment": true,
+  }
+});
+```
+
+- There is another branch for more complete regration sample code. See [register-2 branch](https://github.com/thruthesky/fireflutter_sample_app/tree/register-2) for more complete regiration code.
+- We recommend you to copy the sample code and apply it into your own project.
+
+### Display User Login
+
+Let's display user login information on home screen.
+
+- Open home screen with Xcode
+- Code like below
 
 ### Forum
 
@@ -461,18 +745,32 @@ ff.init(
 
 ### Social Login
 
-#### Google Login
+#### Google Sign-in
 
-- You can use the social Login by calling signInWithGoogle.
+- [Google Sign In Setup for Android](#google-sign-in-setup-for-android) and [Facebook Sign In Setup for Android](#facebook-sign-in-setup-for-android) is required to sign in with Google.
+- Open login.screen.dart or create following [Create Login Screen](#create-login-screen)
+- Code like below,
+  - You can use the social Login by calling fireflutter `signInWithGoogle` method.
 
 ```dart
 RaisedButton(
   child: Text('Google Sign-in'),
-  onPressed: ff.signInWithGoogle,
-)
+  onPressed: () async {
+    try {
+      await ff.signInWithGoogle();
+      Get.toNamed('home');
+    } catch (e) {
+      Get.snackbar('Error', e.toString());
+    }
+  },
+),
 ```
 
-#### Facebook Login
+- After login, the user will be redirected to home screen. Add some code like what is described in [Display User Login](#display-user-login).
+
+- Tip: you may customize your registration page to put a button saying `Login with social accounts`. When it is touched, redirect the user to login screen where actual social login buttons are appear.
+
+#### Facebook Sign In
 
 - Follow the instructions on how to setup Facebook project.
 
@@ -543,3 +841,17 @@ SignInWithAppleButton(
     - Copy the Api Key on `FireFlutterApiKey`.
     - Paste it into `Firestore` => `/settings` collection => `app` document => `GcpApiKey`.
   - You may put the `GcpApiKey` in the source code (as in FireFlutter initialization) but that's not recommended. -->
+
+## Trouble Shotting
+
+### MissingPluginException google_sign_in
+
+`MissingPluginException(No implementation found for method init on channel plugins.flutter.io/google_sign_in)`
+
+This error happens (at least in our case) when Flutter has google_sign_in package and facebook sign in package. If facebook sign in is depending on google_sign_in package, setting for facebok sign in is mandatory to use google_sign_in. In short, do the settings for both google sign in and facebook sign in.
+
+### sign_in_failed
+
+`PlatformException(sign_in_failed, com.google.android.gms.common.api.ApiException: 12500: , null, null)`
+
+This error may happens when you didn't input SHA1 key on Android app in Firebase.
