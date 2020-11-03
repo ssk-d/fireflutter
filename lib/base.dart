@@ -222,6 +222,9 @@ class Base {
   /// Do some sanitizing and call `notificationHandler` to deliver
   /// notification to app.
   _notifyApp(Map<String, dynamic> message, NotificationType type) {
+    print('notifyApp');
+    print(message);
+
     Map<String, dynamic> notification =
         jsonDecode(jsonEncode(message['notification']));
 
@@ -312,23 +315,28 @@ class Base {
           "body": body.length > 512 ? body.substring(0, 512) : body,
           "title": title.length > 128 ? title.substring(0, 128) : title,
           "sound": getNotificationSound('android'),
+          "id": id,
+          "screen": screen,
+          "senderUid": user.uid,
+          "route": "/",
         },
         "priority": "high",
         "data": {
           "click_action": "FLUTTER_NOTIFICATION_CLICK",
-          "id": id,
           "status": "done",
+          "id": id,
           "senderUid": user.uid,
-          'route': '/',
-          'screen': screen
+          "route": "/",
+          "screen": screen,
         },
         "apns": {
           "payload": {
             "aps": {
               "sound": getNotificationSound('ios'),
+              "extra": 1234,
             }
           }
-        }
+        },
       };
 
       print(data);
