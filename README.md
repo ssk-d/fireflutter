@@ -89,6 +89,8 @@ A free, open source, rapid development flutter package to build social apps, com
 
   - FireFlutter is not a smple package that you just add it into pubspec.yaml and ready to go.
   - Furthermore, the settings that are not directly from coming FireFlutter package like social login settings, Algolia setting, Android and iOS developer's accont settings are also hard to implement if you are not get used to them.
+  - And for release, you will need to have extra settgins.
+  - Most of developers are having troubles with settings. You are not the only one.
 
 - We cover all the settings and will try to put it as demonstrative as it can be.
 
@@ -212,6 +214,64 @@ dependencies {
 - You may want to test if the settings are alright.
   - Open VSCode and do [FireFlutter Initialization](#fireflutter-initialization) do some registration code. see [User Registration](#user-email-and-password-registration) for more details.
 
+### Create a keystore
+
+You will need to create a keystore file for Android platform. Keystore file is used to upload and to update app binary file to Playstore and is alos used to generate hash keys for interacting with 3rd party service like facebook login.
+
+It's important to know that Playstore will generate another Keystore file for publishing and you may need the hash key of it to interact with 3rd party.
+
+- Enter the command below and input what it asks.
+
+```sh
+keytool -genkey -v -keystore keystore.key -keyalg RSA -keysize 2048 -validity 10000 -alias key
+```
+
+- Refer [Flutter - Create a keystore](https://flutter.dev/docs/deployment/android#create-a-keystore) for details.
+
+#### Debug hash key
+
+- To get debug hash key, enter the command below,
+
+  - Just press enter if it asks password,
+
+```sh
+keytool -list -v -alias androiddebugkey -keystore ~/.android/debug.keystore
+```
+
+##### Debug hash key base64
+
+- Some 3rd party service like Facebook may ask base64 encrypted hash key, you can get it with the following command
+
+  - Just press enter if it asks password,
+
+```sh
+keytool -exportcert -alias androiddebugkey -keystore ~/.android/debug.keystore | openssl sha1 -binary | openssl base64
+```
+
+#### Release hash key
+
+- To get release hash key, enter the command below,
+
+  - Just press enter if it asks password,
+
+```sh
+keytool -exportcert -list -v -alias [key] -keystore [keystore.key]
+```
+
+You can replace `[key]` with real key and `[keystore.key]` with real keystore file path.
+
+##### Release hash key base64
+
+- Some 3rd party service like Facebook may ask base64 encrypted hash key, you can get it with the following command
+
+  - Just press enter if it asks password,
+
+```sh
+keytool -exportcert -alias YOUR_RELEASE_KEY_ALIAS -keystore YOUR_RELEASE_KEY_PATH | openssl sha1 -binary | openssl base64
+```
+
+- It's important to know that Playstore will generate another Keystore for publish. And you need to input the hash key of it.
+
 ### Add fireflutter package to Flutter project
 
 - Add `fireflutter` to pubspec.yaml
@@ -284,7 +344,70 @@ All the information is coming from [flutter_facebook_auth](https://pub.dev/packa
     - Then, you will be redirected to the app page
 - Click `Setup` under `Dashboard ==> Add Products to Your App ==> Facebook Login`.
 - Click `Android`
--
+- Click `Next`. No need to download SDK.
+- Click `Next`. No need to import the SDK.
+- Input the package name. In our case, it is `com.sonub.fireflutter`.
+- Input `com.sonub.fireflutter.MainActivity` into `Default Activity Class Name`.
+  - You need to replace `com.sonub.comfirefluter` to your package name and add the main activity class that is stated in AndroidManifest.xml. Default is `.MainActivity`.
+- Click save.
+- Click `use this package naem` if you see it.
+- Click continue.
+- Get debug hash key and release hash key as described in [Debug hash key base64](#debug-hash-key-base64) and [Release hash key base64](#release-hash-key-base64)
+  - And add them into `Key Hashes`
+- Click save
+- Click continue
+- Enable Sing Sing On. Set it to Yes.
+- Click save
+- Click next
+- You will see some settings for Android platform in Flutter.
+- Open `android/app/src/main/AndroidManifest.xml`
+- Set `android:label` to `@string/app_name` in application tag like below.
+
+```xml
+<application ... android:label="@string/app_name" ...>
+```
+
+- Open `/android/app/src/main/res/values/strings.xml` ( or create if it is not existing)
+- And copy facebook_app_id and fb_login_protocol_scheme, past into the XML file like below.
+  - Replace `xxxxxxxxxxxxxxxxx` with right value.
+
+```xml
+<resources>
+    <string name="app_name">SMS APP</string>
+    <string name="facebook_app_id">xxxxxxxxxxxxxxxxx</string>
+    <string name="fb_login_protocol_scheme">xxxxxxxxxxxxxxxxx</string>
+</resources>
+```
+
+- Open `android/app/src/main/AndroidManifest.xml`
+- Add the following uses-permission element after the application element (outside application tag)
+
+```xml
+  <uses-permission android:name="android.permission.INTERNET"/>
+```
+
+- Add the following meta-data element, an activity for Facebook, and an activity and intent filter for Chrome Custom Tabs inside your application element:
+
+```xml
+<meta-data android:name="com.facebook.sdk.ApplicationId" android:value="@string/facebook_app_id"/>
+<activity android:name="com.facebook.FacebookActivity" android:configChanges=
+            "keyboard|keyboardHidden|screenLayout|screenSize|orientation" android:label="@string/app_name" />
+<activity android:name="com.facebook.CustomTabActivity" android:exported="true">
+  <intent-filter>
+    <action android:name="android.intent.action.VIEW" />
+    <category android:name="android.intent.category.DEFAULT" />
+    <category android:name="android.intent.category.BROWSABLE" />
+    <data android:scheme="@string/fb_login_protocol_scheme" />
+  </intent-filter>
+</activity>
+```
+
+- Add `Privacy Policy URL` uin `Settings => Basic => Privacy Policy URL`.
+- Click `Save Changes`
+- Click `Use this package name` if you see it.
+- Click `In development` to enable live mode.
+- Choose app category.
+- Click `Switch Mode`.
 
 #### Apple Login Setup
 
@@ -714,3 +837,11 @@ SignInWithAppleButton(
     - Copy the Api Key on `FireFlutterApiKey`.
     - Paste it into `Firestore` => `/settings` collection => `app` document => `GcpApiKey`.
   - You may put the `GcpApiKey` in the source code (as in FireFlutter initialization) but that's not recommended. -->
+
+## Trouble Shotting
+
+### MissingPluginException google_sign_in
+
+`MissingPluginException(No implementation found for method init on channel plugins.flutter.io/google_sign_in)`
+
+This error happens (at least in our case) when Flutter has google_sign_in package and facebook sign in package. If facebook sign in is depending on google_sign_in package, setting for facebok sign in is mandatory to use google_sign_in. In short, do the settings for both google sign in and facebook sign in.
