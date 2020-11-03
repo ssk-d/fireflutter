@@ -1,6 +1,6 @@
 name: fireflutter
-description: A rapid development package for creating Social apps based on Firebase.
-version: 0.0.6
+description: A free, open source, rapid development package for creating Social apps based on Firebase.
+version: 0.0.8
 homepage: https://github.com/thruthesky/fireflutter
 
 environment:
@@ -21,8 +21,6 @@ dependencies:
   cloud_firestore: "^0.14.1+3"
   firebase_storage: "^5.0.0-dev.3"
   firebase_messaging: ^7.0.3
-
-  firebase_remote_config: ^0.4.0+2
 
   sign_in_with_apple: ^2.5.4
   crypto: ^2.1.5

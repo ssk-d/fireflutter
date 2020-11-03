@@ -17,7 +17,7 @@ class Base {
 
   /// Device token for Firebase messaging.
   ///
-  /// This will be available by default on Android. For iOS, this will be only
+  /// This will be available by default on Android. For iOS, this will be only\'
   /// available when user accepts the permission request.
   String firebaseMessagingToken;
 
@@ -51,6 +51,10 @@ class Base {
   bool get loggedIn => user != null;
   bool get notLoggedIn => !loggedIn;
 
+  /// [userChange] event fires whenever user information changes like when
+  /// user logs in, logs out, or update his profile.
+  /// It is important to know that [authStateChanges] event happens only when
+  /// user logs in or logs out.
   BehaviorSubject<UserChangeType> userChange = BehaviorSubject.seeded(null);
 
   /// [notification] will be fired whenever there is a push notification.
@@ -73,8 +77,6 @@ class Base {
   // ignore: close_sinks
   PublishSubject notification = PublishSubject();
 
-  Map<String, RemoteConfigValue> config;
-
   // PublishSubject configDownload = PublishSubject();
 
   Map<String, dynamic> _settings = {};
@@ -94,6 +96,8 @@ class Base {
     authStateChanges.listen(
       (User user) {
         this.user = user;
+
+        /// [userChange] event fires when user is logs in or logs out.
         userChange.add(UserChangeType.auth);
 
         if (this.user == null) {
@@ -127,29 +131,6 @@ class Base {
     postsCol = FirebaseFirestore.instance.collection('posts');
   }
 
-  /// Get config as String
-  ///
-  /// ```
-  /// ff.getConfig('buttonName')
-  /// ```
-  String getConfig(String name) {
-    return config[name].asString();
-  }
-
-  /// Get config as Map
-  ///
-  /// ```
-  /// ff.getConfigAsMap('app_title')['ko']
-  /// ```
-  ///
-  /// Returns null when the [name] does not exist or the value of the string is empty.
-  Map<String, dynamic> getConfigAsMap(String name) {
-    if (config[name] == null) return null;
-    String str = config[name].asString();
-    if (str == null || str == '') return null;
-    return jsonDecode(str);
-  }
-
   /// Update user meta data.
   ///
   /// It is merging with existing data.
@@ -170,6 +151,7 @@ class Base {
   ///   after login but before `Firebase.AuthStateChange()` and when it happens,
   ///   the user appears not to be logged in even if the user already logged in.
   updateToken(User user) {
+    if (enableNotification == false) return;
     if (firebaseMessagingToken == null) return;
     FirebaseFirestore.instance
         .collection('users')
@@ -314,26 +296,26 @@ class Base {
         "notification": {
           "body": body.length > 512 ? body.substring(0, 512) : body,
           "title": title.length > 128 ? title.substring(0, 128) : title,
-          "sound": getNotificationSound('android'),
-          "id": id,
-          "screen": screen,
-          "senderUid": user.uid,
-          "route": "/",
         },
         "priority": "high",
         "data": {
-          "click_action": "FLUTTER_NOTIFICATION_CLICK",
-          "status": "done",
           "id": id,
+          "status": "done",
           "senderUid": user.uid,
           "route": "/",
           "screen": screen,
         },
+        "android": {
+          "notification": {
+            "sound": getNotificationSound('android'),
+            "click_action": "OPEN_ACTIVITY_1"
+          }
+        },
         "apns": {
           "payload": {
+            "sound": getNotificationSound('android'),
             "aps": {
               "sound": getNotificationSound('ios'),
-              "extra": 1234,
             }
           }
         },
@@ -703,27 +685,28 @@ class Base {
   /// Syncronize the Firebase `settings` collection to `this.settings`.
   ///
   /// Get settings in real time and merge(overwrite) it into the `_settings`.
-  listenSettingsChange(Map<String, dynamic> defaultSettings) {
+  listenSettingsChange() {
     FirebaseFirestore.instance
         .collection('settings')
         .snapshots()
         .listen((QuerySnapshot snapshot) {
       if (snapshot.size == 0) return;
-      Map settingSnapshot = {};
+      Map temp = {};
       snapshot.docs.forEach((DocumentSnapshot document) {
-        settingSnapshot[document.id] = document.data();
+        temp[document.id] = document.data();
       });
-      mergeSettings(settingSnapshot);
+      mergeSettings(temp);
       settingsChange.add(_settings);
     });
   }
 
   ///
-  mergeSettings(Map<dynamic, dynamic> defaultSettings) {
-    defaultSettings.forEach((setting, config) {
-      for (var name in config.keys) {
-        if (_settings[setting] == null) _settings[setting] = {};
-        _settings[setting][name] = config[name];
+  mergeSettings(Map<dynamic, dynamic> settingsFromFirestore) {
+    settingsFromFirestore.forEach((key, document) {
+      // _settings[key] = document;
+      for (String name in document.keys) {
+        if (_settings[key] == null) _settings[key] = {};
+        _settings[key][name] = document[name];
       }
     });
   }

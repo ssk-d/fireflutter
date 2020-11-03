@@ -6,7 +6,6 @@ import 'dart:async';
 import 'package:dio/dio.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
-import 'package:firebase_remote_config/firebase_remote_config.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -45,7 +44,7 @@ class FireFlutter extends Base {
     bool enableNotification = false,
     String firebaseServerToken,
     Map<String, dynamic> pushNotificationOption,
-    Map<String, dynamic> settings,
+    Map<String, Map<dynamic, dynamic>> settings,
     Map<String, Map<String, String>> translations,
   }) async {
     this.enableNotification = enableNotification;
@@ -63,7 +62,7 @@ class FireFlutter extends Base {
     await initFirebase();
     initUser();
     initFirebaseMessaging();
-    listenSettingsChange(settings);
+    listenSettingsChange();
     listenTranslationsChange(translations);
 
     /// Initialize or Re-initialize based on the setting's update.
@@ -142,6 +141,8 @@ class FireFlutter extends Base {
     await userDoc.set(data);
 
     await updateUserMeta(meta);
+
+    onLogin(user);
     return user;
   }
 
@@ -167,6 +168,7 @@ class FireFlutter extends Base {
       password: password,
     );
     await updateUserMeta(meta);
+    onLogin(userCredential.user);
     return userCredential.user;
   }
 
@@ -375,9 +377,10 @@ class FireFlutter extends Base {
 
           final int i = forum.posts.indexWhere((p) => p['id'] == post['id']);
           if (i > -1) {
-            final comments = forum.posts[i]['comments']; 
+            /// after post is updated, it doesn't have the 'comments' data.
+            /// so it needs to be re-inserted.
+            post['comments'] = forum.posts[i]['comments'];
             forum.posts[i] = post;
-            forum.posts[i]['comments'] = comments;
           }
           forum.render(RenderType.postUpdate);
         }
