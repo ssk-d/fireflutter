@@ -41,12 +41,14 @@ A free, open source, rapid development flutter package to build social apps, com
       - [Facebook Sign In Setup for Android](#facebook-sign-in-setup-for-android)
       - [Facebook Sign In Setup for iOS](#facebook-sign-in-setup-for-ios)
     - [Apple Sign In Setup for iOS](#apple-sign-in-setup-for-ios)
+  - [Firebase tools installation](#firebase-tools-installation)
+  - [Download and Set FireFlutter Firebase Project](#download-and-set-fireflutter-firebase-project)
   - [Firestore security rules](#firestore-security-rules)
     - [Security Rules Testing](#security-rules-testing)
   - [Cloud Functions](#cloud-functions)
-  - [Funtions Test](#funtions-test)
-  - [Push Notification](#push-notification)
-  - [Localization](#localization)
+    - [Funtions Test](#funtions-test)
+  - [Localization Setup](#localization-setup)
+  - [Push Notification Setup](#push-notification-setup)
   - [Algolia Installation](#algolia-installation)
   - [Admin Account Setting](#admin-account-setting)
 - [App Management](#app-management)
@@ -54,7 +56,7 @@ A free, open source, rapid development flutter package to build social apps, com
   - [Internalization (Localization)](#internalization-localization)
   - [Forum Management](#forum-management)
     - [Forum Category Management](#forum-category-management)
-- [For Developers](#for-developers)
+- [Developer Code Guidelines](#developer-code-guidelines)
   - [General Setup](#general-setup)
     - [FireFlutter Initialization](#fireflutter-initialization)
     - [Add GetX](#add-getx)
@@ -68,7 +70,7 @@ A free, open source, rapid development flutter package to build social apps, com
   - [Display User Login](#display-user-login)
   - [Forum](#forum)
   - [Logic for Vote](#logic-for-vote)
-  - [Push Notification](#push-notification-1)
+  - [Push Notification](#push-notification)
   - [Social Login](#social-login)
     - [Google Sign-in](#google-sign-in)
     - [Facebook Sign In](#facebook-sign-in)
@@ -77,9 +79,10 @@ A free, open source, rapid development flutter package to build social apps, com
     - [Kakao Login](#kakao-login)
 - [I18N](#i18n)
 - [Settings](#settings)
-  - [Trouble Shotting](#trouble-shotting)
-    - [MissingPluginException google_sign_in](#missingpluginexception-google_sign_in)
-    - [sign_in_failed](#sign_in_failed)
+- [Trouble Shotting](#trouble-shotting)
+  - [MissingPluginException google_sign_in](#missingpluginexception-google_sign_in)
+  - [sign_in_failed](#sign_in_failed)
+  - [operation-not-allowed](#operation-not-allowed)
 
 <!-- /TOC -->
 
@@ -553,24 +556,36 @@ We add `Apple sign in` only on iOS platform.
 
 - Refer [Eanble Sign In with App](https://help.apple.com/xcode/mac/11.0/#/dev50571b902) for details.
 
+## Firebase tools installation
+
+- Install Firebase tools with the following command. You may need root permission.
+
+```sh
+npm install -g firebase-tools
+```
+
+- Then, login to Firebase with the follow command.
+
+```sh
+firebase login
+```
+
+- Refer [Set up or update the CLI](https://firebase.google.com/docs/cli#mac-linux-npm) for details.
+
+## Download and Set FireFlutter Firebase Project
+
+- Install firebase tools as described at [Firebase tools installation](#firebase-tools-installation)
+
+- Git clone(or fork) https://github.com/thruthesky/fireflutter-firebase and install node modules with `npm i`.
+- Update Firebase project ID in `.firebaserc ==> projects ==> default`.
+- Save `Firebase SDK Admin Service Key` to `firebase-service-account-key.json` in the same folder of `.firebaserc`.
+
 ## Firestore security rules
 
-- Firestore needs security rules and Functions needs functions to support FireFlutter package.
+Firestore needs security rules to secure its data or it might loose all data by hackers.
 
-  - If you wish, you can continue without this settings. But it's not secure and some functionality may not work.
-
-- Install firebase tools.
-
-```
-# npm install -g firebase-tools
-$ cd firebase
-$ firebase login
-```
-
-- Git clone(or fork) https://github.com/thruthesky/fireflutter-firebase and install with `npm i`
-- Update Firebase project ID in `.firebaserc ==> projects ==> default`.
-- Save `Firebase SDK Admin Service Key` to `firebase-service-account-key.json`.
-- Run `firebase deploy --only firestore,functions`. You will need Firebase `Pay as you go` plan to deploy it.
+- Do [Download and Set FireFlutter Firebase Project](#download-and-set-fireflutter-firebase-project)
+- Run `firebase deploy --only firestore`.
 
 ### Security Rules Testing
 
@@ -598,34 +613,110 @@ $ npm run test:user.token
 
 ## Cloud Functions
 
-- We tried to limit the usage of Cloud Functions as less as possible. But there are some functionalities we cannot acheive without it.
+We tried to limit the usage of Cloud Functions as minimum as possible. But there are some functionalities we cannot acheive without it.
 
-  - One of the reason why we use Cloud Funtions is to enable like and dislike functionality. It is a simple functionality but when it comes with Firestore security rule, it's not an easy work. And Cloud Functions does better with it.
+One of the reason why we use Cloud Funtions is to enable like and dislike functionality. It is a simple functionality but when it comes with Firestore security rule, it's not an easy work. And Cloud Functions does better with it.
 
-## Funtions Test
+- Do [Download and Set FireFlutter Firebase Project](#download-and-set-fireflutter-firebase-project)
+- Run `firebase deploy --only functions`. You will need Firebase `Pay as you go` plan to deploy it.
 
-- If you whish to test Functins, you may do so with the following;
+### Funtions Test
+
+- If you whish to test Functions, you may do so with the following;
 
 ```
 $ cd functions
 $ npm test
+$ npm test:algolia
 ```
 
-## Push Notification
+## Localization Setup
+
+If an app serves only for one nation with one language, the app may not need localization. But if the app serves for many nations with many languages, then the app should have localization. The app should display Chinese language for Chinese people, Korean langauge for Korean people, Japanese for Japanese people and so on.
+
+You can set different texts of different languages on menu, buttons, screens.
+
+Android platform does not need to have any settings.
+
+For iOS,
+
+- Open `Info.plist`
+- Add the following. You can add more languages.
+
+```xml
+<key>CFBundleLocalizations</key>
+<array>
+	<string>en</string>
+	<string>ch</string>
+	<string>ja</string>
+	<string>ko</string>
+</array>
+```
+
+- Create `translations.dart` file in the same folder of `main.dart`
+  - and add the following code.
+  - In the code below, we add only English and Korean. You may add more languages and its translations.
+
+```dart
+import 'package:get/get.dart';
+
+/// Default translated texts.
+///
+/// This will be available immediately after app boots before downloading from
+/// Firestore.
+Map<String, Map<String, String>> translations = {
+  "en": {
+    "app-name": "App Name",
+    "home": "Home",
+  },
+  "ko": {
+    "app-name": "앱 이름",
+    "home": "홈",
+  }
+};
+
+/// Update translation document data from Firestore into `GetX locale format`.
+updateTranslations(Map<dynamic, dynamic> data) {
+  data.forEach((ln, texts) {
+    for (var name in texts.keys) {
+      translations[ln][name] = texts[name];
+    }
+  });
+}
+
+/// GetX locale text translations.
+class AppTranslations extends Translations {
+  @override
+  Map<String, Map<String, String>> get keys => translations;
+}
+```
+
+- Open main.dart
+  - Add the following into GetMaterialApp
+  - The `locale: Locale('ko')` is the default language to display texts in.
+
+```dart
+locale: Locale('ko'),
+translations: AppTranslations(),
+```
+
+- Open home.screen.dart
+  - Update app bar title with the following and you will see translated text in Korean.
+
+```dart
+Scaffold(
+  appBar: AppBar(
+    title: Text('app-name'.tr),
+  ),
+```
+
+## Push Notification Setup
 
 - Settings of push notification on Android and iOS platform are done in the sample app.
 
   - If you are not going to use the sample app, you need to setup by yourself.
 
 - Refer [Firestore Messaging](https://pub.dev/packages/firebase_messaging)
-
-## Localization
-
-- To add a language, the language needs to be set in Info.plist of iOS platform. No setting is needed on Android platform.
-- you need to add the translation under Firestore `translations` collection.
-- you need to use it in your app.
-- Localization could be used for menus, texts in screens.
--
 
 ## Algolia Installation
 
@@ -666,7 +757,7 @@ $ npm test
 
 - You can create forum categories in admin screen.
 
-# For Developers
+# Developer Code Guidelines
 
 ## General Setup
 
@@ -991,16 +1082,22 @@ if (GetPlatform.isIOS)
     - Paste it into `Firestore` => `/settings` collection => `app` document => `GcpApiKey`.
   - You may put the `GcpApiKey` in the source code (as in FireFlutter initialization) but that's not recommended. -->
 
-## Trouble Shotting
+# Trouble Shotting
 
-### MissingPluginException google_sign_in
+## MissingPluginException google_sign_in
 
 `MissingPluginException(No implementation found for method init on channel plugins.flutter.io/google_sign_in)`
 
 This error happens (at least in our case) when Flutter has google_sign_in package and facebook sign in package. If facebook sign in is depending on google_sign_in package, setting for facebok sign in is mandatory to use google_sign_in. In short, do the settings for both google sign in and facebook sign in.
 
-### sign_in_failed
+## sign_in_failed
 
 `PlatformException(sign_in_failed, com.google.android.gms.common.api.ApiException: 12500: , null, null)`
 
 This error may happens when you didn't input SHA1 key on Android app in Firebase.
+
+## operation-not-allowed
+
+`PlatformException(operation-not-allowed, The identity provider configuration is not found., {code: operation-not-allowed, message: The identity provider configuration is not found., nativeErrorMessage: The identity provider configuration is not found., nativeErrorCode: 17006, additionalData: {}}, null)`
+
+This error may happens when you didn't enable the sign-in method on Firebase Authentication. For instance, you have set Facebook sign in settings but forgot to enable Facebook sign in on Firebase Authentication.
