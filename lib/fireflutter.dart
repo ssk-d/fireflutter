@@ -284,10 +284,6 @@ class FireFlutter extends Base {
     /// Listen to coming posts.
     forum.postQuerySubscription =
         postsQuery.snapshots().listen((QuerySnapshot snapshot) {
-      if (snapshot.docs.length < limit) {
-        forum.noMorePosts = true;
-      }
-
       // if snapshot size is 0, means no documents has been fetched.
       if (snapshot.size == 0) {
         if (forum.pageNo == 1) {
@@ -295,6 +291,12 @@ class FireFlutter extends Base {
         } else {
           forum.noMorePosts = true;
         }
+        forum.fetchingPosts(RenderType.stopFetching);
+      }
+
+      ///
+      if (snapshot.docs.length < limit) {
+        forum.noMorePosts = true;
         forum.fetchingPosts(RenderType.stopFetching);
       }
 

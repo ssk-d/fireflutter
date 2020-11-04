@@ -36,6 +36,9 @@ class ForumData {
   /// This is for infinite scrolling in forum screen.
   RenderType _inLoading;
   bool get inLoading => _inLoading == RenderType.fetching;
+
+  /// Tell the app to re-render the screen.
+  /// TODO the name of the method is confusing. Change it to reRender or similiar
   fetchingPosts(RenderType x) {
     _inLoading = x;
     render(RenderType.stopFetching);
