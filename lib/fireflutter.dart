@@ -40,25 +40,29 @@ class FireFlutter extends Base {
   /// the unit of [remoteConfigFetchInterval] is minute. In debug mode, it can be set to 1.
   /// But in release mode, it must not be less than 15. If it is less than 15,
   /// then it will be escalated to 15.
+  ///
   Future<void> init({
     bool enableNotification = false,
     String firebaseServerToken,
-    Map<String, dynamic> pushNotificationOption,
+    String pushNotificationSound,
     Map<String, Map<dynamic, dynamic>> settings,
     Map<String, Map<String, String>> translations,
   }) async {
     this.enableNotification = enableNotification;
     this.firebaseServerToken = firebaseServerToken;
-    this.pushNotificationOption = pushNotificationOption;
+    this.pushNotificationSound = pushNotificationSound;
 
-    // Must be called before firebase init
+    /// Must be called before firebase init
+    ///
     if (settings != null) {
       _settings = settings;
       settingsChange.add(_settings);
     }
 
-    translationsChange.add(translations); // Must be called before firebase init
-
+    if (translations != null) {
+      translationsChange
+          .add(translations); // Must be called before firebase init
+    }
     await initFirebase();
     initUser();
     initFirebaseMessaging();
@@ -253,23 +257,23 @@ class FireFlutter extends Base {
   ///
   fetchPosts(ForumData forum) {
     if (forum.shouldNotFetch) return;
-    print('category: ${forum.category}');
-    print('should fetch?: ${forum.shouldFetch}');
+    // print('category: ${forum.category}');
+    // print('should fetch?: ${forum.shouldFetch}');
     forum.fetchingPosts(RenderType.fetching);
     forum.pageNo++;
-    print('pageNo: ${forum.pageNo}');
+    // print('pageNo: ${forum.pageNo}');
 
     /// Prepare query
     Query postsQuery = postsCol.where('category', isEqualTo: forum.category);
     postsQuery = postsQuery.orderBy('createdAt', descending: true);
     //set default limit
-    int limit = _settings['forum']['no-of-posts-per-fetch'];
+    int limit = _settings['forum']['no-of-posts-per-fetch'] ?? 12;
 
     //if it has specific limit on settings set the corresponding settings.
     if (_settings[forum.category] != null &&
         _settings[forum.category]['no-of-posts-per-fetch'] != null)
       limit = _settings[forum.category]['no-of-posts-per-fetch'];
-    print(limit);
+    // print(limit);
     postsQuery = postsQuery.limit(limit);
 
     /// Fetch from the last post that had been fetched.

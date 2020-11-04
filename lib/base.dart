@@ -5,7 +5,7 @@ class Base {
 
   /// To send push notification
   String firebaseServerToken;
-  Map<String, dynamic> pushNotificationOption;
+  String pushNotificationSound;
 
   /// User document realtime update.
   StreamSubscription userSubscription;
@@ -67,7 +67,6 @@ class Base {
   ///     "click_action": "FLUTTER_NOTIFICATION_CLICK",
   ///     "id": id,
   ///     "status": "done",
-  ///     "sound": 'default',
   ///     "senderUid": user.uid,
   ///     'route': '/',
   ///     'screen': screen
@@ -79,13 +78,14 @@ class Base {
 
   // PublishSubject configDownload = PublishSubject();
 
-  Map<String, dynamic> _settings = {};
+  /// Set default properties to prevent errors.
+  Map<String, dynamic> _settings = {'forum': {}, 'app': {}};
   // ignore: close_sinks
   BehaviorSubject settingsChange = BehaviorSubject.seeded(null);
 
   // Map<String, dynamic> _translations;
   // ignore: close_sinks
-  BehaviorSubject translationsChange = BehaviorSubject.seeded(null);
+  BehaviorSubject translationsChange = BehaviorSubject.seeded({});
 
   Algolia algolia;
 
@@ -159,6 +159,24 @@ class Base {
         .collection('meta')
         .doc('tokens')
         .set({firebaseMessagingToken: true}, SetOptions(merge: true));
+  }
+
+  updateUserSubscription(user) async {
+    if (enableNotification == false) return;
+    if (firebaseMessagingToken == null) return;
+    final docSnapshot =
+        await usersCol.doc(user['uid']).collection('meta').doc('public').get();
+    if (!docSnapshot.exists) return;
+    Map<String, dynamic> tokensDoc = docSnapshot.data();
+
+    tokensDoc.forEach((key, value) {
+      if (key.indexOf('notification_') != -1) {
+        if (value == true)
+          subscribeTopic(key);
+        else
+          unsubscribeTopic(key);
+      }
+    });
   }
 
   Future subscribeTopic(String topicName) async {
@@ -240,15 +258,15 @@ class Base {
     /// - exited
     firebaseMessaging.configure(
       onMessage: (Map<String, dynamic> message) async {
-        print('onMessage');
+        // print('onMessage');
         _notifyApp(message, NotificationType.onMessage);
       },
       onLaunch: (Map<String, dynamic> message) async {
-        print('onLaunch');
+        // print('onLaunch');
         _notifyApp(message, NotificationType.onLaunch);
       },
       onResume: (Map<String, dynamic> message) async {
-        print('onResume');
+        // print('onResume');
         _notifyApp(message, NotificationType.onResume);
       },
     );
@@ -268,7 +286,7 @@ class Base {
   }) async {
     if (enableNotification == false) return false;
 
-    print('SendNotification');
+    // print('SendNotification');
 
     if (token == null &&
         (tokens == null || tokens.length == 0) &&
@@ -296,7 +314,7 @@ class Base {
         "notification": {
           "body": body.length > 512 ? body.substring(0, 512) : body,
           "title": title.length > 128 ? title.substring(0, 128) : title,
-          "sound": getNotificationSound('android'),
+          "sound": pushNotificationSound ?? 'default',
         },
         "priority": "high",
         "data": {
@@ -308,7 +326,7 @@ class Base {
           "click_action": "FLUTTER_NOTIFICATION_CLICK",
         },
         // "android": {
-        //   // this is not working
+        //   // this is not working on legacy protocol
         //   "notification": {
         //     "sound": getNotificationSound('android'),
         //     "click_action": "FLUTTER_NOTIFICATION_CLICK",
@@ -352,14 +370,6 @@ class Base {
       }
     });
     return success;
-  }
-
-  String getNotificationSound(String platform) {
-    return pushNotificationOption != null &&
-            pushNotificationOption[platform] != null &&
-            pushNotificationOption[platform]['sound'] != null
-        ? pushNotificationOption[platform]['sound']
-        : 'default';
   }
 
   Map<String, dynamic> getCommentParent(
@@ -616,6 +626,7 @@ class Base {
 
   onLogin(User user) {
     updateToken(user);
+    updateUserSubscription(user);
   }
 
   /// Pick an image from Camera or Gallery,
@@ -731,9 +742,11 @@ class Base {
     });
   }
 
-  bool isShowForumVote(String category, String vote) {
-    if (_settings[category] == null || _settings[category][vote] == null)
-      return _settings['forum'][vote];
+  /// Returns vote setting
+  bool voteSetting(String category, String vote) {
+    if (_settings[category] == null || _settings[category][vote] == null) {
+      return _settings['forum'][vote] ?? true;
+    }
     return _settings[category][vote];
   }
 
