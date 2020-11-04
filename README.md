@@ -2,11 +2,11 @@
 
 [한국어 설명 보기](readme.ko.md)
 
-A free, open source, rapid development flutter package to build social apps, community apps, and more.
+A free, open source, rapid development flutter package to build social apps, community apps, blogs apps, and much more.
 
 - This package has complete features (see Features below) that most of apps are needed.
 - `Simple, easy and the right way`.
-  We want it to be really simple but right way for ourselves and for the builders in the world.
+  We want it to be deadly simple but right way for ourselves and for the builders in the world.
   We know when it gets complicated, developers' lives would get even more complicated.
 
 # Table of Contents
@@ -70,9 +70,9 @@ A free, open source, rapid development flutter package to build social apps, com
   - [Display User Login](#display-user-login)
   - [Create admin page](#create-admin-page)
   - [Forum Coding](#forum-coding)
-    - [Create forum category management page](#create-forum-category-management-page)
-    - [Create post edit page](#create-post-edit-page)
-    - [Create post list page](#create-post-list-page)
+    - [Create forum category management screen](#create-forum-category-management-screen)
+    - [Create post edit screen](#create-post-edit-screen)
+    - [Create post list screen](#create-post-list-screen)
   - [Logic for Vote](#logic-for-vote)
   - [Push Notification](#push-notification)
   - [Social Login](#social-login)
@@ -139,6 +139,9 @@ A free, open source, rapid development flutter package to build social apps, com
 
 # TODOs
 
+- Sample code for post crud
+- Sample code for comment crud
+- Sample code for search posts and comments with Algolia
 - Adding sample code for user profile update
 - Adding sample code for live change of user language.
 
@@ -418,7 +421,7 @@ keytool -exportcert -alias YOUR_RELEASE_KEY_ALIAS -keystore YOUR_RELEASE_KEY_PAT
 
 #### Facebook Sign In Setup for Android
 
-In this chapter, Facebook sign in setup for Android is explanined in detail.
+In this chapter, Facebook sign in setup for Android is explained in detail.
 
 All the information is coming from [flutter_facebook_auth](https://pub.dev/packages/flutter_facebook_auth) which is the package we use for Facebook login.
 
@@ -1040,19 +1043,29 @@ FireFlutter does not involve any of the app's in UI/UX. Because of this, you can
 
 There are many works to do to complete forum functionality.
 
-### Create forum category management page
+### Create forum category management screen
 
 - Do [Admin Account Setting](#admin-account-setting)
 - Login as the admin account.
 - Do [Create admin page](#create-admin-page)
 - And see [forum-admin branch of sample app](https://github.com/thruthesky/fireflutter_sample_app/tree/forum-admin) for the code of forum category management page.
   - The code is in `lib/screens/admin/admin.category.screen.dart`.
+- Then, create a category ID as 'qna'.
 
-### Create post edit page
+### Create post edit screen
 
-//// to be continued...
+In forum edit screen, user can create or update a post and he can upload photos.
 
-### Create post list page
+- You need to create 'qna' category as described in [Create forum category management screen](#create-forum-category-management-screen)
+- And follow the code in [forum-edit branch of sample app](https://github.com/thruthesky/fireflutter_sample_app/tree/forum-edit)
+  - In the code,
+    - A button is added to open forum edit screen.
+    - Forum edit screen is created at `lib/screens/forum/forum.edit.dart`
+    -
+
+### Create post list screen
+
+We have put the forum functionality concept to work in real time update which means if a user creates a comment, it will appear on other user's phone in real time (without reloading).
 
 - To fetch posts and listing, you need to declare `ForumData` object.
   - How to declare forum data.
@@ -1097,7 +1110,7 @@ class _ForumScreenState extends State<ForumScreen> {
 - Voting works asynchronously.
   - When a user votes in the order of `like => dislike => like => dislike`,
     the server(Firestore) may receive in the order of `like => like => dislike => dislike` since it is **asynchronous**.
-    So, client app should block the user not to vote again while voting is in progress.
+    So, client app should block (by showing a progress indicator) the user not to vote again while voting is in progress.
 
 ## Push Notification
 
