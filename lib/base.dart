@@ -121,7 +121,7 @@ class Base {
   }
 
   Future<void> initFirebase() async {
-    print('initFirebase');
+    // print('initFirebase');
     WidgetsFlutterBinding.ensureInitialized();
     await Firebase.initializeApp();
     FirebaseFirestore.instance.settings =
@@ -222,8 +222,8 @@ class Base {
   /// Do some sanitizing and call `notificationHandler` to deliver
   /// notification to app.
   _notifyApp(Map<String, dynamic> message, NotificationType type) {
-    print('notifyApp');
-    print(message);
+    // print('notifyApp');
+    // print(message);
 
     Map<String, dynamic> notification =
         jsonDecode(jsonEncode(message['notification']));
@@ -341,12 +341,13 @@ class Base {
         // },
       };
 
-      print(data);
+      // print(data);
       data[el['key']] = el['value'];
       final encodeData = jsonEncode(data);
       var dio = Dio();
 
-      print('try sending notification');
+      // print('try sending notification');
+      /// TODO Why does it have try {} and catch {}? It produces error.
       try {
         var response = await dio.post(
           postUrl,
@@ -357,16 +358,16 @@ class Base {
         );
         if (response.statusCode == 200) {
           // on success do
-          print("notification success");
+          // print("notification success");
         } else {
           // on failure do
-          print("notification failure");
+          // print("notification failure");
           success = false;
         }
-        print(response.data);
+        // print(response.data);
       } catch (e) {
-        print('Dio error in sendNotification');
-        print(e);
+        // print('Dio error in sendNotification');
+        // print(e);
       }
     });
     return success;
@@ -447,9 +448,9 @@ class Base {
       // }
     }
 
-    print('tokens');
-    print(tokens);
-    print(uidsForNotification);
+    // print('tokens');
+    // print(tokens);
+    // print(uidsForNotification);
 
     /// send notification with tokens and topic.
     sendNotification(
@@ -592,7 +593,7 @@ class Base {
 
     int depth = parent['depth'];
     String depthOrder = parent['order'].split('.')[depth];
-    print('depthOrder: $depthOrder');
+    // print('depthOrder: $depthOrder');
 
     int i;
     for (i = parentIndex + 1; i < post['comments'].length; i++) {
@@ -602,8 +603,8 @@ class Base {
     }
 
     final previousSiblingComment = post['comments'][i - 1];
-    print(
-        'previousSiblingComment: ${previousSiblingComment['content']}, ${previousSiblingComment['order']}');
+    // print(
+    //     'previousSiblingComment: ${previousSiblingComment['content']}, ${previousSiblingComment['order']}');
     return getCommentOrder(
       order: previousSiblingComment['order'],
       depth: parent['depth'] + 1,

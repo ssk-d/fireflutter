@@ -32,7 +32,7 @@ part './base.dart';
 class FireFlutter extends Base {
   /// [socialLoginHandler] will be invoked when a social login success or fail.
   FireFlutter() {
-    print('FireFlutter');
+    // print('FireFlutter');
   }
 
   ///
@@ -110,7 +110,7 @@ class FireFlutter extends Base {
     if (data['email'] == null) throw 'email_is_empty';
     if (data['password'] == null) throw 'password_is_empty';
 
-    print('req: $data');
+    // print('req: $data');
 
     UserCredential userCredential =
         await FirebaseAuth.instance.createUserWithEmailAndPassword(
@@ -165,7 +165,7 @@ class FireFlutter extends Base {
     @required String password,
     Map<String, Map<String, dynamic>> meta,
   }) async {
-    print('email: $email');
+    // print('email: $email');
     UserCredential userCredential =
         await FirebaseAuth.instance.signInWithEmailAndPassword(
       email: email,
@@ -355,7 +355,7 @@ class FireFlutter extends Base {
                 final int ci = post['comments']
                     .indexWhere((c) => c['id'] == commentData['id']);
 
-                print('comment index : $ci');
+                // print('comment index : $ci');
                 if (ci > -1) {
                   post['comments'][ci] = commentData;
                 }
@@ -376,8 +376,8 @@ class FireFlutter extends Base {
 
         /// post update
         else if (documentChange.type == DocumentChangeType.modified) {
-          print('post updated');
-          print(post.toString());
+          // print('post updated');
+          // print(post.toString());
 
           final int i = forum.posts.indexWhere((p) => p['id'] == post['id']);
           if (i > -1) {
@@ -541,7 +541,7 @@ class FireFlutter extends Base {
 
   Future<User> signInWithApple() async {
     final oauthCred = await createAppleOAuthCred();
-    print(oauthCred);
+    // print(oauthCred);
 
     UserCredential userCredential =
         await FirebaseAuth.instance.signInWithCredential(oauthCred);
@@ -635,13 +635,13 @@ class FireFlutter extends Base {
 
       /// called after the user submitted the phone number.
       codeSent: (String verID, [int forceResendToken]) async {
-        print('codeSent!');
+        // print('codeSent!');
         onCodeSent(verID, forceResendToken);
       },
 
       /// called whenever error happens
       verificationFailed: (FirebaseAuthException e) async {
-        print('verificationFailed!');
+        // print('verificationFailed!');
         onError(e);
       },
 
