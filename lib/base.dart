@@ -161,6 +161,24 @@ class Base {
         .set({firebaseMessagingToken: true}, SetOptions(merge: true));
   }
 
+  updateUserSubscription(user) async {
+    if (enableNotification == false) return;
+    if (firebaseMessagingToken == null) return;
+    final docSnapshot =
+        await usersCol.doc(user['uid']).collection('meta').doc('public').get();
+    if (!docSnapshot.exists) return;
+    Map<String, dynamic> tokensDoc = docSnapshot.data();
+
+    tokensDoc.forEach((key, value) {
+      if (key.indexOf('notification_') != -1) {
+        if (value == true)
+          subscribeTopic(key);
+        else
+          unsubscribeTopic(key);
+      }
+    });
+  }
+
   Future subscribeTopic(String topicName) async {
     await FirebaseMessaging().subscribeToTopic(topicName);
   }
@@ -614,6 +632,7 @@ class Base {
 
   onLogin(User user) {
     updateToken(user);
+    updateUserSubscription(user);
   }
 
   /// Pick an image from Camera or Gallery,
