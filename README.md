@@ -48,6 +48,8 @@ A free, open source, rapid development flutter package to build social apps, com
     - [Security Rules Testing](#security-rules-testing)
   - [Cloud Functions](#cloud-functions)
     - [Funtions Test](#funtions-test)
+  - [Image Picker Setup](#image-picker-setup)
+    - [Image Picker Setup for iOS](#image-picker-setup-for-ios)
   - [Localization Setup](#localization-setup)
   - [Push Notification Setup](#push-notification-setup)
   - [Algolia Setup](#algolia-setup)
@@ -72,6 +74,7 @@ A free, open source, rapid development flutter package to build social apps, com
   - [Forum Coding](#forum-coding)
     - [Create forum category management screen](#create-forum-category-management-screen)
     - [Create post edit screen](#create-post-edit-screen)
+    - [Photo upload](#photo-upload)
     - [Create post list screen](#create-post-list-screen)
   - [Logic for Vote](#logic-for-vote)
   - [Push Notification](#push-notification)
@@ -87,6 +90,7 @@ A free, open source, rapid development flutter package to build social apps, com
   - [MissingPluginException google_sign_in](#missingpluginexception-google_sign_in)
   - [sign_in_failed](#sign_in_failed)
   - [operation-not-allowed](#operation-not-allowed)
+  - [App crashes on second file upload](#app-crashes-on-second-file-upload)
 
 <!-- /TOC -->
 
@@ -642,6 +646,33 @@ $ npm test
 $ npm test:algolia
 ```
 
+## Image Picker Setup
+
+To upload files(or photos), we will use [image_picker](https://pub.dev/packages/image_picker) package.
+
+Android platform(API 29+) does not need any settings. It works out of the box.
+
+- See [image_picker](https://pub.dev/packages/image_picker) package page for detail.
+
+### Image Picker Setup for iOS
+
+- Open `ios/Runner/Info.plist` with VSCode
+- Add the three keys.
+  - `NSPhotoLibraryUsageDescription` - describe why your app needs permission for the photo library. This is called Privacy - Photo Library Usage Description in the visual editor.
+  - `NSCameraUsageDescription` - describe why your app needs access to the camera. This is called Privacy - Camera Usage Description in the visual editor.
+  - `NSMicrophoneUsageDescription` - describe why your app needs access to the microphone, if you intend to record videos. This is called Privacy - Microphone Usage Description in the visual editor
+
+Example)
+
+```xml
+<key>NSPhotoLibraryUsageDescription</key>
+<string>$(EXECUTABLE_NAME) need access to Photo Library.</string>
+<key>NSCameraUsageDescription</key>
+<string>$(EXECUTABLE_NAME) need access to Camera.</string>
+<key>NSMicrophoneUsageDescription</key>
+<string>$(EXECUTABLE_NAME) need access to Microphone.</string>
+```
+
 ## Localization Setup
 
 If an app serves only for one nation with one language, the app may not need localization. But if the app serves for many nations with many languages, then the app should have localization. The app should display Chinese language for Chinese people, Korean langauge for Korean people, Japanese for Japanese people and so on.
@@ -1058,10 +1089,44 @@ In forum edit screen, user can create or update a post and he can upload photos.
 
 - You need to create 'qna' category as described in [Create forum category management screen](#create-forum-category-management-screen)
 - And follow the code in [forum-edit branch of sample app](https://github.com/thruthesky/fireflutter_sample_app/tree/forum-edit)
+
   - In the code,
-    - A button is added to open forum edit screen.
     - Forum edit screen is created at `lib/screens/forum/forum.edit.dart`
-    -
+    - And the route is added in main.dart
+    - A button is added in home.screen.dart to open forum edit screen.
+
+- Post create and update are done with `editPost()` method.
+  - If `id` is null, then, it will create a post. Or it will update the post of the id.
+
+```dart
+ff.editPost({
+  'id': post == null ? null : post['id'],
+  'category': category,
+  'title': titleController.text,
+  'content': contentController.text,
+  'uid': ff.user.uid,
+});
+```
+
+- See [sample app's post-edit branch](https://github.com/thruthesky/fireflutter_sample_app/tree/forum-edit)
+
+### Photo upload
+
+To upload a photo(or any file), we are going to put a photo upload button(or camera icon) for user to choose a phone.
+
+- Do [Create post edit screen](#create-post-edit-screen)
+- Do [Image Picker Setup](#image-picker-setup)
+- FireFlutter's `uploadFile()` method will do the upload. The parameters are,
+
+  - `folder` - where the uploaded file would be saved under Firebase Stroage.
+  - `source` - the `ImageSource` to tell the app to get images from. It would be Gallary or Camera.
+  - `progress` - callback function to get upload progress in percentage.
+  - `quality` - jpeg quality
+  - `maxWidth` - max width of image.
+
+- When user click file upload icon, the app should show a dialog or bottom sheet for user to choose to get photo from Camera or Gallery.
+- After user choose the choice where to get photo, it needs to call `uploadFile()` with the parameters.
+- See [sample app's file-upload branch](https://github.com/thruthesky/fireflutter_sample_app/tree/photo-upload) for complete code.
 
 ### Create post list screen
 
@@ -1071,27 +1136,7 @@ We have put the forum functionality concept to work in real time update which me
   - How to declare forum data.
 
 ```dart
-class ForumScreen extends StatefulWidget {
-  @override
-  _ForumScreenState createState() => _ForumScreenState();
-}
-
-class _ForumScreenState extends State<ForumScreen> {
-  ForumData forum;
-
-  @override
-  void initState() {
-    super.initState();
-    forum = ForumData(
-      category: Get.arguments['category'], // Category of forum
-      /// [render] callback will be invoked on post/comment/file CRUD and fetching posts.
-      render: (RenderType x) {
-        if (mounted) setState(() => null);
-      },
-    );
-  }
-}
-
+///...
 ```
 
 ## Logic for Vote
@@ -1258,3 +1303,7 @@ This error may happens when you didn't input SHA1 key on Android app in Firebase
 `PlatformException(operation-not-allowed, The identity provider configuration is not found., {code: operation-not-allowed, message: The identity provider configuration is not found., nativeErrorMessage: The identity provider configuration is not found., nativeErrorCode: 17006, additionalData: {}}, null)`
 
 This error may happens when you didn't enable the sign-in method on Firebase Authentication. For instance, you have set Facebook sign in settings but forgot to enable Facebook sign in on Firebase Authentication.
+
+## App crashes on second file upload
+
+It's know to be a bug of Flutter and image_picker.
