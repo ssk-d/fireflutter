@@ -13,6 +13,11 @@ enum RenderType {
   stopFetching
 }
 
+enum ForumStatus {
+  noPosts,
+  noMorePosts,
+}
+
 typedef Render = void Function(RenderType x);
 const ERROR_SIGNIN_ABORTED = 'ERROR_SIGNIN_ABORTED';
 
@@ -37,16 +42,17 @@ class ForumData {
   RenderType _inLoading;
   bool get inLoading => _inLoading == RenderType.fetching;
 
-  /// Tell the app to re-render the screen.
-  /// TODO the name of the method is confusing. Change it to reRender or similiar
-  fetchingPosts(RenderType x) {
+  /// Tell the app to update(re-render) the screen.
+  ///
+  /// This method should be invoked whenever forum data changes like fetching
+  /// more posts, comment updating, voting, etc.
+  updateScreen(RenderType x) {
     _inLoading = x;
     render(RenderType.stopFetching);
   }
 
-  bool noMorePosts = false;
-  bool noPostsYet = false;
-  bool get shouldFetch => inLoading == false && noMorePosts == false;
+  ForumStatus status;
+  bool get shouldFetch => inLoading == false && status == null;
   bool get shouldNotFetch => !shouldFetch;
 
   String category;

@@ -259,7 +259,7 @@ class FireFlutter extends Base {
     if (forum.shouldNotFetch) return;
     // print('category: ${forum.category}');
     // print('should fetch?: ${forum.shouldFetch}');
-    forum.fetchingPosts(RenderType.fetching);
+    forum.updateScreen(RenderType.fetching);
     forum.pageNo++;
     // print('pageNo: ${forum.pageNo}');
 
@@ -287,17 +287,17 @@ class FireFlutter extends Base {
       // if snapshot size is 0, means no documents has been fetched.
       if (snapshot.size == 0) {
         if (forum.pageNo == 1) {
-          forum.noPostsYet = true;
+          forum.status = ForumStatus.noPosts;
         } else {
-          forum.noMorePosts = true;
+          forum.status = ForumStatus.noMorePosts;
         }
-        forum.fetchingPosts(RenderType.stopFetching);
+        forum.updateScreen(RenderType.stopFetching);
       }
 
       ///
       if (snapshot.docs.length < limit) {
-        forum.noMorePosts = true;
-        forum.fetchingPosts(RenderType.stopFetching);
+        forum.status = ForumStatus.noMorePosts;
+        forum.updateScreen(RenderType.stopFetching);
       }
 
       snapshot.docChanges.forEach((DocumentChange documentChange) {
@@ -373,7 +373,7 @@ class FireFlutter extends Base {
             });
           });
 
-          forum.fetchingPosts(RenderType.stopFetching);
+          forum.updateScreen(RenderType.stopFetching);
         }
 
         /// post update

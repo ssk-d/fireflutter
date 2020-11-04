@@ -1,3 +1,7 @@
+## [0.0.12] - minor fixes
+
+- Minor code fixes.
+
 ## [0.0.11] - default settings
 
 - should work without any settings.
