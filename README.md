@@ -370,7 +370,7 @@ keytool -exportcert -alias YOUR_RELEASE_KEY_ALIAS -keystore YOUR_RELEASE_KEY_PAT
 - Add `fireflutter` to pubspec.yaml
   - fireflutter package contains other packages like algolia, dio, firebase related packages, and more as its dependency. You don't have to install the same packages again in your pubspec.yaml
   - To check what versions of the packages are installed, see pubspec.lock file.
-  - See [the pubspect.yaml in sample app](https://github.com/thruthesky/fireflutter_sample_app/blob/fireflutter-initialization/pubspec.yaml).
+  - See [the pubspect.yaml in sample app](https://github.com/thruthesky/fireflutter_sample_app/blob/fireflutter/pubspec.yaml).
   - You need to update the latest version of `fireflutter`.
 - See [FireFlutter Initialization](#fireflutter-initialization) to initialize `fireflutter` package.
 - See [Add GetX](#add-getx) to use route, state management, localization and more.
@@ -895,7 +895,7 @@ void main() async {
 
   - And move the `ff` variable into `global_variables.dart`.
 
-- The complete code is on [fireflutter-initialization branch](https://github.com/thruthesky/fireflutter_sample_app/tree/fireflutter-initialization/lib) of sample app.
+- The complete code is on [fireflutter-initialization branch](https://github.com/thruthesky/fireflutter_sample_app/tree/fireflutter/lib) of sample app.
 
 - todo: app settings
 - todo: translations
@@ -1127,6 +1127,7 @@ To upload a photo(or any file), we are going to put a photo upload button(or cam
 - When user click file upload icon, the app should show a dialog or bottom sheet for user to choose to get photo from Camera or Gallery.
 - After user choose the choice where to get photo, it needs to call `uploadFile()` with the parameters.
 - See [sample app's file-upload branch](https://github.com/thruthesky/fireflutter_sample_app/tree/photo-upload) for complete code.
+  - Code for deleting uploaded photo is not in the branch. We will cover it on post update branch.
 
 ### Create post list screen
 
