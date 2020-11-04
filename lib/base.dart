@@ -296,6 +296,7 @@ class Base {
         "notification": {
           "body": body.length > 512 ? body.substring(0, 512) : body,
           "title": title.length > 128 ? title.substring(0, 128) : title,
+          "sound": getNotificationSound('android'),
         },
         "priority": "high",
         "data": {
@@ -304,21 +305,22 @@ class Base {
           "senderUid": user.uid,
           "route": "/",
           "screen": screen,
+          "click_action": "FLUTTER_NOTIFICATION_CLICK",
         },
-        "android": {
-          "notification": {
-            "sound": getNotificationSound('android'),
-            "click_action": "OPEN_ACTIVITY_1"
-          }
-        },
-        "apns": {
-          "payload": {
-            "sound": getNotificationSound('android'),
-            "aps": {
-              "sound": getNotificationSound('ios'),
-            }
-          }
-        },
+        // "android": {
+        //   // this is not working
+        //   "notification": {
+        //     "sound": getNotificationSound('android'),
+        //     "click_action": "FLUTTER_NOTIFICATION_CLICK",
+        //   }
+        // },
+        // "apns": {
+        //   "payload": {
+        //     "aps": {
+        //       "sound": getNotificationSound('ios'),
+        //     }
+        //   }
+        // },
       };
 
       print(data);
