@@ -40,6 +40,7 @@ class FireFlutter extends Base {
   /// the unit of [remoteConfigFetchInterval] is minute. In debug mode, it can be set to 1.
   /// But in release mode, it must not be less than 15. If it is less than 15,
   /// then it will be escalated to 15.
+  ///
   Future<void> init({
     bool enableNotification = false,
     String firebaseServerToken,
@@ -51,14 +52,17 @@ class FireFlutter extends Base {
     this.firebaseServerToken = firebaseServerToken;
     this.pushNotificationOption = pushNotificationOption;
 
-    // Must be called before firebase init
+    /// Must be called before firebase init
+    ///
     if (settings != null) {
       _settings = settings;
       settingsChange.add(_settings);
     }
 
-    translationsChange.add(translations); // Must be called before firebase init
-
+    if (translations != null) {
+      translationsChange
+          .add(translations); // Must be called before firebase init
+    }
     await initFirebase();
     initUser();
     initFirebaseMessaging();
