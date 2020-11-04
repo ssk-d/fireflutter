@@ -1,3 +1,8 @@
+## [0.0.11] - default settings
+
+- should work without any settings.
+- document update.
+
 ## [0.0.10] - Updating documents and minor fixes
 
 - Updating documents and minor fixes
