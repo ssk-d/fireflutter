@@ -10,7 +10,7 @@ enum RenderType {
   fileUpload,
   fileDelete,
   fetching,
-  stopFetching
+  finishFetching
 }
 
 enum ForumStatus {
@@ -48,7 +48,7 @@ class ForumData {
   /// more posts, comment updating, voting, etc.
   updateScreen(RenderType x) {
     _inLoading = x;
-    render(RenderType.stopFetching);
+    render(x);
   }
 
   ForumStatus status;
@@ -56,7 +56,7 @@ class ForumData {
   bool get shouldNotFetch => !shouldFetch;
 
   String category;
-  int pageNo = 0;
+  // int pageNo = 0;
   // int noOfPostsPerFetch; // Todo check if still needed
   List<Map<String, dynamic>> posts = [];
   Render render;

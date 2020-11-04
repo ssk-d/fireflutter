@@ -255,12 +255,13 @@ class FireFlutter extends Base {
 
   /// Get more posts from Firestore
   ///
+  /// This does not fetch again while it is in progress of fetching.
   fetchPosts(ForumData forum) {
     if (forum.shouldNotFetch) return;
     // print('category: ${forum.category}');
     // print('should fetch?: ${forum.shouldFetch}');
     forum.updateScreen(RenderType.fetching);
-    forum.pageNo++;
+    // forum.pageNo++;
     // print('pageNo: ${forum.pageNo}');
 
     /// Prepare query
@@ -286,20 +287,16 @@ class FireFlutter extends Base {
         postsQuery.snapshots().listen((QuerySnapshot snapshot) {
       // if snapshot size is 0, means no documents has been fetched.
       if (snapshot.size == 0) {
-        if (forum.pageNo == 1) {
+        if (forum.posts.isEmpty) {
           forum.status = ForumStatus.noPosts;
         } else {
           forum.status = ForumStatus.noMorePosts;
         }
-        forum.updateScreen(RenderType.stopFetching);
-      }
-
-      ///
-      if (snapshot.docs.length < limit) {
+      } else if (snapshot.docs.length < limit) {
         forum.status = ForumStatus.noMorePosts;
-        forum.updateScreen(RenderType.stopFetching);
       }
 
+      forum.updateScreen(RenderType.finishFetching);
       snapshot.docChanges.forEach((DocumentChange documentChange) {
         final post = documentChange.doc.data();
         post['id'] = documentChange.doc.id;
@@ -372,8 +369,6 @@ class FireFlutter extends Base {
               }
             });
           });
-
-          forum.updateScreen(RenderType.stopFetching);
         }
 
         /// post update
