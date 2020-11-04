@@ -1,7 +1,7 @@
 part of './fireflutter.dart';
 
 class Base {
-  final String allTopic = 'allTopic';
+  final String allTopic = 'allTopic123';
 
   /// To send push notification
   String firebaseServerToken;
@@ -296,6 +296,7 @@ class Base {
         "notification": {
           "body": body.length > 512 ? body.substring(0, 512) : body,
           "title": title.length > 128 ? title.substring(0, 128) : title,
+          // "sound": getNotificationSound('android'),
         },
         "priority": "high",
         "data": {
@@ -308,12 +309,11 @@ class Base {
         "android": {
           "notification": {
             "sound": getNotificationSound('android'),
-            "click_action": "OPEN_ACTIVITY_1"
+            "click_action": "FLUTTER_NOTIFICATION_CLICK"
           }
         },
         "apns": {
           "payload": {
-            "sound": getNotificationSound('android'),
             "aps": {
               "sound": getNotificationSound('ios'),
             }
