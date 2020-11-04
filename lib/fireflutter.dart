@@ -44,13 +44,13 @@ class FireFlutter extends Base {
   Future<void> init({
     bool enableNotification = false,
     String firebaseServerToken,
-    Map<String, dynamic> pushNotificationOption,
+    String pushNotificationSound,
     Map<String, Map<dynamic, dynamic>> settings,
     Map<String, Map<String, String>> translations,
   }) async {
     this.enableNotification = enableNotification;
     this.firebaseServerToken = firebaseServerToken;
-    this.pushNotificationOption = pushNotificationOption;
+    this.pushNotificationSound = pushNotificationSound;
 
     /// Must be called before firebase init
     ///

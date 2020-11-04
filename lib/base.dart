@@ -5,7 +5,7 @@ class Base {
 
   /// To send push notification
   String firebaseServerToken;
-  Map<String, dynamic> pushNotificationOption;
+  String pushNotificationSound;
 
   /// User document realtime update.
   StreamSubscription userSubscription;
@@ -67,7 +67,6 @@ class Base {
   ///     "click_action": "FLUTTER_NOTIFICATION_CLICK",
   ///     "id": id,
   ///     "status": "done",
-  ///     "sound": 'default',
   ///     "senderUid": user.uid,
   ///     'route': '/',
   ///     'screen': screen
@@ -315,7 +314,7 @@ class Base {
         "notification": {
           "body": body.length > 512 ? body.substring(0, 512) : body,
           "title": title.length > 128 ? title.substring(0, 128) : title,
-          // "sound": getNotificationSound('android'),
+          "sound": pushNotificationSound ?? 'default',
         },
         "priority": "high",
         "data": {
@@ -324,20 +323,22 @@ class Base {
           "senderUid": user.uid,
           "route": "/",
           "screen": screen,
+          "click_action": "FLUTTER_NOTIFICATION_CLICK",
         },
-        "android": {
-          "notification": {
-            "sound": getNotificationSound('android'),
-            "click_action": "FLUTTER_NOTIFICATION_CLICK"
-          }
-        },
-        "apns": {
-          "payload": {
-            "aps": {
-              "sound": getNotificationSound('ios'),
-            }
-          }
-        },
+        // "android": {
+        //   // this is not working on legacy protocol
+        //   "notification": {
+        //     "sound": getNotificationSound('android'),
+        //     "click_action": "FLUTTER_NOTIFICATION_CLICK",
+        //   }
+        // },
+        // "apns": {
+        //   "payload": {
+        //     "aps": {
+        //       "sound": getNotificationSound('ios'),
+        //     }
+        //   }
+        // },
       };
 
       print(data);
@@ -369,14 +370,6 @@ class Base {
       }
     });
     return success;
-  }
-
-  String getNotificationSound(String platform) {
-    return pushNotificationOption != null &&
-            pushNotificationOption[platform] != null &&
-            pushNotificationOption[platform]['sound'] != null
-        ? pushNotificationOption[platform]['sound']
-        : 'default';
   }
 
   Map<String, dynamic> getCommentParent(
