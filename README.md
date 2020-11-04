@@ -70,6 +70,7 @@ A free, open source, rapid development flutter package to build social apps, com
   - [Create Profile Screen](#create-profile-screen)
     - [User Email And Password Registration](#user-email-and-password-registration)
   - [Display User Login](#display-user-login)
+  - [Login with email and password](#login-with-email-and-password)
   - [Create admin page](#create-admin-page)
   - [Forum Coding](#forum-coding)
     - [Create forum category management screen](#create-forum-category-management-screen)
@@ -1014,6 +1015,18 @@ Let's display user login information on home screen.
 - Open home screen with Xcode
 - Code like below
 
+## Login with email and password
+
+Let's create a login page.
+
+- `login()` method of fireflutter will handle email and password login.
+
+```dart
+await ff.login(
+    email: emailController.text,
+    password: passwordController.text);
+```
+
 ## Create admin page
 
 - Do [Admin Account Setting](#admin-account-setting)
@@ -1029,6 +1042,8 @@ if (ff.isAdmin) ...[
   ),
 ],
 ```
+
+- See the code in [login-with-email-password branch](https://github.com/thruthesky/fireflutter_sample_app/blob/login-with-email-password/lib/screens/login/login.screen.dart).
 
 - Create admin.screen.dart under lib/screens/admin foler.
   - And code like below
