@@ -1004,7 +1004,7 @@ User user = await ff.register({
 });
 ```
 
-- There is another branch for more complete regration sample code. See [register-2 branch](https://github.com/thruthesky/fireflutter_sample_app/tree/register-2) for more complete regiration code.
+- There is another branch for more complete regration sample code. See [register-v2 branch](https://github.com/thruthesky/fireflutter_sample_app/tree/register-v2) for more complete regiration code.
 - We recommend you to copy the sample code and apply it into your own project.
 
 ## Display User Login
@@ -1079,7 +1079,7 @@ There are many works to do to complete forum functionality.
 - Do [Admin Account Setting](#admin-account-setting)
 - Login as the admin account.
 - Do [Create admin page](#create-admin-page)
-- And see [forum-admin branch of sample app](https://github.com/thruthesky/fireflutter_sample_app/tree/forum-admin) for the code of forum category management page.
+- And see [forum-admin branch of sample app](https://github.com/thruthesky/fireflutter_sample_app/tree/category-admin) for the code of forum category management page.
   - The code is in `lib/screens/admin/admin.category.screen.dart`.
 - Then, create a category ID as 'qna'.
 
@@ -1088,7 +1088,7 @@ There are many works to do to complete forum functionality.
 In forum edit screen, user can create or update a post and he can upload photos.
 
 - You need to create 'qna' category as described in [Create forum category management screen](#create-forum-category-management-screen)
-- And follow the code in [forum-edit branch of sample app](https://github.com/thruthesky/fireflutter_sample_app/tree/forum-edit)
+- And follow the code in [forum-edit branch of sample app](https://github.com/thruthesky/fireflutter_sample_app/tree/post-create)
 
   - In the code,
     - Forum edit screen is created at `lib/screens/forum/forum.edit.dart`
@@ -1108,7 +1108,7 @@ ff.editPost({
 });
 ```
 
-- See [sample app's post-edit branch](https://github.com/thruthesky/fireflutter_sample_app/tree/forum-edit)
+- See [sample app's post-edit branch](https://github.com/thruthesky/fireflutter_sample_app/tree/post-create)
 
 ### Photo upload
 
