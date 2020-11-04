@@ -2,11 +2,11 @@
 
 [한국어 설명 보기](readme.ko.md)
 
-A free, open source, rapid development flutter package to build social apps, community apps, and more.
+A free, open source, rapid development flutter package to build social apps, community apps, blogs apps, and much more.
 
 - This package has complete features (see Features below) that most of apps are needed.
 - `Simple, easy and the right way`.
-  We want it to be really simple but right way for ourselves and for the builders in the world.
+  We want it to be deadly simple but right way for ourselves and for the builders in the world.
   We know when it gets complicated, developers' lives would get even more complicated.
 
 # Table of Contents
@@ -48,6 +48,8 @@ A free, open source, rapid development flutter package to build social apps, com
     - [Security Rules Testing](#security-rules-testing)
   - [Cloud Functions](#cloud-functions)
     - [Funtions Test](#funtions-test)
+  - [Image Picker Setup](#image-picker-setup)
+    - [Image Picker Setup for iOS](#image-picker-setup-for-ios)
   - [Localization Setup](#localization-setup)
   - [Push Notification Setup](#push-notification-setup)
   - [Algolia Setup](#algolia-setup)
@@ -68,11 +70,13 @@ A free, open source, rapid development flutter package to build social apps, com
   - [Create Profile Screen](#create-profile-screen)
     - [User Email And Password Registration](#user-email-and-password-registration)
   - [Display User Login](#display-user-login)
+  - [Login with email and password](#login-with-email-and-password)
   - [Create admin page](#create-admin-page)
   - [Forum Coding](#forum-coding)
-    - [Create forum category management page](#create-forum-category-management-page)
-    - [Create post edit page](#create-post-edit-page)
-    - [Create post list page](#create-post-list-page)
+    - [Create forum category management screen](#create-forum-category-management-screen)
+    - [Create post edit screen](#create-post-edit-screen)
+    - [Photo upload](#photo-upload)
+    - [Create post list screen](#create-post-list-screen)
   - [Logic for Vote](#logic-for-vote)
   - [Push Notification](#push-notification)
   - [Social Login](#social-login)
@@ -87,6 +91,7 @@ A free, open source, rapid development flutter package to build social apps, com
   - [MissingPluginException google_sign_in](#missingpluginexception-google_sign_in)
   - [sign_in_failed](#sign_in_failed)
   - [operation-not-allowed](#operation-not-allowed)
+  - [App crashes on second file upload](#app-crashes-on-second-file-upload)
 
 <!-- /TOC -->
 
@@ -139,6 +144,9 @@ A free, open source, rapid development flutter package to build social apps, com
 
 # TODOs
 
+- Sample code for post crud
+- Sample code for comment crud
+- Sample code for search posts and comments with Algolia
 - Adding sample code for user profile update
 - Adding sample code for live change of user language.
 
@@ -363,7 +371,7 @@ keytool -exportcert -alias YOUR_RELEASE_KEY_ALIAS -keystore YOUR_RELEASE_KEY_PAT
 - Add `fireflutter` to pubspec.yaml
   - fireflutter package contains other packages like algolia, dio, firebase related packages, and more as its dependency. You don't have to install the same packages again in your pubspec.yaml
   - To check what versions of the packages are installed, see pubspec.lock file.
-  - See [the pubspect.yaml in sample app](https://github.com/thruthesky/fireflutter_sample_app/blob/fireflutter-initialization/pubspec.yaml).
+  - See [the pubspect.yaml in sample app](https://github.com/thruthesky/fireflutter_sample_app/blob/fireflutter/pubspec.yaml).
   - You need to update the latest version of `fireflutter`.
 - See [FireFlutter Initialization](#fireflutter-initialization) to initialize `fireflutter` package.
 - See [Add GetX](#add-getx) to use route, state management, localization and more.
@@ -418,7 +426,7 @@ keytool -exportcert -alias YOUR_RELEASE_KEY_ALIAS -keystore YOUR_RELEASE_KEY_PAT
 
 #### Facebook Sign In Setup for Android
 
-In this chapter, Facebook sign in setup for Android is explanined in detail.
+In this chapter, Facebook sign in setup for Android is explained in detail.
 
 All the information is coming from [flutter_facebook_auth](https://pub.dev/packages/flutter_facebook_auth) which is the package we use for Facebook login.
 
@@ -637,6 +645,33 @@ One of the reason why we use Cloud Funtions is to enable like and dislike functi
 $ cd functions
 $ npm test
 $ npm test:algolia
+```
+
+## Image Picker Setup
+
+To upload files(or photos), we will use [image_picker](https://pub.dev/packages/image_picker) package.
+
+Android platform(API 29+) does not need any settings. It works out of the box.
+
+- See [image_picker](https://pub.dev/packages/image_picker) package page for detail.
+
+### Image Picker Setup for iOS
+
+- Open `ios/Runner/Info.plist` with VSCode
+- Add the three keys.
+  - `NSPhotoLibraryUsageDescription` - describe why your app needs permission for the photo library. This is called Privacy - Photo Library Usage Description in the visual editor.
+  - `NSCameraUsageDescription` - describe why your app needs access to the camera. This is called Privacy - Camera Usage Description in the visual editor.
+  - `NSMicrophoneUsageDescription` - describe why your app needs access to the microphone, if you intend to record videos. This is called Privacy - Microphone Usage Description in the visual editor
+
+Example)
+
+```xml
+<key>NSPhotoLibraryUsageDescription</key>
+<string>$(EXECUTABLE_NAME) need access to Photo Library.</string>
+<key>NSCameraUsageDescription</key>
+<string>$(EXECUTABLE_NAME) need access to Camera.</string>
+<key>NSMicrophoneUsageDescription</key>
+<string>$(EXECUTABLE_NAME) need access to Microphone.</string>
 ```
 
 ## Localization Setup
@@ -861,7 +896,7 @@ void main() async {
 
   - And move the `ff` variable into `global_variables.dart`.
 
-- The complete code is on [fireflutter-initialization branch](https://github.com/thruthesky/fireflutter_sample_app/tree/fireflutter-initialization/lib) of sample app.
+- The complete code is on [fireflutter-initialization branch](https://github.com/thruthesky/fireflutter_sample_app/tree/fireflutter/lib) of sample app.
 
 - todo: app settings
 - todo: translations
@@ -970,7 +1005,7 @@ User user = await ff.register({
 });
 ```
 
-- There is another branch for more complete regration sample code. See [register-2 branch](https://github.com/thruthesky/fireflutter_sample_app/tree/register-2) for more complete regiration code.
+- There is another branch for more complete regration sample code. See [register-v2 branch](https://github.com/thruthesky/fireflutter_sample_app/tree/register-v2) for more complete regiration code.
 - We recommend you to copy the sample code and apply it into your own project.
 
 ## Display User Login
@@ -979,6 +1014,18 @@ Let's display user login information on home screen.
 
 - Open home screen with Xcode
 - Code like below
+
+## Login with email and password
+
+Let's create a login page.
+
+- `login()` method of fireflutter will handle email and password login.
+
+```dart
+await ff.login(
+    email: emailController.text,
+    password: passwordController.text);
+```
 
 ## Create admin page
 
@@ -995,6 +1042,8 @@ if (ff.isAdmin) ...[
   ),
 ],
 ```
+
+- See the code in [login-with-email-password branch](https://github.com/thruthesky/fireflutter_sample_app/blob/login-with-email-password/lib/screens/login/login.screen.dart).
 
 - Create admin.screen.dart under lib/screens/admin foler.
   - And code like below
@@ -1040,45 +1089,70 @@ FireFlutter does not involve any of the app's in UI/UX. Because of this, you can
 
 There are many works to do to complete forum functionality.
 
-### Create forum category management page
+### Create forum category management screen
 
 - Do [Admin Account Setting](#admin-account-setting)
 - Login as the admin account.
 - Do [Create admin page](#create-admin-page)
-- And see [forum-admin branch of sample app](https://github.com/thruthesky/fireflutter_sample_app/tree/forum-admin) for the code of forum category management page.
+- And see [forum-admin branch of sample app](https://github.com/thruthesky/fireflutter_sample_app/tree/category-admin) for the code of forum category management page.
   - The code is in `lib/screens/admin/admin.category.screen.dart`.
+- Then, create a category ID as 'qna'.
 
-### Create post edit page
+### Create post edit screen
 
-//// to be continued...
+In forum edit screen, user can create or update a post and he can upload photos.
 
-### Create post list page
+- You need to create 'qna' category as described in [Create forum category management screen](#create-forum-category-management-screen)
+- And follow the code in [forum-edit branch of sample app](https://github.com/thruthesky/fireflutter_sample_app/tree/post-create)
+
+  - In the code,
+    - Forum edit screen is created at `lib/screens/forum/forum.edit.dart`
+    - And the route is added in main.dart
+    - A button is added in home.screen.dart to open forum edit screen.
+
+- Post create and update are done with `editPost()` method.
+  - If `id` is null, then, it will create a post. Or it will update the post of the id.
+
+```dart
+ff.editPost({
+  'id': post == null ? null : post['id'],
+  'category': category,
+  'title': titleController.text,
+  'content': contentController.text,
+  'uid': ff.user.uid,
+});
+```
+
+- See [sample app's post-edit branch](https://github.com/thruthesky/fireflutter_sample_app/tree/post-create)
+
+### Photo upload
+
+To upload a photo(or any file), we are going to put a photo upload button(or camera icon) for user to choose a phone.
+
+- Do [Create post edit screen](#create-post-edit-screen)
+- Do [Image Picker Setup](#image-picker-setup)
+- FireFlutter's `uploadFile()` method will do the upload. The parameters are,
+
+  - `folder` - where the uploaded file would be saved under Firebase Stroage.
+  - `source` - the `ImageSource` to tell the app to get images from. It would be Gallary or Camera.
+  - `progress` - callback function to get upload progress in percentage.
+  - `quality` - jpeg quality
+  - `maxWidth` - max width of image.
+
+- When user click file upload icon, the app should show a dialog or bottom sheet for user to choose to get photo from Camera or Gallery.
+- After user choose the choice where to get photo, it needs to call `uploadFile()` with the parameters.
+- See [sample app's file-upload branch](https://github.com/thruthesky/fireflutter_sample_app/tree/photo-upload) for complete code.
+  - Code for deleting uploaded photo is not in the branch. We will cover it on post update branch.
+
+### Create post list screen
+
+We have put the forum functionality concept to work in real time update which means if a user creates a comment, it will appear on other user's phone in real time (without reloading).
 
 - To fetch posts and listing, you need to declare `ForumData` object.
   - How to declare forum data.
 
 ```dart
-class ForumScreen extends StatefulWidget {
-  @override
-  _ForumScreenState createState() => _ForumScreenState();
-}
-
-class _ForumScreenState extends State<ForumScreen> {
-  ForumData forum;
-
-  @override
-  void initState() {
-    super.initState();
-    forum = ForumData(
-      category: Get.arguments['category'], // Category of forum
-      /// [render] callback will be invoked on post/comment/file CRUD and fetching posts.
-      render: (RenderType x) {
-        if (mounted) setState(() => null);
-      },
-    );
-  }
-}
-
+///...
 ```
 
 ## Logic for Vote
@@ -1097,7 +1171,7 @@ class _ForumScreenState extends State<ForumScreen> {
 - Voting works asynchronously.
   - When a user votes in the order of `like => dislike => like => dislike`,
     the server(Firestore) may receive in the order of `like => like => dislike => dislike` since it is **asynchronous**.
-    So, client app should block the user not to vote again while voting is in progress.
+    So, client app should block (by showing a progress indicator) the user not to vote again while voting is in progress.
 
 ## Push Notification
 
@@ -1245,3 +1319,7 @@ This error may happens when you didn't input SHA1 key on Android app in Firebase
 `PlatformException(operation-not-allowed, The identity provider configuration is not found., {code: operation-not-allowed, message: The identity provider configuration is not found., nativeErrorMessage: The identity provider configuration is not found., nativeErrorCode: 17006, additionalData: {}}, null)`
 
 This error may happens when you didn't enable the sign-in method on Firebase Authentication. For instance, you have set Facebook sign in settings but forgot to enable Facebook sign in on Firebase Authentication.
+
+## App crashes on second file upload
+
+It's know to be a bug of Flutter and image_picker.

@@ -257,11 +257,11 @@ class FireFlutter extends Base {
   ///
   fetchPosts(ForumData forum) {
     if (forum.shouldNotFetch) return;
-    print('category: ${forum.category}');
-    print('should fetch?: ${forum.shouldFetch}');
+    // print('category: ${forum.category}');
+    // print('should fetch?: ${forum.shouldFetch}');
     forum.fetchingPosts(RenderType.fetching);
     forum.pageNo++;
-    print('pageNo: ${forum.pageNo}');
+    // print('pageNo: ${forum.pageNo}');
 
     /// Prepare query
     Query postsQuery = postsCol.where('category', isEqualTo: forum.category);
@@ -273,7 +273,7 @@ class FireFlutter extends Base {
     if (_settings[forum.category] != null &&
         _settings[forum.category]['no-of-posts-per-fetch'] != null)
       limit = _settings[forum.category]['no-of-posts-per-fetch'];
-    print(limit);
+    // print(limit);
     postsQuery = postsQuery.limit(limit);
 
     /// Fetch from the last post that had been fetched.
