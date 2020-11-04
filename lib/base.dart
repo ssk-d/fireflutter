@@ -79,7 +79,8 @@ class Base {
 
   // PublishSubject configDownload = PublishSubject();
 
-  Map<String, dynamic> _settings = {};
+  /// Set default properties to prevent errors.
+  Map<String, dynamic> _settings = {'forum': {}, 'app': {}};
   // ignore: close_sinks
   BehaviorSubject settingsChange = BehaviorSubject.seeded(null);
 
@@ -729,9 +730,11 @@ class Base {
     });
   }
 
-  bool isShowForumVote(String category, String vote) {
-    if (_settings[category] == null || _settings[category][vote] == null)
-      return _settings['forum'][vote];
+  /// Returns vote setting
+  bool voteSetting(String category, String vote) {
+    if (_settings[category] == null || _settings[category][vote] == null) {
+      return _settings['forum'][vote] ?? true;
+    }
     return _settings[category][vote];
   }
 

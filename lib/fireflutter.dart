@@ -267,7 +267,7 @@ class FireFlutter extends Base {
     Query postsQuery = postsCol.where('category', isEqualTo: forum.category);
     postsQuery = postsQuery.orderBy('createdAt', descending: true);
     //set default limit
-    int limit = _settings['forum']['no-of-posts-per-fetch'];
+    int limit = _settings['forum']['no-of-posts-per-fetch'] ?? 12;
 
     //if it has specific limit on settings set the corresponding settings.
     if (_settings[forum.category] != null &&
