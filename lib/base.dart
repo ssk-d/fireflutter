@@ -162,6 +162,24 @@ class Base {
         .set({firebaseMessagingToken: true}, SetOptions(merge: true));
   }
 
+  updateUserSubscription(user) async {
+    if (enableNotification == false) return;
+    if (firebaseMessagingToken == null) return;
+    final docSnapshot =
+        await usersCol.doc(user['uid']).collection('meta').doc('public').get();
+    if (!docSnapshot.exists) return;
+    Map<String, dynamic> tokensDoc = docSnapshot.data();
+
+    tokensDoc.forEach((key, value) {
+      if (key.indexOf('notification_') != -1) {
+        if (value == true)
+          subscribeTopic(key);
+        else
+          unsubscribeTopic(key);
+      }
+    });
+  }
+
   Future subscribeTopic(String topicName) async {
     await FirebaseMessaging().subscribeToTopic(topicName);
   }
@@ -297,6 +315,7 @@ class Base {
         "notification": {
           "body": body.length > 512 ? body.substring(0, 512) : body,
           "title": title.length > 128 ? title.substring(0, 128) : title,
+          // "sound": getNotificationSound('android'),
         },
         "priority": "high",
         "data": {
@@ -309,12 +328,11 @@ class Base {
         "android": {
           "notification": {
             "sound": getNotificationSound('android'),
-            "click_action": "OPEN_ACTIVITY_1"
+            "click_action": "FLUTTER_NOTIFICATION_CLICK"
           }
         },
         "apns": {
           "payload": {
-            "sound": getNotificationSound('android'),
             "aps": {
               "sound": getNotificationSound('ios'),
             }
@@ -615,6 +633,7 @@ class Base {
 
   onLogin(User user) {
     updateToken(user);
+    updateUserSubscription(user);
   }
 
   /// Pick an image from Camera or Gallery,
