@@ -21,78 +21,78 @@ A free, open source, rapid development flutter package to build social apps, com
 - [Components](#components)
 - [Requirements](#requirements)
 - [Installation](#installation)
-    - [Firebase Project Creation](#firebase-project-creation)
-    - [Firebase Email/Password Login](#firebase-emailpassword-login)
-    - [Create Firestore Database](#create-firestore-database)
-    - [Create Flutter project](#create-flutter-project)
-        - [Setup Flutter to connect to Firebase](#setup-flutter-to-connect-to-firebase)
-            - [iOS Setup](#ios-setup)
-            - [Android Setup](#android-setup)
-    - [Create a keystore](#create-a-keystore)
-        - [Debug hash key](#debug-hash-key)
-            - [Debug hash key base64](#debug-hash-key-base64)
-        - [Release hash key](#release-hash-key)
-            - [Release hash key base64](#release-hash-key-base64)
-    - [Add fireflutter package to Flutter project](#add-fireflutter-package-to-flutter-project)
-    - [Firebase Social Login](#firebase-social-login)
-        - [Google Sign-in Setup](#google-sign-in-setup)
-        - [Google Sign-in Setup for iOS](#google-sign-in-setup-for-ios)
-        - [Google Sign-in Setup for Android](#google-sign-in-setup-for-android)
-        - [Facebook Sign In Setup](#facebook-sign-in-setup)
-            - [Facebook Sign In Setup for Android](#facebook-sign-in-setup-for-android)
-            - [Facebook Sign In Setup for iOS](#facebook-sign-in-setup-for-ios)
-        - [Apple Sign In Setup for iOS](#apple-sign-in-setup-for-ios)
-    - [Firebase tools installation](#firebase-tools-installation)
-    - [Download and Set FireFlutter Firebase Project](#download-and-set-fireflutter-firebase-project)
-    - [Firestore security rules](#firestore-security-rules)
-        - [Security Rules Testing](#security-rules-testing)
-    - [Cloud Functions](#cloud-functions)
-        - [Funtions Test](#funtions-test)
-    - [Image Picker Setup](#image-picker-setup)
-        - [Image Picker Setup for iOS](#image-picker-setup-for-ios)
-    - [Localization Setup](#localization-setup)
-    - [Push Notification Setup](#push-notification-setup)
-    - [Algolia Setup](#algolia-setup)
-    - [Admin Account Setting](#admin-account-setting)
+  - [Firebase Project Creation](#firebase-project-creation)
+  - [Firebase Email/Password Login](#firebase-emailpassword-login)
+  - [Create Firestore Database](#create-firestore-database)
+  - [Create Flutter project](#create-flutter-project)
+    - [Setup Flutter to connect to Firebase](#setup-flutter-to-connect-to-firebase)
+      - [iOS Setup](#ios-setup)
+      - [Android Setup](#android-setup)
+  - [Create a keystore](#create-a-keystore)
+    - [Debug hash key](#debug-hash-key)
+      - [Debug hash key base64](#debug-hash-key-base64)
+    - [Release hash key](#release-hash-key)
+      - [Release hash key base64](#release-hash-key-base64)
+  - [Add fireflutter package to Flutter project](#add-fireflutter-package-to-flutter-project)
+  - [Firebase Social Login](#firebase-social-login)
+    - [Google Sign-in Setup](#google-sign-in-setup)
+    - [Google Sign-in Setup for iOS](#google-sign-in-setup-for-ios)
+    - [Google Sign-in Setup for Android](#google-sign-in-setup-for-android)
+    - [Facebook Sign In Setup](#facebook-sign-in-setup)
+      - [Facebook Sign In Setup for Android](#facebook-sign-in-setup-for-android)
+      - [Facebook Sign In Setup for iOS](#facebook-sign-in-setup-for-ios)
+    - [Apple Sign In Setup for iOS](#apple-sign-in-setup-for-ios)
+  - [Firebase tools installation](#firebase-tools-installation)
+  - [Download and Set FireFlutter Firebase Project](#download-and-set-fireflutter-firebase-project)
+  - [Firestore security rules](#firestore-security-rules)
+    - [Security Rules Testing](#security-rules-testing)
+  - [Cloud Functions](#cloud-functions)
+    - [Funtions Test](#funtions-test)
+  - [Image Picker Setup](#image-picker-setup)
+    - [Image Picker Setup for iOS](#image-picker-setup-for-ios)
+  - [Localization Setup](#localization-setup)
+  - [Push Notification Setup](#push-notification-setup)
+  - [Algolia Setup](#algolia-setup)
+  - [Admin Account Setting](#admin-account-setting)
 - [App Management](#app-management)
-    - [App Settings](#app-settings)
-    - [Internalization (Localization)](#internalization-localization)
-    - [Forum Management](#forum-management)
-        - [Forum Category Management](#forum-category-management)
+  - [App Settings](#app-settings)
+  - [Internalization (Localization)](#internalization-localization)
+  - [Forum Management](#forum-management)
+    - [Forum Category Management](#forum-category-management)
 - [Developer Code Guidelines](#developer-code-guidelines)
-    - [General Setup](#general-setup)
-        - [FireFlutter Initialization](#fireflutter-initialization)
-        - [Add GetX](#add-getx)
-    - [Firestore Structure](#firestore-structure)
-    - [User](#user)
-    - [Create Register Screen](#create-register-screen)
-    - [Create Login Screen](#create-login-screen)
-    - [Create Profile Screen](#create-profile-screen)
-        - [User Email And Password Registration](#user-email-and-password-registration)
-    - [Display User Login](#display-user-login)
-    - [Login with email and password](#login-with-email-and-password)
-    - [Create admin page](#create-admin-page)
-    - [Forum Coding](#forum-coding)
-        - [Create forum category management screen](#create-forum-category-management-screen)
-        - [Create post edit screen](#create-post-edit-screen)
-        - [Photo upload](#photo-upload)
-        - [Create post list screen](#create-post-list-screen)
-        - [Post edit and file delete](#post-edit-and-file-delete)
-    - [Logic for Vote](#logic-for-vote)
-    - [Push Notification](#push-notification)
-    - [Social Login](#social-login)
-        - [Google Sign-in](#google-sign-in)
-        - [Facebook Sign In](#facebook-sign-in)
-        - [Apple Sign In](#apple-sign-in)
-    - [External Logins](#external-logins)
-        - [Kakao Login](#kakao-login)
+  - [General Setup](#general-setup)
+    - [FireFlutter Initialization](#fireflutter-initialization)
+    - [Add GetX](#add-getx)
+  - [Firestore Structure](#firestore-structure)
+  - [User](#user)
+  - [Create Register Screen](#create-register-screen)
+  - [Create Login Screen](#create-login-screen)
+  - [Create Profile Screen](#create-profile-screen)
+    - [User Email And Password Registration](#user-email-and-password-registration)
+  - [Display User Login](#display-user-login)
+  - [Login with email and password](#login-with-email-and-password)
+  - [Create admin page](#create-admin-page)
+  - [Forum Coding](#forum-coding)
+    - [Create forum category management screen](#create-forum-category-management-screen)
+    - [Create post edit screen](#create-post-edit-screen)
+    - [Photo upload](#photo-upload)
+    - [Create post list screen](#create-post-list-screen)
+    - [Post edit and file delete](#post-edit-and-file-delete)
+  - [Logic for Vote](#logic-for-vote)
+  - [Push Notification](#push-notification)
+  - [Social Login](#social-login)
+    - [Google Sign-in](#google-sign-in)
+    - [Facebook Sign In](#facebook-sign-in)
+    - [Apple Sign In](#apple-sign-in)
+  - [External Logins](#external-logins)
+    - [Kakao Login](#kakao-login)
 - [I18N](#i18n)
 - [Settings](#settings)
 - [Trouble Shotting](#trouble-shotting)
-    - [MissingPluginException google_sign_in](#missingpluginexception-google_sign_in)
-    - [sign_in_failed](#sign_in_failed)
-    - [operation-not-allowed](#operation-not-allowed)
-    - [App crashes on second file upload](#app-crashes-on-second-file-upload)
+  - [MissingPluginException google_sign_in](#missingpluginexception-google_sign_in)
+  - [sign_in_failed](#sign_in_failed)
+  - [operation-not-allowed](#operation-not-allowed)
+  - [App crashes on second file upload](#app-crashes-on-second-file-upload)
 
 <!-- /TOC -->
 
@@ -594,9 +594,20 @@ firebase login
 
 - Install firebase tools as described at [Firebase tools installation](#firebase-tools-installation)
 
-- Git clone(or fork) https://github.com/thruthesky/fireflutter-firebase and install node modules with `npm i`.
+- Git clone(or fork) https://github.com/thruthesky/fireflutter-firebase
+  - And enter the project folder
+  - `$ cd fireflutter-firebase`
+- Install node modules with the following command.
+  - `$ npm i`.
 - Update Firebase project ID in `.firebaserc ==> projects ==> default`.
-- Save `Firebase SDK Admin Service Key` to `firebase-service-account-key.json` in the same folder of `.firebaserc`.
+- Set `Firebase SDK Admin Service Key`
+  - Go to Project settings => Service accounts => Firebae Admin SDK
+  - Click `Node.js`
+  - Click `Generate new priate key`
+  - Click `Generate Key`
+  - Then, a file will be downloaded.
+  - Rename the file to `firebase-service-account-key.json`
+  - And move(or overwrite if it exists) it to the project folder(the same folder where `.firebaserc` is).
 
 ## Firestore security rules
 
@@ -631,12 +642,17 @@ $ npm run test:user.token
 
 ## Cloud Functions
 
-We tried to limit the usage of Cloud Functions as minimum as possible. But there are some functionalities we cannot acheive without it.
+We tried to limit the usage of Cloud Functions as minimum as possible. But there are some functionalities we cannot achive without it.
 
 One of the reason why we use Cloud Funtions is to enable like and dislike functionality. It is a simple functionality but when it comes with Firestore security rule, it's not an easy work. And Cloud Functions does better with it.
 
 - Do [Download and Set FireFlutter Firebase Project](#download-and-set-fireflutter-firebase-project)
+- Install node modules under functions folder.
+  - `$ cd functions`
+  - `$ npm i`
+  - `$ cd ..`
 - Run `firebase deploy --only functions`. You will need Firebase `Pay as you go` plan to deploy it.
+  - If you meet `Error: HTTP Error: 403, Unknown Error` erro, then you may try again.
 
 ### Funtions Test
 
@@ -1153,6 +1169,9 @@ To manage forum data, you need to create an instance of `ForumData` class.
 It needs to `category` of the forum and a callback which will be called if there any update to re-render the screen.
 
 Call `fetchPosts()` method the ForumData instance and fireflutter will get posts from Firestore storing the posts in `ForumData.posts` and the app can render the posts within the callback of ForumData instance.
+
+- Do [Firestore security rules](#firestore-security-rules). When the app list posts, it will require indexes.
+- Do [Cloud Functions](#cloud-functions). When the app is displaying posts, the Clould Funtions soubld be ready.
 
 ```dart
 ///...
