@@ -343,31 +343,23 @@ class Base {
 
       // print(data);
       data[el['key']] = el['value'];
-      final encodeData = jsonEncode(data);
-      var dio = Dio();
+      final String encodeData = jsonEncode(data);
+      Dio dio = Dio();
 
-      // print('try sending notification');
-      /// TODO Why does it have try {} and catch {}? It produces error.
-      try {
-        var response = await dio.post(
-          postUrl,
-          data: encodeData,
-          options: Options(
-            headers: headers,
-          ),
-        );
-        if (response.statusCode == 200) {
-          // on success do
-          // print("notification success");
-        } else {
-          // on failure do
-          // print("notification failure");
-          success = false;
-        }
-        // print(response.data);
-      } catch (e) {
-        // print('Dio error in sendNotification');
-        // print(e);
+      Response response = await dio.post(
+        postUrl,
+        data: encodeData,
+        options: Options(
+          headers: headers,
+        ),
+      );
+      if (response.statusCode == 200) {
+        // on success do
+        // print("notification success");
+      } else {
+        // on failure do
+        // print("notification failure");
+        success = false;
       }
     });
     return success;
