@@ -1,7 +1,7 @@
 part of './fireflutter.dart';
 
 class Base {
-  final String allTopic = 'allTopic123';
+  final String allTopic = 'allTopic';
 
   /// To send push notification
   String firebaseServerToken;
