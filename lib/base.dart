@@ -233,7 +233,7 @@ class Base {
     // print('notifyApp');
     // print(message);
 
-    Map<String, dynamic> notification =
+    Map<dynamic, dynamic> notification =
         jsonDecode(jsonEncode(message['notification']));
 
     /// on `iOS`, `title`, `body` are insdie `message['aps']['alert']`.
