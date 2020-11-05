@@ -61,7 +61,8 @@ class Base {
   /// - user document(without subcollection) like when user updates his profile
   /// - user log in,
   /// - user log out,
-  /// - user verify his phone nubmrer
+  /// - user verify his phone nubmer
+  /// - user profile photo changes
   ///
   /// It is important to know that [authStateChanges] event happens only when
   /// user logs in or logs out.

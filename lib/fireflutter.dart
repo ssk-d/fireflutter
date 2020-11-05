@@ -205,6 +205,7 @@ class FireFlutter extends Base {
     await user.updateProfile(photoURL: url);
     await user.reload();
     user = FirebaseAuth.instance.currentUser;
+    userChange.add(UserChangeType.profile);
   }
 
   /////////////////////////////////////////////////////////////////////////////

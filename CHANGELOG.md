@@ -1,3 +1,7 @@
+## [0.0.18] - userChange event on photoURL
+
+- userChange event fires on photoURL change
+
 ## [0.0.16] - deprecation of data
 
 - data variable is now deprecated. Use `userData` instead.
