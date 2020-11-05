@@ -421,15 +421,24 @@ class FireFlutter extends Base {
     }
   }
 
-  /// [data] is the map to save into comment document.
+  /// Create a comment
   ///
-  /// `post` property of [data] is required.
-  Future editComment(
-    Map<String, dynamic> data,
-  ) async {
-    if (data['post'] == null) throw 'ERROR_POST_IS_REQUIRED';
-    final Map<String, dynamic> post = data['post'];
-    data.remove('post');
+  /// [data] is the comment to save into comment document.
+  ///
+  /// If `data['id']` has value, then it will update the comment document.
+  ///
+  /// If `data['id']` is null, then it will create a new comment.
+  /// - In this case, [parentIndex] has the index of position in
+  /// [post.comments] array to get `order` of comment position. then, it will
+  /// insert the `order` into the comment. Then, when the comments are listed,
+  /// It will be sorted in proper order.
+  ///
+  ///
+  Future editComment(Map<String, dynamic> data, Map<String, dynamic> post,
+      {int parentIndex}) async {
+    // if (data['post'] == null) throw 'ERROR_POST_IS_REQUIRED';
+    // final Map<String, dynamic> post = data['post'];
+    // data.remove('post');
 
     final commentsCol = commentsCollection(post['id']);
     data.remove('postid');
@@ -444,9 +453,6 @@ class FireFlutter extends Base {
 
     /// create
     else {
-      final int parentIndex = data['parentIndex'];
-      data.remove('parentIndex');
-
       /// get order
       data['order'] = getCommentOrderOf(post, parentIndex);
       data['uid'] = user.uid;
