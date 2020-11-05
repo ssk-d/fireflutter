@@ -147,7 +147,23 @@ class FireFlutter extends Base {
 
     await userDoc.set(data);
 
-    await updateUserMeta(meta);
+    /// Default meta
+    Map<String, Map<String, dynamic>> defaultMeta = {
+      'public': {
+        "notification_post": true,
+        "notification_comment": true,
+      }
+    };
+
+    /// Merge default with new meta data.
+    meta.forEach((key, value) {
+      for (String name in value.keys) {
+        if (defaultMeta[key] == null) defaultMeta[key] = {};
+        defaultMeta[key][name] = value[name];
+      }
+    });
+
+    await updateUserMeta(defaultMeta);
 
     onLogin(user);
     return user;

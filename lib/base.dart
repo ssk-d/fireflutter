@@ -293,8 +293,7 @@ class Base {
     String topic,
   }) async {
     if (enableNotification == false) return false;
-
-    // print('SendNotification');
+    if (firebaseServerToken == null) return false;
 
     if (token == null &&
         (tokens == null || tokens.length == 0) &&
@@ -418,13 +417,13 @@ class Base {
       }
 
       /// If the post owner has not subscribed to new comments under his post, then don't send notification.
-      if (uid == post['uid'] && publicData['notifyPost'] != true) {
+      if (uid == post['uid'] && publicData['notification_post'] != true) {
         // uids.remove(uid);
         continue;
       }
 
       /// If the user didn't subscribe for comments under his comments, then don't send notification.
-      if (publicData['notifyComment'] != true) {
+      if (publicData['notification_comment'] != true) {
         // uids.remove(uid);
         continue;
       }
@@ -616,10 +615,12 @@ class Base {
         await usersCol.doc(user.uid).collection('meta').doc('public').get();
 
     if (!userRef.exists) {
-      usersCol.doc(user.uid).collection('meta').doc('public').set({
-        "notifyPost": true,
-        "notifyComment": true,
-      }, SetOptions(merge: true));
+      updateUserMeta({
+        'public': {
+          "notification_post": true,
+          "notification_comment": true,
+        },
+      });
     }
 
     onLogin(user);

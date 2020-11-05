@@ -1092,8 +1092,8 @@ User user = await ff.register({
   // ...
 }, meta: {
   "public": {
-    "notifyPost": true,
-    "notifyComment": true,
+    "notification_post": true,
+    "notification_comment": true,
   }
 });
 ```
@@ -1316,18 +1316,86 @@ The logic of the vote should like below;
 
 ## Push Notification
 
-- Must be enableNotification `true` on main on FireFlutter init
-  - to handble notification you can pass method via notificationHandler.
+- FireFlutter comes with `Push Notification functionality`. It is disable by default.
+- To enable push notification you must set `enableNotification: true` on main in `FireFlutter init()`.
+- Once enabled it will ask the user if they want to receive push notification.
+- By default it subscribe to `allTopic`. So you can use this topic to send to all users.
+- It also subscribe to `notification_post` when new comment is created under the user post it will receive notification.
+- And `notification_comment` when a comment is created under the user comment it will receive notification also.
+- Push Notification includes
+  - Subscribe/Unsubscribe to topic
+  - Sending notification to `Topic`, `Token`, `list of tokens`
+
+- To use the `sendNotification()` you must provide the `Server Key` from your Firebase Console.
+  - To get the Server key login to [Firebase Console](https://console.firebase.google.com)
+  - Select your current `project`, then go to `Project Settings`.
+  - Click `Cloud Messaging` and under `Project Credentials` you can Copy the `Server key Token`.
+
+- Enabling push notification and providing server key.
 
 ```dart
-ff.init(
-    enableNotification: true,
-    notificationHandler: (Map<String, dynamic> notification,
-        Map<String, dynamic> data, NotificationType type) {
-          // do something here.
-          // display, alert, move to specific page
-    },
-  );
+  @override
+  void initState() {
+    super.initState();
+    ff.init(
+        enableNotification: true,
+        firebaseServerToken: "AAAAj...bM:APA91....ist2N........AAA"
+      );
+  }
+```
+
+- To handle the notification message you can listen to it using the `ff.notification.listen(() {})`
+- The return data has 3 Notification type `onMessage` , `onLaunch` , `onResume`.
+- Meaning you can handle the message depending when you have receive the message.
+- For example when you recieved the notification
+  - And you need to show a alert message if it was send while the app is open.
+  - Or move to specific page when you click the notification from tray.
+
+- Listening to incoming notification.
+
+```dart
+  void initState() {
+    super.initState();
+
+    ff.init(
+        enableNotification: true,
+        firebaseServerToken: "AAAAj...bM:APA91....ist2N........AAA"
+      );
+
+    ff.notification.listen(
+          (x) {
+            Map<dynamic, dynamic> notification = x['notification'];
+            Map<dynamic, dynamic> data = x['data'];
+            NotificationType type = x['type'];
+            if (type == NotificationType.onMessage) {
+              // Display or Alert the notification message
+            } else {
+              // Move to different Screen
+            }
+          },
+        );
+  }
+```
+
+- Sending push notification
+  - Providing `topic` as string will send notification to that topic.
+  - Providing `token` as string will send to specific Device.
+  - Providing `tokens` as list of string will send to list of Device provided.
+
+```dart
+      RaisedButton(
+        onPressed: () async {
+            ff.sendNotification(
+              'title message only',
+              'test body message',
+              id: '0X1upoaLklWc2Z07dsbn',
+              screen: '/forumView',
+              topic: ff.allTopic,
+            );
+          });
+        },
+        child: Text('Send Notification'),
+      ),
 ```
 
 ## Social Login
