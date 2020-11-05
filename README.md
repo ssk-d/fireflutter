@@ -82,9 +82,11 @@ A free, open source, rapid development flutter package to build social apps, com
     - [Create post list screen](#create-post-list-screen)
     - [Post list with photos](#post-list-with-photos)
     - [Post edit](#post-edit)
+    - [Post delete](#post-delete)
     - [Photo delete](#photo-delete)
-  - [Voting](#voting)
-    - [Logic for Vote](#logic-for-vote)
+    - [Voting](#voting)
+      - [Logic for Vote](#logic-for-vote)
+    - [Comment crud, photo upload/update, vote like/dislike](#comment-crud-photo-uploadupdate-vote-likedislike)
   - [Push Notification](#push-notification)
   - [Social Login](#social-login)
     - [Google Sign-in](#google-sign-in)
@@ -151,11 +153,10 @@ A free, open source, rapid development flutter package to build social apps, com
 
 # TODOs
 
-- Sample code for comment crud
-- Sample code for vote(like, dislike)
-- Sample code for deleting posts, comments, photos.
 - Sample code for search posts and comments with Algolia
 - Adding sample code for user profile update
+- Adding sample code for phone number verification
+- Adding sample code to allow post/comment crud only for the users who have verified their phone numbers.
 - Adding sample code for live change of user language.
 - Integration test
 
@@ -1278,12 +1279,32 @@ if (post['files'] != null)
 - The only thing that takes to edit post is to add a button to open post edit page. That's it. all the code is already done in [Create post edit screen](#create-post-edit-screen) section.
 - You cannot edit other user's post. you may customise UX to prevent for the user to enter forum edit screen when it is not his post.
 
+### Post delete
+
+- Do [Post edit](#post-edit)
+- And add the follow code
+
+```dart
+RaisedButton(
+  onPressed: () async {
+    try {
+      await ff.deletePost(post['id']);
+    } catch (e) {
+      Get.snackbar('Error', e.toString());
+    }
+  },
+  child: Text('Delete'),
+),
+```
+
+- See [sample app's post delete branch](https://github.com/thruthesky/fireflutter_sample_app/tree/post-delete) for sample code.
+
 ### Photo delete
 
 - Do [Post edit](#post-edit)
 - See [sample app's photo edit branch](https://github.com/thruthesky/fireflutter_sample_app/tree/photo-delete) for detail code.
 
-## Voting
+### Voting
 
 - Do [Create post list screen](#create-post-list-screen)
 - See [sample app's vote branch](https://github.com/thruthesky/fireflutter_sample_app/tree/vote) for the code.
@@ -1291,7 +1312,7 @@ if (post['files'] != null)
   - You may show/hide vote buttons based on forum settings.
   - You should show a progress indicator ( or disable ) while the voting is in progress.
 
-### Logic for Vote
+#### Logic for Vote
 
 Voting is actually a simple logic but when it comes with the Firestore security, it is a hard to achevie.
 
@@ -1319,6 +1340,12 @@ The logic of the vote should like below;
     So, client app should block (by showing a progress indicator) the user not to vote again while voting is in progress.
 
 - Note. the logic is to be chagned as described at https://github.com/thruthesky/fireflutter/issues/3
+
+### Comment crud, photo upload/update, vote like/dislike
+
+If you are following the path of how to create a post, list posts, and edit post, then you would have be familiar with fireflutter. If not, please practice more.
+
+[Comment crud branch of sample app](https://github.com/thruthesky/fireflutter_sample_app/tree/comment-crud) has all the source code. The code is a bit long since it has comment create form, comment list, photo upload, buttons.
 
 ## Push Notification
 

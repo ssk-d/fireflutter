@@ -612,17 +612,17 @@ class Base {
   }
 
   onSocialLogin(User user) async {
-    final userRef =
-        await usersCol.doc(user.uid).collection('meta').doc('public').get();
+    // final snapshot =
+    //     await usersCol.doc(user.uid).collection('meta').doc('public').get();
 
-    if (!userRef.exists) {
-      usersCol.doc(user.uid).collection('meta').doc('public').set({
-        "notifyPost": true,
-        "notifyComment": true,
-      }, SetOptions(merge: true));
-    }
+    // if (!snapshot.exists) {
+    //   usersCol.doc(user.uid).collection('meta').doc('public').set({
+    //     "notifyPost": true,
+    //     "notifyComment": true,
+    //   }, SetOptions(merge: true));
+    // }
 
-    onLogin(user);
+    await onLogin(user);
   }
 
   onLogin(User user) {
@@ -780,5 +780,9 @@ class Base {
     if (name == null) return settings;
     if (settings == null) return defaultValue;
     return settings[name] ?? defaultValue;
+  }
+
+  profile() {
+    return usersCol.doc(user.uid).get();
   }
 }
