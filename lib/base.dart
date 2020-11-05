@@ -50,7 +50,10 @@ class Base {
   /// ff.user.updateProfile(displayName: nicknameController.text);
   /// ```
   User user;
-  Map<String, dynamic> data = {};
+
+  /// User document data.
+  Map<String, dynamic> userData = {};
+
   bool get loggedIn => user != null;
   bool get notLoggedIn => !loggedIn;
 
@@ -117,7 +120,7 @@ class Base {
           userSubscription = usersCol.doc(user.uid).snapshots().listen(
             (DocumentSnapshot snapshot) {
               if (snapshot.exists) {
-                data = snapshot.data();
+                userData = snapshot.data();
                 userChange.add(UserChangeType.document);
               }
             },
