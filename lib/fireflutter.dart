@@ -15,6 +15,7 @@ import 'package:flutter_facebook_auth/flutter_facebook_auth.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:merge_map/merge_map.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:rxdart/subjects.dart';
 import 'package:algolia/algolia.dart';
@@ -156,12 +157,14 @@ class FireFlutter extends Base {
     };
 
     /// Merge default with new meta data.
-    meta.forEach((key, value) {
-      for (String name in value.keys) {
-        if (defaultMeta[key] == null) defaultMeta[key] = {};
-        defaultMeta[key][name] = value[name];
-      }
-    });
+    meta = mergeMap([defaultMeta, meta]);
+
+    // meta.forEach((key, value) {
+    //   for (String name in value.keys) {
+    //     if (defaultMeta[key] == null) defaultMeta[key] = {};
+    //     defaultMeta[key][name] = value[name];
+    //   }
+    // });
 
     await updateUserMeta(defaultMeta);
 

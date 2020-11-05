@@ -34,6 +34,7 @@ dependencies:
   path_provider: ^1.6.21
 
   algolia: ^0.1.7
+  merge_map: ^1.0.2
 
 dev_dependencies:
   flutter_test:
