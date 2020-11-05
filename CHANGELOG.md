@@ -1,3 +1,7 @@
+## [0.0.15] - non-blocking initialze
+
+- Fireflutter now introduces a non-blocking initialization. It's not a breaking change.
+
 ## [0.0.14] - Minor fix
 
 - Minor fix
