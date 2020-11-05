@@ -54,8 +54,12 @@ class Base {
   bool get loggedIn => user != null;
   bool get notLoggedIn => !loggedIn;
 
-  /// [userChange] event fires whenever user information changes like when
-  /// user logs in, logs out, or update his profile.
+  /// [userChange] event fires when
+  /// - user document(without subcollection) like when user updates his profile
+  /// - user log in,
+  /// - user log out,
+  /// - user verify his phone nubmrer
+  ///
   /// It is important to know that [authStateChanges] event happens only when
   /// user logs in or logs out.
   BehaviorSubject<UserChangeType> userChange = BehaviorSubject.seeded(null);
@@ -169,11 +173,11 @@ class Base {
         .set({firebaseMessagingToken: true}, SetOptions(merge: true));
   }
 
-  updateUserSubscription(user) async {
+  updateUserSubscription(User user) async {
     if (enableNotification == false) return;
     if (firebaseMessagingToken == null) return;
     final docSnapshot =
-        await usersCol.doc(user['uid']).collection('meta').doc('public').get();
+        await usersCol.doc(user.uid).collection('meta').doc('public').get();
     if (!docSnapshot.exists) return;
     Map<String, dynamic> tokensDoc = docSnapshot.data();
 
@@ -293,8 +297,7 @@ class Base {
     String topic,
   }) async {
     if (enableNotification == false) return false;
-
-    // print('SendNotification');
+    if (firebaseServerToken == null) return false;
 
     if (token == null &&
         (tokens == null || tokens.length == 0) &&
@@ -418,13 +421,13 @@ class Base {
       }
 
       /// If the post owner has not subscribed to new comments under his post, then don't send notification.
-      if (uid == post['uid'] && publicData['notifyPost'] != true) {
+      if (uid == post['uid'] && publicData['notification_post'] != true) {
         // uids.remove(uid);
         continue;
       }
 
       /// If the user didn't subscribe for comments under his comments, then don't send notification.
-      if (publicData['notifyComment'] != true) {
+      if (publicData['notification_comment'] != true) {
         // uids.remove(uid);
         continue;
       }
@@ -597,7 +600,7 @@ class Base {
 
     int i;
     for (i = parentIndex + 1; i < post['comments'].length; i++) {
-      dynamic c = post['comments'][i];
+      Map<String, dynamic> c = post['comments'][i];
       String findOrder = c['order'].split('.')[depth];
       if (depthOrder != findOrder) break;
     }
@@ -612,15 +615,27 @@ class Base {
   }
 
   onSocialLogin(User user) async {
-    // final snapshot =
+    // final userRef =
     //     await usersCol.doc(user.uid).collection('meta').doc('public').get();
 
-    // if (!snapshot.exists) {
-    //   usersCol.doc(user.uid).collection('meta').doc('public').set({
-    //     "notifyPost": true,
-    //     "notifyComment": true,
-    //   }, SetOptions(merge: true));
+    // if (!userRef.exists) {
+    //   updateUserMeta({
+    //     'public': {
+    //       "notification_post": true,
+    //       "notification_comment": true,
+    //     },
+    //   });
     // }
+
+    final Map<String, dynamic> doc = await profile();
+    if (doc == null) {
+      await updateProfile({}, meta: {
+        'public': {
+          "notification_post": true,
+          "notification_comment": true,
+        },
+      });
+    }
 
     await onLogin(user);
   }
@@ -782,7 +797,40 @@ class Base {
     return settings[name] ?? defaultValue;
   }
 
-  profile() {
-    return usersCol.doc(user.uid).get();
+  profile() async {
+    DocumentSnapshot snapshot = await usersCol.doc(user.uid).get();
+    if (snapshot.exists)
+      return snapshot.data();
+    else
+      return null;
+  }
+
+  /// Updates a user's profile data.
+  ///
+  /// After update, `user` will have updated `displayName` and `photoURL`.
+  ///
+  /// TODO Make a model(interface type)
+  Future<void> updateProfile(
+    Map<String, dynamic> data, {
+    Map<String, Map<String, dynamic>> meta,
+  }) async {
+    if (data == null) return;
+    if (data['displayName'] != null) {
+      await user.updateProfile(displayName: data['displayName']);
+    }
+    if (data['photoURL'] != null) {
+      await user.updateProfile(photoURL: data['photoURL']);
+    }
+
+    await user.reload();
+    user = FirebaseAuth.instance.currentUser;
+    final userDoc =
+        FirebaseFirestore.instance.collection('users').doc(user.uid);
+
+    data.remove('displayName');
+    data.remove('photoURL');
+    await userDoc.set(data, SetOptions(merge: true));
+
+    await updateUserMeta(meta);
   }
 }

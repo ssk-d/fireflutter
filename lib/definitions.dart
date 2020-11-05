@@ -21,7 +21,7 @@ enum ForumStatus {
 typedef Render = void Function(RenderType x);
 const ERROR_SIGNIN_ABORTED = 'ERROR_SIGNIN_ABORTED';
 
-enum UserChangeType { auth, document, register, profile }
+enum UserChangeType { auth, document, register, profile, phoneNumber }
 enum NotificationType { onMessage, onLaunch, onResume }
 
 typedef NotificationHandler = void Function(Map<String, dynamic> messge,

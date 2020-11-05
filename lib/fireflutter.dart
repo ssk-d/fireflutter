@@ -147,7 +147,23 @@ class FireFlutter extends Base {
 
     await userDoc.set(data);
 
-    await updateUserMeta(meta);
+    /// Default meta
+    Map<String, Map<String, dynamic>> defaultMeta = {
+      'public': {
+        "notification_post": true,
+        "notification_comment": true,
+      }
+    };
+
+    /// Merge default with new meta data.
+    meta.forEach((key, value) {
+      for (String name in value.keys) {
+        if (defaultMeta[key] == null) defaultMeta[key] = {};
+        defaultMeta[key][name] = value[name];
+      }
+    });
+
+    await updateUserMeta(defaultMeta);
 
     onLogin(user);
     return user;
@@ -177,35 +193,6 @@ class FireFlutter extends Base {
     await updateUserMeta(meta);
     onLogin(userCredential.user);
     return userCredential.user;
-  }
-
-  /// Updates a user's profile data.
-  ///
-  /// After update, `user` will have updated `displayName` and `photoURL`.
-  ///
-  /// TODO Make a model(interface type)
-  Future<void> updateProfile(
-    Map<String, dynamic> data, {
-    Map<String, Map<String, dynamic>> meta,
-  }) async {
-    if (data == null) return;
-    if (data['displayName'] != null) {
-      await user.updateProfile(displayName: data['displayName']);
-    }
-    if (data['photoURL'] != null) {
-      await user.updateProfile(photoURL: data['photoURL']);
-    }
-
-    await user.reload();
-    user = FirebaseAuth.instance.currentUser;
-    final userDoc =
-        FirebaseFirestore.instance.collection('users').doc(user.uid);
-
-    data.remove('displayName');
-    data.remove('photoURL');
-    await userDoc.set(data, SetOptions(merge: true));
-
-    await updateUserMeta(meta);
   }
 
   /// Update user's profile photo
@@ -678,6 +665,11 @@ class FireFlutter extends Base {
     ///   1: `code` is incorrect.
     ///   2: the mobile number associated by the verificationId is already in linked with other user.
     await user.linkWithCredential(creds);
+
+    /// Inform the app when user phone number has changed
+    await user.reload();
+    user = FirebaseAuth.instance.currentUser;
+    userChange.add(UserChangeType.phoneNumber);
   }
 
   /// Returns previous choice
