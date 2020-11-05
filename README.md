@@ -71,9 +71,10 @@ A free, open source, rapid development flutter package to build social apps, com
   - [Create Register Screen](#create-register-screen)
   - [Create Login Screen](#create-login-screen)
   - [Create Profile Screen](#create-profile-screen)
-    - [User Email And Password Registration](#user-email-and-password-registration)
+  - [User Email And Password Registration](#user-email-and-password-registration)
   - [Display User Login](#display-user-login)
   - [Login with email and password](#login-with-email-and-password)
+  - [Profile update](#profile-update)
   - [Create admin page](#create-admin-page)
   - [Forum Coding](#forum-coding)
     - [Create forum category management screen](#create-forum-category-management-screen)
@@ -106,11 +107,10 @@ A free, open source, rapid development flutter package to build social apps, com
 
 # TODOs
 
-- Adding sample code for user profile update
 - Adding sample code for phone number verification
 - Sample code for blocking users to create posts/comments if they didn't verify their phone numbers.
+  - Do it on settings.
 - Sample code for search posts and comments with Algolia
-- Adding sample code to allow post/comment crud only for the users who have verified their phone numbers.
 - Adding sample code for live change of user language.
 - Integration test
 
@@ -1045,7 +1045,7 @@ class FirebaseReady extends StatelessWidget {
 
 - See complete code on [route banch of sample app](https://github.com/thruthesky/fireflutter_sample_app/tree/routes)
 
-### User Email And Password Registration
+## User Email And Password Registration
 
 - Open register.screen.dart
 - Put a button for opening register screen.
@@ -1122,6 +1122,10 @@ await ff.login(
     email: emailController.text,
     password: passwordController.text);
 ```
+
+## Profile update
+
+- See [profile.screen.dart in profile update branch of sample app](https://github.com/thruthesky/fireflutter_sample_app/blob/profile-update/lib/screens/profile/profile.screen.dart)
 
 ## Create admin page
 
