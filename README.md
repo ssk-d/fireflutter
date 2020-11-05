@@ -83,7 +83,8 @@ A free, open source, rapid development flutter package to build social apps, com
     - [Post list with photos](#post-list-with-photos)
     - [Post edit](#post-edit)
     - [Photo delete](#photo-delete)
-  - [Logic for Vote](#logic-for-vote)
+  - [Voting](#voting)
+    - [Logic for Vote](#logic-for-vote)
   - [Push Notification](#push-notification)
   - [Social Login](#social-login)
     - [Google Sign-in](#google-sign-in)
@@ -1282,7 +1283,20 @@ if (post['files'] != null)
 - Do [Post edit](#post-edit)
 - See [sample app's photo edit branch](https://github.com/thruthesky/fireflutter_sample_app/tree/photo-delete) for detail code.
 
-## Logic for Vote
+## Voting
+
+- Do [Create post list screen](#create-post-list-screen)
+-
+
+### Logic for Vote
+
+Voting is actually a simple logic but when it comes with the Firestore security, it is a hard to achevie.
+
+Imagin anyone can update the no of likes or dislikes on any post or comment, then the no of votes would be untrustable.
+
+It must be protected by the security rules, not by the logic of the code alone.
+
+The logic of the vote should like below;
 
 - Post voting and comment voting have same logic and same(similiar) document structure.
 - Choice of vote could be one of `empty string('')`, `like`, `dislike`. Otherwise, permission error will happen.
