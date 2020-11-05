@@ -1,4 +1,8 @@
-## [0.0.13] - ForumStatus has been added
+## [0.0.14] - Minor fix
+
+- Minor fix
+
+## [0.0.14] - ForumStatus has been added
 
 - Breaking change
   - noPostsYet, noMorePosts has been replaced with `ForumData.staus`.

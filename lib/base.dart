@@ -1,6 +1,9 @@
 part of './fireflutter.dart';
 
 class Base {
+  BehaviorSubject<bool> firebaseInitialized = BehaviorSubject.seeded(false);
+
+  /// Default topic that all users(devices) will subscribe to
   final String allTopic = 'allTopic';
 
   /// To send push notification
@@ -120,15 +123,20 @@ class Base {
     );
   }
 
-  Future<void> initFirebase() async {
-    // print('initFirebase');
-    WidgetsFlutterBinding.ensureInitialized();
-    await Firebase.initializeApp();
-    FirebaseFirestore.instance.settings =
-        Settings(cacheSizeBytes: Settings.CACHE_SIZE_UNLIMITED);
+  /// Initialize Firebase
+  ///
+  /// Firebase is initialized asynchronously. It does not block the app by async/await.
+  initFirebase() {
+    // WidgetsFlutterBinding.ensureInitialized();
+    return Firebase.initializeApp().then((firebaseApp) {
+      firebaseInitialized.add(true);
+      FirebaseFirestore.instance.settings =
+          Settings(cacheSizeBytes: Settings.CACHE_SIZE_UNLIMITED);
 
-    usersCol = FirebaseFirestore.instance.collection('users');
-    postsCol = FirebaseFirestore.instance.collection('posts');
+      usersCol = FirebaseFirestore.instance.collection('users');
+      postsCol = FirebaseFirestore.instance.collection('posts');
+      return firebaseApp;
+    });
   }
 
   /// Update user meta data.

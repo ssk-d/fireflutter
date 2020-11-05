@@ -1,13 +1,14 @@
 # Fire Flutter
 
-[한국어 설명 보기](readme.ko.md)
-
 A free, open source, rapid development flutter package to build social apps, community apps, blogs apps, and much more.
 
-- This package has complete features (see Features below) that most of apps are needed.
-- `Simple, easy and the right way`.
-  We want it to be deadly simple but right way for ourselves and for the builders in the world.
-  We know when it gets complicated, developers' lives would get even more complicated.
+- Complete features.\
+  This package has complete features (see Features below) that most of apps are needed.
+- `Simple, easy and the right way`.\
+  We want it to be deadly simple but right way for ourselves and for the developers in the world.
+  We know when it gets complicated, our lives would get even more complicated.
+- Real time.\
+  We design it to be real time when it is applied to your app. All the events like post and comment creation, voting(like, dislike), deletion would appears on all the user's phone immediately after the event.
 
 # Table of Contents
 
@@ -59,9 +60,11 @@ A free, open source, rapid development flutter package to build social apps, com
   - [Internalization (Localization)](#internalization-localization)
   - [Forum Management](#forum-management)
     - [Forum Category Management](#forum-category-management)
-- [Developer Code Guidelines](#developer-code-guidelines)
+- [Developer Coding Guidelines](#developer-coding-guidelines)
   - [General Setup](#general-setup)
     - [FireFlutter Initialization](#fireflutter-initialization)
+      - [Blocking mode](#blocking-mode)
+      - [Non-blocking mode](#non-blocking-mode)
     - [Add GetX](#add-getx)
   - [Firestore Structure](#firestore-structure)
   - [User](#user)
@@ -77,7 +80,9 @@ A free, open source, rapid development flutter package to build social apps, com
     - [Create post edit screen](#create-post-edit-screen)
     - [Photo upload](#photo-upload)
     - [Create post list screen](#create-post-list-screen)
-    - [Post edit and file delete](#post-edit-and-file-delete)
+    - [Post list with photos](#post-list-with-photos)
+    - [Post edit](#post-edit)
+    - [Photo delete](#photo-delete)
   - [Logic for Vote](#logic-for-vote)
   - [Push Notification](#push-notification)
   - [Social Login](#social-login)
@@ -145,11 +150,13 @@ A free, open source, rapid development flutter package to build social apps, com
 
 # TODOs
 
-- Sample code for post crud
 - Sample code for comment crud
+- Sample code for vote(like, dislike)
+- Sample code for deleting posts, comments, photos.
 - Sample code for search posts and comments with Algolia
 - Adding sample code for user profile update
 - Adding sample code for live change of user language.
+- Integration test
 
 # References
 
@@ -881,7 +888,7 @@ You can set a user to admin by updating user document of Firestore directly. Adm
 
 - You can create forum categories in admin screen.
 
-# Developer Code Guidelines
+# Developer Coding Guidelines
 
 ## General Setup
 
@@ -894,16 +901,88 @@ You can set a user to admin by updating user document of Firestore directly. Adm
 
 ### FireFlutter Initialization
 
-- Open `main.dart`
-- Add the following code;
+There are two ways of initializing the fireflutter package. One is blocking and the other is non-blocking. This is deu to initializing Firebase inside fireflutter. We recommend non-blocking method since the app would boot faster.
+
+#### Blocking mode
+
+- Import global variable of fireflutter instance - `ff`.
+- You need to call `WidgetsFlutterBinding.ensureInitialized()` before `ff.init()`.
 
 ```dart
 import 'package:fireflutter/fireflutter.dart';
-
-FireFlutter ff = FireFlutter();
 void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
   await ff.init();
   runApp(MainApp());
+}
+```
+
+#### Non-blocking mode
+
+- For non-blocking mode, the `ff.init()` could be in `MainApp()` or any where after `runApp()` call.
+
+```dart
+import 'package:fireflutter/fireflutter.dart';
+void main() async {
+  runApp(MainApp());
+}
+
+class MainApp extends StatefulWidget {
+  @override
+  _MainAppState createState() => _MainAppState();
+}
+
+class _MainAppState extends State<MainApp> {
+  @override
+  void initState() {
+    super.initState();
+    ff.init();
+  }
+```
+
+- You might get error when you try to use Firebase since it might not have finished its initialization, yet. You can write the code like below in such case,
+
+```dart
+String gender = '';
+// ...
+ff.firebaseInitialized.listen((re) async {
+  if (re == false) return;
+  var doc = await FirebaseFirestore.instance
+      .collection('users')
+      .doc('KXfKXYdAUUgvO9pxOAfKQexZmjD3')
+      .get();
+  setState(() {
+    gender = 'Genger: ' + doc.data()['gender'];
+  });
+});
+// ...
+Text(gender)
+```
+
+- You may have a customised Wiget to wait to until Firebase is ready. FirebaseReady will wait until Firebase firebase is initialized and then it will display the child widget.
+
+```dart
+FirebaseReady(child: Text('firebase is ready')),
+///
+class FirebaseReady extends StatelessWidget {
+  const FirebaseReady({
+    Key key,
+    this.child,
+  }) : super(key: key);
+
+  final Widget child;
+  @override
+  Widget build(BuildContext context) {
+    return StreamBuilder(
+      stream: ff.firebaseInitialized,
+      builder: (context, snapshot) {
+        if (snapshot.data == null || snapshot.data == false)
+          return Container();
+        else
+          return child;
+      },
+    );
+  }
 }
 ```
 
@@ -914,10 +993,6 @@ void main() async {
   - And move the `ff` variable into `global_variables.dart`.
 
 - The complete code is on [fireflutter-initialization branch](https://github.com/thruthesky/fireflutter_sample_app/tree/fireflutter/lib) of sample app.
-
-- todo: app settings
-- todo: translations
-- todo: how to use settings.
 
 ### Add GetX
 
@@ -1172,16 +1247,40 @@ Call `fetchPosts()` method the ForumData instance and fireflutter will get posts
 
 - Do [Firestore security rules](#firestore-security-rules). When the app list posts, it will require indexes.
 - Do [Cloud Functions](#cloud-functions). When the app is displaying posts, the Clould Funtions soubld be ready.
+- See [smaple app's forum-list branch](https://github.com/thruthesky/fireflutter_sample_app/tree/forum-list) for the sample code.
+  - You would open [forum.list.dart](https://github.com/thruthesky/fireflutter_sample_app/blob/forum-list/lib/screens/forum/forum.list.dart) to see what's going on to list a forum.
+    - It first gets category
+    - then, fetches posts
+    - then, display it in list view.
+    - If there is no post existing, then it will dispaly 'no post existing' message.
+    - If there is no more posts to fetch, then it will display 'no more posts' message.
+    - It has a `+` button to open post create screen.
+    - It has a code for infinite scrolling to fectch more posts.
+  - The code is not complete. Many functionalities are missing like editing, voting for like and dislike, deleting, etc. We will cover this things on the following code samples.
+
+### Post list with photos
+
+- Do [Create post list screen](#create-post-list-screen)
+- See [sample app's forum-list-with-photo branch](https://github.com/thruthesky/fireflutter_sample_app/tree/forum-list-with-photo). It is an extented example of [Create post list screen](#create-post-list-screen) with photo list.
+  - Code for displaying images is very simple. You just need to add the code below into the list view.
 
 ```dart
-///...
+if (post['files'] != null)
+  for (String url in post['files'])
+    Image.network(url)
 ```
 
-### Post edit and file delete
+### Post edit
 
-```dart
-///...
-```
+- Do [Create post edit screen](#create-post-edit-screen)
+- Do [Create post list screen](#create-post-list-screen)
+- The only thing that takes to edit post is to add a button to open post edit page. That's it. all the code is already done in [Create post edit screen](#create-post-edit-screen) section.
+- You cannot edit other user's post. you may customise UX to prevent for the user to enter forum edit screen when it is not his post.
+
+### Photo delete
+
+- Do [Post edit](#post-edit)
+- See [sample app's photo edit branch](https://github.com/thruthesky/fireflutter_sample_app/tree/photo-delete) for detail code.
 
 ## Logic for Vote
 

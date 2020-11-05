@@ -63,25 +63,28 @@ class FireFlutter extends Base {
       translationsChange
           .add(translations); // Must be called before firebase init
     }
-    await initFirebase();
-    initUser();
-    initFirebaseMessaging();
-    listenSettingsChange();
-    listenTranslationsChange(translations);
+    return initFirebase().then((firebaseApp) {
+      initUser();
+      initFirebaseMessaging();
+      listenSettingsChange();
+      listenTranslationsChange(translations);
 
-    /// Initialize or Re-initialize based on the setting's update.
-    settingsChange.listen((settings) {
-      // print('settingsChange.listen() on fireflutter::init() $settings');
+      /// Initialize or Re-initialize based on the setting's update.
+      settingsChange.listen((settings) {
+        // print('settingsChange.listen() on fireflutter::init() $settings');
 
-      // Initalize Algolia
-      String applicationId = appSetting('ALGOLIA_APP_ID');
-      String apiKey = appSetting('ALGOLIA_SEARCH_KEY');
-      if (applicationId != '' && apiKey != '') {
-        algolia = Algolia.init(
-          applicationId: applicationId,
-          apiKey: apiKey,
-        );
-      }
+        // Initalize Algolia
+        String applicationId = appSetting('ALGOLIA_APP_ID');
+        String apiKey = appSetting('ALGOLIA_SEARCH_KEY');
+        if (applicationId != '' && apiKey != '') {
+          algolia = Algolia.init(
+            applicationId: applicationId,
+            apiKey: apiKey,
+          );
+        }
+      });
+
+      return firebaseApp;
     });
   }
 
