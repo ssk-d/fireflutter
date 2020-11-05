@@ -89,7 +89,7 @@ class FireFlutter extends Base {
     });
   }
 
-  bool get isAdmin => this.data['isAdmin'] == true;
+  bool get isAdmin => this.userData['isAdmin'] == true;
   bool get userIsLoggedIn => user != null;
   bool get userIsLoggedOut => !userIsLoggedIn;
 
@@ -205,6 +205,7 @@ class FireFlutter extends Base {
     await user.updateProfile(photoURL: url);
     await user.reload();
     user = FirebaseAuth.instance.currentUser;
+    userChange.add(UserChangeType.profile);
   }
 
   /////////////////////////////////////////////////////////////////////////////

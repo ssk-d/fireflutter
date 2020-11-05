@@ -16,8 +16,8 @@ A free, open source, rapid development flutter package to build social apps, com
 
 - [Fire Flutter](#fire-flutter)
 - [Table of Contents](#table-of-contents)
-- [Features](#features)
 - [TODOs](#todos)
+- [Features](#features)
 - [References](#references)
 - [Components](#components)
 - [Requirements](#requirements)
@@ -104,6 +104,16 @@ A free, open source, rapid development flutter package to build social apps, com
 
 <!-- /TOC -->
 
+# TODOs
+
+- Adding sample code for user profile update
+- Adding sample code for phone number verification
+- Sample code for blocking users to create posts/comments if they didn't verify their phone numbers.
+- Sample code for search posts and comments with Algolia
+- Adding sample code to allow post/comment crud only for the users who have verified their phone numbers.
+- Adding sample code for live change of user language.
+- Integration test
+
 # Features
 
 - User
@@ -122,6 +132,7 @@ A free, open source, rapid development flutter package to build social apps, com
   - Complete forum functioanlities.
     - Forum category add/update/delete in admin page.
     - Post and comment create/update/read/delete, likes/dislikes, file upload/delete. And any other extra functioanalties to compete forum feature.
+  - Block users who didn't verify their phone nubmers to create posts & comments.
   - Forum search with Algolia.
   - Infinite scroll.
   - Real time.
@@ -150,15 +161,6 @@ A free, open source, rapid development flutter package to build social apps, com
 
 - Fully Customizable
   - FireFlutter package does not involve in any of part application's login or UI. It is completely separated from the app. Thus, it's highly customizable.
-
-# TODOs
-
-- Sample code for search posts and comments with Algolia
-- Adding sample code for user profile update
-- Adding sample code for phone number verification
-- Adding sample code to allow post/comment crud only for the users who have verified their phone numbers.
-- Adding sample code for live change of user language.
-- Integration test
 
 # References
 
@@ -1345,7 +1347,7 @@ The logic of the vote should like below;
 
 If you are following the path of how to create a post, list posts, and edit post, then you would have be familiar with fireflutter. If not, please practice more.
 
-[Comment crud branch of sample app](https://github.com/thruthesky/fireflutter_sample_app/tree/comment-crud) has all the source code. The code is a bit long since it has comment create form, comment list, photo upload, buttons.
+[Comment crud branch of sample app](https://github.com/thruthesky/fireflutter_sample_app/tree/comment-crud) has all the source code. The code is a bit long since it has comment create form, comment list, photo upload, buttons. So, the codes are splitted into small sized of widgets.
 
 ## Push Notification
 
