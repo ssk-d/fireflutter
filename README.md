@@ -1351,20 +1351,22 @@ If you are following the path of how to create a post, list posts, and edit post
 
 - FireFlutter comes with `Push Notification functionality`. It is disable by default.
 - To enable push notification you must set `enableNotification: true` on main in `FireFlutter init()`.
-- Once enabled it will ask the user if they want to receive push notification.
+- Once enabled it will ask the user if they want to receive push notification in iOS.
 - By default it subscribe to `allTopic`. So you can use this topic to send to all users.
 - It also subscribe to `notification_post` when new comment is created under the user post it will receive notification.
 - And `notification_comment` when a comment is created under the user comment it will receive notification also.
 - Push Notification includes
+
   - Subscribe/Unsubscribe to topic
   - Sending notification to `Topic`, `Token`, `list of tokens`
 
-- To use the `sendNotification()` you must provide the `Server Key` from your Firebase Console.
+- To use the `sendNotification()` you must provide the `Cloud Messaging Server Key` from your Firebase Console.
+
   - To get the Server key login to [Firebase Console](https://console.firebase.google.com)
   - Select your current `project`, then go to `Project Settings`.
   - Click `Cloud Messaging` and under `Project Credentials` you can Copy the `Server key Token`.
 
-- Enabling push notification and providing server key.
+- Enabling push notification and providing cloud messaging server key.
 
 ```dart
   @override
@@ -1381,6 +1383,7 @@ If you are following the path of how to create a post, list posts, and edit post
 - The return data has 3 Notification type `onMessage` , `onLaunch` , `onResume`.
 - Meaning you can handle the message depending when you have receive the message.
 - For example when you recieved the notification
+
   - And you need to show a alert message if it was send while the app is open.
   - Or move to specific page when you click the notification from tray.
 
