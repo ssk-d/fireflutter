@@ -1,6 +1,9 @@
 part of './fireflutter.dart';
 
 class Base {
+  BehaviorSubject<bool> firebaseInitialized = BehaviorSubject.seeded(false);
+
+  /// Default topic that all users(devices) will subscribe to
   final String allTopic = 'allTopic';
 
   /// To send push notification
@@ -120,15 +123,20 @@ class Base {
     );
   }
 
-  Future<void> initFirebase() async {
-    print('initFirebase');
-    WidgetsFlutterBinding.ensureInitialized();
-    await Firebase.initializeApp();
-    FirebaseFirestore.instance.settings =
-        Settings(cacheSizeBytes: Settings.CACHE_SIZE_UNLIMITED);
+  /// Initialize Firebase
+  ///
+  /// Firebase is initialized asynchronously. It does not block the app by async/await.
+  initFirebase() {
+    // WidgetsFlutterBinding.ensureInitialized();
+    return Firebase.initializeApp().then((firebaseApp) {
+      firebaseInitialized.add(true);
+      FirebaseFirestore.instance.settings =
+          Settings(cacheSizeBytes: Settings.CACHE_SIZE_UNLIMITED);
 
-    usersCol = FirebaseFirestore.instance.collection('users');
-    postsCol = FirebaseFirestore.instance.collection('posts');
+      usersCol = FirebaseFirestore.instance.collection('users');
+      postsCol = FirebaseFirestore.instance.collection('posts');
+      return firebaseApp;
+    });
   }
 
   /// Update user meta data.
@@ -222,8 +230,8 @@ class Base {
   /// Do some sanitizing and call `notificationHandler` to deliver
   /// notification to app.
   _notifyApp(Map<String, dynamic> message, NotificationType type) {
-    print('notifyApp');
-    print(message);
+    // print('notifyApp');
+    // print(message);
 
     Map<dynamic, dynamic> notification =
         jsonDecode(jsonEncode(message['notification']));
@@ -341,32 +349,25 @@ class Base {
         // },
       };
 
-      print(data);
+      // print(data);
       data[el['key']] = el['value'];
-      final encodeData = jsonEncode(data);
-      var dio = Dio();
+      final String encodeData = jsonEncode(data);
+      Dio dio = Dio();
 
-      print('try sending notification');
-      try {
-        var response = await dio.post(
-          postUrl,
-          data: encodeData,
-          options: Options(
-            headers: headers,
-          ),
-        );
-        if (response.statusCode == 200) {
-          // on success do
-          print("notification success");
-        } else {
-          // on failure do
-          print("notification failure");
-          success = false;
-        }
-        print(response.data);
-      } catch (e) {
-        print('Dio error in sendNotification');
-        print(e);
+      Response response = await dio.post(
+        postUrl,
+        data: encodeData,
+        options: Options(
+          headers: headers,
+        ),
+      );
+      if (response.statusCode == 200) {
+        // on success do
+        // print("notification success");
+      } else {
+        // on failure do
+        // print("notification failure");
+        success = false;
       }
     });
     return success;
@@ -447,9 +448,9 @@ class Base {
       // }
     }
 
-    print('tokens');
-    print(tokens);
-    print(uidsForNotification);
+    // print('tokens');
+    // print(tokens);
+    // print(uidsForNotification);
 
     /// send notification with tokens and topic.
     sendNotification(
@@ -592,7 +593,7 @@ class Base {
 
     int depth = parent['depth'];
     String depthOrder = parent['order'].split('.')[depth];
-    print('depthOrder: $depthOrder');
+    // print('depthOrder: $depthOrder');
 
     int i;
     for (i = parentIndex + 1; i < post['comments'].length; i++) {
@@ -602,8 +603,8 @@ class Base {
     }
 
     final previousSiblingComment = post['comments'][i - 1];
-    print(
-        'previousSiblingComment: ${previousSiblingComment['content']}, ${previousSiblingComment['order']}');
+    // print(
+    //     'previousSiblingComment: ${previousSiblingComment['content']}, ${previousSiblingComment['order']}');
     return getCommentOrder(
       order: previousSiblingComment['order'],
       depth: parent['depth'] + 1,

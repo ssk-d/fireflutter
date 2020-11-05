@@ -1,3 +1,20 @@
+## [0.0.15] - non-blocking initialze
+
+- Fireflutter now introduces a non-blocking initialization. It's not a breaking change.
+
+## [0.0.14] - Minor fix
+
+- Minor fix
+
+## [0.0.14] - ForumStatus has been added
+
+- Breaking change
+  - noPostsYet, noMorePosts has been replaced with `ForumData.staus`.
+
+## [0.0.12] - minor fixes
+
+- Minor code fixes.
+
 ## [0.0.11] - default settings
 
 - should work without any settings.

@@ -32,7 +32,7 @@ part './base.dart';
 class FireFlutter extends Base {
   /// [socialLoginHandler] will be invoked when a social login success or fail.
   FireFlutter() {
-    print('FireFlutter');
+    // print('FireFlutter');
   }
 
   ///
@@ -63,25 +63,28 @@ class FireFlutter extends Base {
       translationsChange
           .add(translations); // Must be called before firebase init
     }
-    await initFirebase();
-    initUser();
-    initFirebaseMessaging();
-    listenSettingsChange();
-    listenTranslationsChange(translations);
+    return initFirebase().then((firebaseApp) {
+      initUser();
+      initFirebaseMessaging();
+      listenSettingsChange();
+      listenTranslationsChange(translations);
 
-    /// Initialize or Re-initialize based on the setting's update.
-    settingsChange.listen((settings) {
-      // print('settingsChange.listen() on fireflutter::init() $settings');
+      /// Initialize or Re-initialize based on the setting's update.
+      settingsChange.listen((settings) {
+        // print('settingsChange.listen() on fireflutter::init() $settings');
 
-      // Initalize Algolia
-      String applicationId = appSetting('ALGOLIA_APP_ID');
-      String apiKey = appSetting('ALGOLIA_SEARCH_KEY');
-      if (applicationId != '' && apiKey != '') {
-        algolia = Algolia.init(
-          applicationId: applicationId,
-          apiKey: apiKey,
-        );
-      }
+        // Initalize Algolia
+        String applicationId = appSetting('ALGOLIA_APP_ID');
+        String apiKey = appSetting('ALGOLIA_SEARCH_KEY');
+        if (applicationId != '' && apiKey != '') {
+          algolia = Algolia.init(
+            applicationId: applicationId,
+            apiKey: apiKey,
+          );
+        }
+      });
+
+      return firebaseApp;
     });
   }
 
@@ -110,7 +113,7 @@ class FireFlutter extends Base {
     if (data['email'] == null) throw 'email_is_empty';
     if (data['password'] == null) throw 'password_is_empty';
 
-    print('req: $data');
+    // print('req: $data');
 
     UserCredential userCredential =
         await FirebaseAuth.instance.createUserWithEmailAndPassword(
@@ -165,7 +168,7 @@ class FireFlutter extends Base {
     @required String password,
     Map<String, Map<String, dynamic>> meta,
   }) async {
-    print('email: $email');
+    // print('email: $email');
     UserCredential userCredential =
         await FirebaseAuth.instance.signInWithEmailAndPassword(
       email: email,
@@ -255,12 +258,13 @@ class FireFlutter extends Base {
 
   /// Get more posts from Firestore
   ///
+  /// This does not fetch again while it is in progress of fetching.
   fetchPosts(ForumData forum) {
     if (forum.shouldNotFetch) return;
     // print('category: ${forum.category}');
     // print('should fetch?: ${forum.shouldFetch}');
-    forum.fetchingPosts(RenderType.fetching);
-    forum.pageNo++;
+    forum.updateScreen(RenderType.fetching);
+    // forum.pageNo++;
     // print('pageNo: ${forum.pageNo}');
 
     /// Prepare query
@@ -284,20 +288,18 @@ class FireFlutter extends Base {
     /// Listen to coming posts.
     forum.postQuerySubscription =
         postsQuery.snapshots().listen((QuerySnapshot snapshot) {
-      if (snapshot.docs.length < limit) {
-        forum.noMorePosts = true;
-      }
-
       // if snapshot size is 0, means no documents has been fetched.
       if (snapshot.size == 0) {
-        if (forum.pageNo == 1) {
-          forum.noPostsYet = true;
+        if (forum.posts.isEmpty) {
+          forum.status = ForumStatus.noPosts;
         } else {
-          forum.noMorePosts = true;
+          forum.status = ForumStatus.noMorePosts;
         }
-        forum.fetchingPosts(RenderType.stopFetching);
+      } else if (snapshot.docs.length < limit) {
+        forum.status = ForumStatus.noMorePosts;
       }
 
+      forum.updateScreen(RenderType.finishFetching);
       snapshot.docChanges.forEach((DocumentChange documentChange) {
         final post = documentChange.doc.data();
         post['id'] = documentChange.doc.id;
@@ -355,7 +357,7 @@ class FireFlutter extends Base {
                 final int ci = post['comments']
                     .indexWhere((c) => c['id'] == commentData['id']);
 
-                print('comment index : $ci');
+                // print('comment index : $ci');
                 if (ci > -1) {
                   post['comments'][ci] = commentData;
                 }
@@ -370,14 +372,12 @@ class FireFlutter extends Base {
               }
             });
           });
-
-          forum.fetchingPosts(RenderType.stopFetching);
         }
 
         /// post update
         else if (documentChange.type == DocumentChangeType.modified) {
-          print('post updated');
-          print(post.toString());
+          // print('post updated');
+          // print(post.toString());
 
           final int i = forum.posts.indexWhere((p) => p['id'] == post['id']);
           if (i > -1) {
@@ -541,7 +541,7 @@ class FireFlutter extends Base {
 
   Future<User> signInWithApple() async {
     final oauthCred = await createAppleOAuthCred();
-    print(oauthCred);
+    // print(oauthCred);
 
     UserCredential userCredential =
         await FirebaseAuth.instance.signInWithCredential(oauthCred);
@@ -635,13 +635,13 @@ class FireFlutter extends Base {
 
       /// called after the user submitted the phone number.
       codeSent: (String verID, [int forceResendToken]) async {
-        print('codeSent!');
+        // print('codeSent!');
         onCodeSent(verID, forceResendToken);
       },
 
       /// called whenever error happens
       verificationFailed: (FirebaseAuthException e) async {
-        print('verificationFailed!');
+        // print('verificationFailed!');
         onError(e);
       },
 

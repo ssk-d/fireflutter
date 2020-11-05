@@ -10,7 +10,12 @@ enum RenderType {
   fileUpload,
   fileDelete,
   fetching,
-  stopFetching
+  finishFetching
+}
+
+enum ForumStatus {
+  noPosts,
+  noMorePosts,
 }
 
 typedef Render = void Function(RenderType x);
@@ -36,18 +41,22 @@ class ForumData {
   /// This is for infinite scrolling in forum screen.
   RenderType _inLoading;
   bool get inLoading => _inLoading == RenderType.fetching;
-  fetchingPosts(RenderType x) {
+
+  /// Tell the app to update(re-render) the screen.
+  ///
+  /// This method should be invoked whenever forum data changes like fetching
+  /// more posts, comment updating, voting, etc.
+  updateScreen(RenderType x) {
     _inLoading = x;
-    render(RenderType.stopFetching);
+    render(x);
   }
 
-  bool noMorePosts = false;
-  bool noPostsYet = false;
-  bool get shouldFetch => inLoading == false && noMorePosts == false;
+  ForumStatus status;
+  bool get shouldFetch => inLoading == false && status == null;
   bool get shouldNotFetch => !shouldFetch;
 
   String category;
-  int pageNo = 0;
+  // int pageNo = 0;
   // int noOfPostsPerFetch; // Todo check if still needed
   List<Map<String, dynamic>> posts = [];
   Render render;
