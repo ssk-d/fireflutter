@@ -1286,7 +1286,10 @@ if (post['files'] != null)
 ## Voting
 
 - Do [Create post list screen](#create-post-list-screen)
--
+- See [sample app's vote branch](https://github.com/thruthesky/fireflutter_sample_app/tree/vote) for the code.
+- You may customise UI/UX of vote funtionality.
+  - You may show/hide vote buttons based on forum settings.
+  - You should show a progress indicator ( or disable ) while the voting is in progress.
 
 ### Logic for Vote
 
@@ -1310,9 +1313,12 @@ The logic of the vote should like below;
 - A user voted `like` and the user vote `dislike`, then `likes` will be decreased by 1 and `dislikes` will be increased by 1.
 - Admin should not fix vote document manually, since it may produce wierd results.
 - Voting works asynchronously.
+
   - When a user votes in the order of `like => dislike => like => dislike`,
     the server(Firestore) may receive in the order of `like => like => dislike => dislike` since it is **asynchronous**.
     So, client app should block (by showing a progress indicator) the user not to vote again while voting is in progress.
+
+- Note. the logic is to be chagned as described at https://github.com/thruthesky/fireflutter/issues/3
 
 ## Push Notification
 
