@@ -89,8 +89,13 @@ class FireFlutter extends Base {
     });
   }
 
+  /// Checks if the current logged in user is an admin.
   bool get isAdmin => this.userData['isAdmin'] == true;
+
+  /// Checks if a user is currently logged in.
   bool get userIsLoggedIn => user != null;
+
+  /// Checks if no user is logged in.
   bool get userIsLoggedOut => !userIsLoggedIn;
 
   /// Register into Firebase with email/password
@@ -213,39 +218,6 @@ class FireFlutter extends Base {
   /// Forum Functions
   ///
   /////////////////////////////////////////////////////////////////////////////
-
-  /// Add url to post or comment document `files` field.
-  ///
-  /// Note: Same URL can be added twice. The user may upload same file twice.
-  ///
-  /// ```
-  /// // after upload
-  /// // get url
-  /// ff.addFile(url: url, path: 'post or comment path', files: comments['files'] );
-  /// ```
-  // addFiles({
-  //   @required String url,
-  //   List<String> files,
-  //   @required String path,
-  // }) {
-  //   if (files == null) files = [];
-  //   files.add(url);
-  //   final doc =
-  //       FirebaseFirestore.instance.doc(path);
-  //   doc.set({'files': files}, SetOptions(merge: true));
-  // }
-
-  /// Deletes a file from firebase storage.
-  ///
-  /// If the file is not found on the firebase storage, it will ignore the error.
-  Future deleteFile(String url) async {
-    Reference ref = FirebaseStorage.instance.refFromURL(url);
-    await ref.delete().catchError((e) {
-      if (!e.toString().contains('object-not-found')) {
-        throw e;
-      }
-    });
-  }
 
   /// Get more posts from Firestore
   ///
@@ -509,6 +481,68 @@ class FireFlutter extends Base {
     await postsCol.doc(postID).collection('comments').doc(commentID).delete();
   }
 
+  /// Uploads a file to firebase storage and returns the uploaded file's url.
+  ///
+  /// [folder] is the folder name on Firebase Storage.
+  /// [source] is the source of file input. It can be Camera or Gallery.
+  /// [maxWidth] is the max width of image to upload.
+  /// [quality] is the quality of the jpeg image.
+  /// [progress] will return the current percentage of upload task progress.
+  ///
+  /// ```dart
+  /// ff.uploadFile(
+  ///   folder: 'uploads',
+  ///   source: source,
+  ///   progress: (p) => setState(() => uploadProgress = p),
+  /// );
+  /// ```
+  ///
+  /// `upload-cancelled` error may return when there is no return(no value) from file selection.
+  Future<String> uploadFile({
+    @required String folder,
+    ImageSource source,
+    double maxWidth = 1024,
+    int quality = 90,
+    void progress(double progress),
+  }) async {
+    // select file.
+    File file = await pickImage(
+      source: source,
+      maxWidth: maxWidth,
+      quality: quality,
+    );
+
+    // if no file is selected then do nothing.
+    if (file == null) throw 'upload-cancelled';
+    // print('success: file picked: ${file.path}');
+
+    final ref = FirebaseStorage.instance
+        .ref(folder + '/' + getFilenameFromPath(file.path));
+
+    UploadTask task = ref.putFile(file);
+    task.snapshotEvents.listen((TaskSnapshot snapshot) {
+      double p = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+      progress(p);
+    });
+
+    await task;
+    final url = await ref.getDownloadURL();
+    // print('DOWNLOAD URL : $url');
+    return url;
+  }
+
+  /// Deletes a file from firebase storage.
+  ///
+  /// If the file is not found on the firebase storage, it will ignore the error.
+  Future deleteFile(String url) async {
+    Reference ref = FirebaseStorage.instance.refFromURL(url);
+    await ref.delete().catchError((e) {
+      if (!e.toString().contains('object-not-found')) {
+        throw e;
+      }
+    });
+  }
+
   /// Google sign-in
   ///
   ///
@@ -572,47 +606,6 @@ class FireFlutter extends Base {
     UserCredential userCredential =
         await FirebaseAuth.instance.signInWithCredential(oauthCred);
     return userCredential.user;
-  }
-
-  /// Uploads a file to firebase storage and returns the uploaded file's url.
-  ///
-  /// [folder] is the folder name on Firebase Storage.
-  /// [source] is the source of file input. It can be Camera or Gallery.
-  /// [maxWidth] is the max width of image to upload.
-  /// [quality] is the quality of the jpeg image.
-  ///
-  /// `upload-cancelled` error may return when there is no return(no value) from file selection.
-  Future<String> uploadFile({
-    @required String folder,
-    ImageSource source,
-    double maxWidth = 1024,
-    int quality = 90,
-    void progress(double progress),
-  }) async {
-    // select file.
-    File file = await pickImage(
-      source: source,
-      maxWidth: maxWidth,
-      quality: quality,
-    );
-
-    // if no file is selected then do nothing.
-    if (file == null) throw 'upload-cancelled';
-    // print('success: file picked: ${file.path}');
-
-    final ref = FirebaseStorage.instance
-        .ref(folder + '/' + getFilenameFromPath(file.path));
-
-    UploadTask task = ref.putFile(file);
-    task.snapshotEvents.listen((TaskSnapshot snapshot) {
-      double p = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-      progress(p);
-    });
-
-    await task;
-    final url = await ref.getDownloadURL();
-    // print('DOWNLOAD URL : $url');
-    return url;
   }
 
   /// Authenticates a provided phone number by sending a verification code.
@@ -749,11 +742,18 @@ class FireFlutter extends Base {
   /// Votes for a post or comment.
   ///
   /// [postId] and [choice] are required.
-  /// 
-  /// [commentId] is optional.
-  /// - If it is null, it will proceed to vote for a post.
-  /// - If it have a value, it will vote for a comment.
   ///
+  /// [commentId] is optional.
+  /// - If it is null, this will proceed to vote for a post.
+  /// - If it have a value, this will vote for a comment.
+  ///
+  ///```dart
+  /// ff.vote(
+  ///     postId: 1,
+  ///     commentId: 'can be null if going to vote for post.',
+  ///     choice: VoteChoice.like,
+  /// );
+  ///```
   Future vote({
     @required String postId,
     String commentId,
