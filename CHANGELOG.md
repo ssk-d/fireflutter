@@ -1,3 +1,7 @@
+## [0.0.21] - cancellation on user data
+
+- fix on listening on user data. It produced error on user logout due to improper way of canncellation the subscription.
+
 ## [0.0.20] - Phone auth
 
 - fix bug on phone auth
