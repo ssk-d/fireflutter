@@ -53,10 +53,11 @@ class FireFlutter extends Base {
     this.firebaseServerToken = firebaseServerToken;
     this.pushNotificationSound = pushNotificationSound;
 
-    /// Must be called before firebase init
+    /// Initialize settings.
     ///
+    /// Note. it must be called before firebase init.
     if (settings != null) {
-      _settings = settings;
+      _settings = mergeMap([_settings, settings]);
       settingsChange.add(_settings);
     }
 
@@ -134,7 +135,6 @@ class FireFlutter extends Base {
     );
 
     await userCredential.user.reload();
-    user = FirebaseAuth.instance.currentUser;
 
     // Remove default data.
     // And if there is no more properties to save into document, then save
@@ -193,7 +193,7 @@ class FireFlutter extends Base {
       password: password,
     );
     await updateUserMeta(meta);
-    onLogin(userCredential.user);
+    await onLogin(userCredential.user);
     return userCredential.user;
   }
 
@@ -203,7 +203,6 @@ class FireFlutter extends Base {
   Future<void> updatePhoto(String url) async {
     await user.updateProfile(photoURL: url);
     await user.reload();
-    user = FirebaseAuth.instance.currentUser;
     userChange.add(UserChangeType.profile);
   }
 
@@ -708,7 +707,6 @@ class FireFlutter extends Base {
 
     // Inform the app when user phone number has changed
     await user.reload();
-    user = FirebaseAuth.instance.currentUser;
     userChange.add(UserChangeType.phoneNumber);
   }
 
