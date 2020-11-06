@@ -329,7 +329,6 @@ class Base {
         "notification": {
           "body": body.length > 512 ? body.substring(0, 512) : body,
           "title": title.length > 128 ? title.substring(0, 128) : title,
-          "sound": pushNotificationSound ?? 'default',
         },
         "priority": "high",
         "data": {
