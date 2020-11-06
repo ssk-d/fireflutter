@@ -57,7 +57,7 @@ class ForumData {
 
   String category;
   // int pageNo = 0;
-  // int noOfPostsPerFetch; // Todo check if still needed
+  // int noOfPostsPerFetch; // TODO: check if still needed
   List<Map<String, dynamic>> posts = [];
   Render render;
 
@@ -68,7 +68,7 @@ class ForumData {
   leave() {
     postQuerySubscription.cancel();
 
-    /// TODO: unsubscribe all commentsSubscriptions.
+    // TODO: unsubscribe all comments list stream subscriptions.
     if (commentsSubcriptions.isNotEmpty) {
       commentsSubcriptions.forEach((key, value) {
         value.cancel();

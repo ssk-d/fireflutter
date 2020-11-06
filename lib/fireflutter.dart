@@ -127,7 +127,7 @@ class FireFlutter extends Base {
       password: data['password'],
     );
 
-    /// For registraion, it is okay that displayName or photoUrl is empty.
+    // For registraion, it is okay that displayName or photoUrl is empty.
     await userCredential.user.updateProfile(
       displayName: data['displayName'],
       photoURL: data['photoURL'],
@@ -136,21 +136,20 @@ class FireFlutter extends Base {
     await userCredential.user.reload();
     user = FirebaseAuth.instance.currentUser;
 
-    /// Remove default data.
-    /// And if there is no more properties to save into document, then save
-    /// empty object.
+    // Remove default data.
+    // And if there is no more properties to save into document, then save
+    // empty object.
     data.remove('email');
     data.remove('password');
     data.remove('displayName');
     data.remove('photoURL');
 
-    /// Login Success
+    // Login Success
     DocumentReference userDoc = FirebaseFirestore.instance
         .collection('users')
         .doc(userCredential.user.uid);
 
-    /// Set user extra information
-
+    // Set user extra information
     await userDoc.set(data);
 
     /// Default meta
@@ -203,7 +202,7 @@ class FireFlutter extends Base {
     return userCredential.user;
   }
 
-  /// Update user's profile photo
+  /// Update user's profile photo.
   ///
   ///
   Future<void> updatePhoto(String url) async {
@@ -212,12 +211,6 @@ class FireFlutter extends Base {
     user = FirebaseAuth.instance.currentUser;
     userChange.add(UserChangeType.profile);
   }
-
-  /////////////////////////////////////////////////////////////////////////////
-  ///
-  /// Forum Functions
-  ///
-  /////////////////////////////////////////////////////////////////////////////
 
   /// Get more posts from Firestore
   ///
@@ -233,6 +226,7 @@ class FireFlutter extends Base {
     // Prepare query
     Query postsQuery = postsCol.where('category', isEqualTo: forum.category);
     postsQuery = postsQuery.orderBy('createdAt', descending: true);
+
     // Set default limit
     int limit = _settings['forum']['no-of-posts-per-fetch'] ?? 12;
 
@@ -240,7 +234,6 @@ class FireFlutter extends Base {
     if (_settings[forum.category] != null &&
         _settings[forum.category]['no-of-posts-per-fetch'] != null)
       limit = _settings[forum.category]['no-of-posts-per-fetch'];
-    // print(limit);
     postsQuery = postsQuery.limit(limit);
 
     // Fetch from the last post that had been fetched.
@@ -303,7 +296,6 @@ class FireFlutter extends Base {
               if (commentsChange.type == DocumentChangeType.added) {
                 // TODO For comments loading on post view, it does not need to loop.
                 // TODO Only for newly created comment needs to have loop and find a position to insert.
-
                 int found = (post['comments'] as List).indexWhere(
                     (c) => c['order'].compareTo(commentData['order']) < 0);
                 if (found > -1) {
@@ -385,9 +377,6 @@ class FireFlutter extends Base {
   /// });
   /// ```
   Future editPost(Map<String, dynamic> data) async {
-    if (data['title'] == null && data['content'] == null)
-      throw "ERROR_TITLE_AND_CONTENT_EMPTY";
-
     // update
     if (data['id'] != null) {
       data['updatedAt'] = FieldValue.serverTimestamp();
@@ -427,15 +416,19 @@ class FireFlutter extends Base {
   /// insert the `order` into the comment. Then, when the comments are listed,
   /// It will be sorted in proper order.
   ///
+  ///
+  ///```dart
+  /// ff.editComment(
+  ///     data,
+  ///     postData,
+  ///     parentIndex: 1,
+  /// );
+  ///```
   Future editComment(
     Map<String, dynamic> data,
     Map<String, dynamic> post, {
     int parentIndex,
   }) async {
-    // if (data['post'] == null) throw 'ERROR_POST_IS_REQUIRED';
-    // final Map<String, dynamic> post = data['post'];
-    // data.remove('post');
-
     final commentsCol = commentsCollection(post['id']);
     data.remove('postid');
 
@@ -489,15 +482,21 @@ class FireFlutter extends Base {
   /// [quality] is the quality of the jpeg image.
   /// [progress] will return the current percentage of upload task progress.
   ///
+  /// `upload-cancelled` error may return when there is no return(no value) from file selection.
+  ///
   /// ```dart
-  /// ff.uploadFile(
+  ///
+  /// ImageSource source = ... // choose image source
+  ///
+  /// String url = await ff.uploadFile(
   ///   folder: 'uploads',
   ///   source: source,
-  ///   progress: (p) => setState(() => uploadProgress = p),
+  ///   progress: (double p) {
+  ///     // do something ..
+  ///   },
   /// );
   /// ```
   ///
-  /// `upload-cancelled` error may return when there is no return(no value) from file selection.
   Future<String> uploadFile({
     @required String folder,
     ImageSource source,
@@ -521,7 +520,7 @@ class FireFlutter extends Base {
 
     UploadTask task = ref.putFile(file);
     task.snapshotEvents.listen((TaskSnapshot snapshot) {
-      double p = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+      double p = (snapshot.bytesTransferred / snapshot.totalBytes);
       progress(p);
     });
 
@@ -613,23 +612,25 @@ class FireFlutter extends Base {
   /// [internationalNo] is the number to send the code to.
   ///
   /// [resendToken] is optional, and can be used when requesting to resend the verification code.
-  /// [resendToken] can be obtained from [onCodeSent]'s return value.
+  /// - this can be obtained from [onCodeSent]'s return value.
   ///
   /// [onCodeSent] will be invoked once the code is generated and sent to the provided number.
-  /// It will include the [verificationID] and [codeResendToken].
+  /// - this will return the [verificationID] and [codeResendToken].
+  /// - [verifcationID] will be used later for verifying the verification code.
+  /// - [codeResendToken] can be used later if the user wants to resend the verification code to the provided number.
   ///
   /// [onError] will be invoked when an error happen. It contains the error.
   ///
-  /// first time requesting for verification code
   /// ```dart
-  /// f.mobileAuthSendCode(
+  ///  // first time requesting for verification code:
+  ///  f.mobileAuthSendCode(
   ///     internationalNo,
   ///     ...
   ///  );
   /// ```
   ///
-  /// resending verification code.
   /// ```dart
+  ///  // resending verification code:
   ///  ff.mobileAuthSendCode(
   ///     internationalNo,
   ///     resendToken: codeResendToken,
@@ -684,9 +685,18 @@ class FireFlutter extends Base {
   /// Verify a phone number with the code provided.
   ///
   /// [code] is the verification code sent to user's mobile number.
-  /// [verificationId] is used to verify the current session, which is associated with the user's mobile number.
   ///
-  /// After code is verified, it will link/update the current user's phone number.
+  /// [verificationId] is used to verify the current session, which is associated with the user's mobile number.
+  /// - this can be obtained from the return value of [onCodeSent] after calling the method [mobileAuthSendCode()].
+  ///
+  /// After code is verified, this will link/update the current user's phone number.
+  ///
+  /// ```dart
+  /// ff.mobileAuthVerifyCode(
+  ///   code: 999999,                    // verification code
+  ///   verificationId: 'S4mpl3-1D...',  // verification ID
+  /// );
+  /// ```
   Future mobileAuthVerifyCode({
     @required String code,
     @required String verificationId,
