@@ -49,7 +49,7 @@ class Base {
   /// ```
   /// ff.user.updateProfile(displayName: nicknameController.text);
   /// ```
-  User user;
+  User get user => FirebaseAuth.instance.currentUser;
 
   /// User document data.
   Map<String, dynamic> userData = {};
@@ -104,31 +104,30 @@ class Base {
     authStateChanges = FirebaseAuth.instance.authStateChanges();
 
     /// Note: listen handler will called twice if Firestore is working as offlien mode.
-    authStateChanges.listen(
-      (User user) {
-        this.user = user;
+    authStateChanges.listen((User user) {
+      /// [userChange] event fires when user is logs in or logs out.
+      userChange.add(UserChangeType.auth);
 
-        /// [userChange] event fires when user is logs in or logs out.
-        userChange.add(UserChangeType.auth);
+      /// Cancell listening user document.
+      ///
+      /// This needs to be done when user logs out or
+      /// `cloud_firestore/permission-denied` error will appear
+      if (userSubscription != null) {
+        userSubscription.cancel();
+      }
 
-        if (this.user == null) {
-        } else {
-          if (userSubscription != null) {
-            userSubscription.cancel();
-          }
-
-          /// Note: listen handler will called twice if Firestore is working as offlien mode.
-          userSubscription = usersCol.doc(user.uid).snapshots().listen(
-            (DocumentSnapshot snapshot) {
-              if (snapshot.exists) {
-                userData = snapshot.data();
-                userChange.add(UserChangeType.document);
-              }
-            },
-          );
-        }
-      },
-    );
+      if (user != null) {
+        /// Note: listen handler will called twice if Firestore is working as offlien mode.
+        userSubscription = usersCol.doc(user.uid).snapshots().listen(
+          (DocumentSnapshot snapshot) {
+            if (snapshot.exists) {
+              userData = snapshot.data();
+              userChange.add(UserChangeType.document);
+            }
+          },
+        );
+      }
+    });
   }
 
   /// Initialize Firebase
@@ -166,10 +165,11 @@ class Base {
   /// [user] is needed because when this method may be called immediately
   ///   after login but before `Firebase.AuthStateChange()` and when it happens,
   ///   the user appears not to be logged in even if the user already logged in.
-  updateToken(User user) {
-    if (enableNotification == false) return;
-    if (firebaseMessagingToken == null) return;
-    FirebaseFirestore.instance
+  ///
+  Future<void> updateToken(User user) {
+    if (enableNotification == false) return null;
+    if (firebaseMessagingToken == null) return null;
+    return FirebaseFirestore.instance
         .collection('users')
         .doc(user.uid)
         .collection('meta')
@@ -177,7 +177,7 @@ class Base {
         .set({firebaseMessagingToken: true}, SetOptions(merge: true));
   }
 
-  updateUserSubscription(User user) async {
+  Future<void> updateUserSubscription(User user) async {
     if (enableNotification == false) return;
     if (firebaseMessagingToken == null) return;
     final docSnapshot =
@@ -185,12 +185,13 @@ class Base {
     if (!docSnapshot.exists) return;
     Map<String, dynamic> tokensDoc = docSnapshot.data();
 
-    tokensDoc.forEach((key, value) {
+    tokensDoc.forEach((key, value) async {
       if (key.indexOf('notification_') != -1) {
-        if (value == true)
-          subscribeTopic(key);
-        else
-          unsubscribeTopic(key);
+        if (value == true) {
+          await subscribeTopic(key);
+        } else {
+          await unsubscribeTopic(key);
+        }
       }
     });
   }
@@ -212,7 +213,7 @@ class Base {
     // print('token');
     // print(firebaseMessagingToken);
     if (user != null) {
-      updateToken(user);
+      await updateToken(user);
     }
 
     /// subscribe to all topic
@@ -620,9 +621,10 @@ class Base {
     await onLogin(user);
   }
 
-  onLogin(User user) {
-    updateToken(user);
-    updateUserSubscription(user);
+  ///
+  Future<void> onLogin(User user) async {
+    await updateToken(user);
+    await updateUserSubscription(user);
   }
 
   /// Pick an image from Camera or Gallery,
@@ -803,7 +805,6 @@ class Base {
     }
 
     await user.reload();
-    user = FirebaseAuth.instance.currentUser;
     final userDoc =
         FirebaseFirestore.instance.collection('users').doc(user.uid);
 
