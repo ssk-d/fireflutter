@@ -22,9 +22,16 @@ A free, open source, rapid development flutter package to build social apps, com
 - [Components](#components)
 - [Requirements](#requirements)
 - [Installation](#installation)
-  - [Firebase Project Creation](#firebase-project-creation)
+  - [Create Firebase Project](#create-firebase-project)
+    - [Enable Firestore](#enable-firestore)
+    - [Enable Functions](#enable-functions)
+    - [Firebase tools installation](#firebase-tools-installation)
+    - [Download and Set FireFlutter Firebase Project](#download-and-set-fireflutter-firebase-project)
+  - [Firestore security rules](#firestore-security-rules)
+    - [Security Rules Testing](#security-rules-testing)
+  - [Cloud Functions Setup](#cloud-functions-setup)
+    - [Funtions Test](#funtions-test)
   - [Firebase Email/Password Login](#firebase-emailpassword-login)
-  - [Create Firestore Database](#create-firestore-database)
   - [Create Flutter project](#create-flutter-project)
     - [Setup Flutter to connect to Firebase](#setup-flutter-to-connect-to-firebase)
       - [iOS Setup](#ios-setup)
@@ -44,13 +51,8 @@ A free, open source, rapid development flutter package to build social apps, com
       - [Facebook Sign In Setup for iOS](#facebook-sign-in-setup-for-ios)
     - [Apple Sign In Setup for iOS](#apple-sign-in-setup-for-ios)
     - [Phone Auth Setup](#phone-auth-setup)
+      - [Additional Phone Auth Setup for Android](#additional-phone-auth-setup-for-android)
       - [Additional Phone Auth Setup for iOS](#additional-phone-auth-setup-for-ios)
-  - [Firebase tools installation](#firebase-tools-installation)
-  - [Download and Set FireFlutter Firebase Project](#download-and-set-fireflutter-firebase-project)
-  - [Firestore security rules](#firestore-security-rules)
-    - [Security Rules Testing](#security-rules-testing)
-  - [Cloud Functions](#cloud-functions)
-    - [Funtions Test](#funtions-test)
   - [Image Picker Setup](#image-picker-setup)
     - [Image Picker Setup for iOS](#image-picker-setup-for-ios)
   - [Localization Setup](#localization-setup)
@@ -103,6 +105,7 @@ A free, open source, rapid development flutter package to build social apps, com
 - [I18N](#i18n)
 - [Settings](#settings)
 - [Trouble Shotting](#trouble-shotting)
+  - [Stuck in registration](#stuck-in-registration)
   - [MissingPluginException google_sign_in](#missingpluginexception-google_sign_in)
   - [sign_in_failed](#sign_in_failed)
   - [operation-not-allowed](#operation-not-allowed)
@@ -210,7 +213,7 @@ A free, open source, rapid development flutter package to build social apps, com
 
 - We also have a premium paid servie to support installation and development.
 
-## Firebase Project Creation
+## Create Firebase Project
 
 - You need to create a Firebase project for the first time. You may use existing Firebase project.
 
@@ -226,15 +229,7 @@ A free, open source, rapid development flutter package to build social apps, com
 
 - Read [Understand Firebase projects](https://firebase.google.com/docs/projects/learn-more) for details.
 
-## Firebase Email/Password Login
-
-- Go to Authentication => Sign-in Method
-- Click `Enable/Password` (without Email link).
-- It is your choice weather you would let users to register by their email and password or not. But for installation test, just enable it.
-
-- Refer [Firebase Authentication](https://firebase.google.com/docs/auth) and [FlutterFire Social Authenticatino](https://firebase.flutter.dev/docs/auth/social) for details.
-
-## Create Firestore Database
+### Enable Firestore
 
 - Go to `Cloud Firestore` menu.
 - Click `Create Database`.
@@ -242,6 +237,111 @@ A free, open source, rapid development flutter package to build social apps, com
 - Click `Next`.
 - Choose nearest `Cloud Firestore location`.
 - Click `Enable`.
+
+### Enable Functions
+
+- Go to Firebase => Functions => Click `Get Started` => Click `Continue` => Click `Finish`
+
+### Firebase tools installation
+
+- Install Firebase tools with the following command. You may need root permission.
+
+```sh
+npm install -g firebase-tools
+```
+
+- Then, login to Firebase with the follow command.
+
+```sh
+firebase login
+```
+
+- Refer [Set up or update the CLI](https://firebase.google.com/docs/cli#mac-linux-npm) for details.
+
+### Download and Set FireFlutter Firebase Project
+
+- Install firebase tools as described at [Firebase tools installation](#firebase-tools-installation)
+
+- Git clone(or fork) https://github.com/thruthesky/fireflutter-firebase
+  - And enter the project folder
+  - `$ cd fireflutter-firebase`
+- Install node modules with the following command.
+  - `$ npm i`.
+- Update Firebase project ID in `.firebaserc ==> projects ==> default`.
+- Set `Firebase SDK Admin Service Key`
+  - Go to Project settings => Service accounts => Firebae Admin SDK
+  - Click `Node.js`
+  - Click `Generate new priate key`
+  - Click `Generate Key`
+  - Then, a file will be downloaded.
+  - Rename the file to `firebase-service-account-key.json`
+  - And move(or overwrite if it exists) it to the project folder(the same folder where `.firebaserc` is).
+
+## Firestore security rules
+
+Firestore needs security rules to secure its data or it might loose all data by hackers.
+
+- Do [Download and Set FireFlutter Firebase Project](#download-and-set-fireflutter-firebase-project)
+- Run `firebase deploy --only firestore`.
+
+### Security Rules Testing
+
+- If you wish to test Firestore security rules, you may do so with the following;
+
+Run Firebase emualtor first.
+
+```
+$ firebase emulators:start --only firestore
+```
+
+run the tests.
+
+```
+$ npm run test
+$ npm run test:basic
+$ npm run test:user
+$ npm run test:admin
+$ npm run test:category
+$ npm run test:post
+$ npm run test:comment
+$ npm run test:vote
+$ npm run test:user.token
+```
+
+## Cloud Functions Setup
+
+We tried to limit the usage of Cloud Functions as minimum as possible. But there are some functionalities we cannot achive without it.
+
+One of the reason why we use Cloud Funtions is to enable like and dislike functionality. It is a simple functionality but when it comes with Firestore security rule, it's not an easy work. And Cloud Functions does better with it.
+
+- Do [Download and Set FireFlutter Firebase Project](#download-and-set-fireflutter-firebase-project)
+- Install node modules under functions folder.
+  - `$ cd functions`
+  - `$ npm i`
+  - `$ cd ..`
+- Run `firebase deploy --only functions`. You will need Firebase `Pay as you go` plan to deploy it.
+  - If you meet `Error: HTTP Error: 403, Unknown Error` erro, then you may try again.
+
+### Funtions Test
+
+- If you whish to test Functions, you may do so with the following;
+
+```
+$ cd functions
+$ npm test
+$ npm test:algolia
+```
+
+## Firebase Email/Password Login
+
+- Do [Create Firestore Database](#create-firestore-database)
+- Do [Firestore security rules](#firestore-security-rules)
+- Do [Cloud Functions Setup](#cloud-functions-setup)
+- Go to Authentication => Sign-in Method
+- Click `Enable/Password` (without Email link).
+- It is your choice weather you would let users to register by their email and password or not. But for installation test, just enable it.
+
+- Refer [Firebase Authentication](https://firebase.google.com/docs/auth) and [FlutterFire Social Authenticatino](https://firebase.flutter.dev/docs/auth/social) for details.
 
 ## Create Flutter project
 
@@ -590,6 +690,11 @@ We add `Apple sign in` only on iOS platform.
 
 - Enable `Phone` under Firebase => Authentication => Sign-in method
 
+#### Additional Phone Auth Setup for Android
+
+- Do [Debug hash key](#debug-hash-key) for test mode.
+- Do [Release hash key](#release-hash-key) for release mode.
+
 #### Additional Phone Auth Setup for iOS
 
 - Get REVERSED_CLIENT_ID from GoogleService-Info.plist
@@ -598,96 +703,6 @@ We add `Apple sign in` only on iOS platform.
   - And add REVERSED_CLIENT_ID into URL Schemes.
 
 - See [FlutterFire Phone Authentication Setup](https://firebase.flutter.dev/docs/auth/phone#setup) for details.
-
-## Firebase tools installation
-
-- Install Firebase tools with the following command. You may need root permission.
-
-```sh
-npm install -g firebase-tools
-```
-
-- Then, login to Firebase with the follow command.
-
-```sh
-firebase login
-```
-
-- Refer [Set up or update the CLI](https://firebase.google.com/docs/cli#mac-linux-npm) for details.
-
-## Download and Set FireFlutter Firebase Project
-
-- Install firebase tools as described at [Firebase tools installation](#firebase-tools-installation)
-
-- Git clone(or fork) https://github.com/thruthesky/fireflutter-firebase
-  - And enter the project folder
-  - `$ cd fireflutter-firebase`
-- Install node modules with the following command.
-  - `$ npm i`.
-- Update Firebase project ID in `.firebaserc ==> projects ==> default`.
-- Set `Firebase SDK Admin Service Key`
-  - Go to Project settings => Service accounts => Firebae Admin SDK
-  - Click `Node.js`
-  - Click `Generate new priate key`
-  - Click `Generate Key`
-  - Then, a file will be downloaded.
-  - Rename the file to `firebase-service-account-key.json`
-  - And move(or overwrite if it exists) it to the project folder(the same folder where `.firebaserc` is).
-
-## Firestore security rules
-
-Firestore needs security rules to secure its data or it might loose all data by hackers.
-
-- Do [Download and Set FireFlutter Firebase Project](#download-and-set-fireflutter-firebase-project)
-- Run `firebase deploy --only firestore`.
-
-### Security Rules Testing
-
-- If you wish to test Firestore security rules, you may do so with the following;
-
-Run Firebase emualtor first.
-
-```
-$ firebase emulators:start --only firestore
-```
-
-run the tests.
-
-```
-$ npm run test
-$ npm run test:basic
-$ npm run test:user
-$ npm run test:admin
-$ npm run test:category
-$ npm run test:post
-$ npm run test:comment
-$ npm run test:vote
-$ npm run test:user.token
-```
-
-## Cloud Functions
-
-We tried to limit the usage of Cloud Functions as minimum as possible. But there are some functionalities we cannot achive without it.
-
-One of the reason why we use Cloud Funtions is to enable like and dislike functionality. It is a simple functionality but when it comes with Firestore security rule, it's not an easy work. And Cloud Functions does better with it.
-
-- Do [Download and Set FireFlutter Firebase Project](#download-and-set-fireflutter-firebase-project)
-- Install node modules under functions folder.
-  - `$ cd functions`
-  - `$ npm i`
-  - `$ cd ..`
-- Run `firebase deploy --only functions`. You will need Firebase `Pay as you go` plan to deploy it.
-  - If you meet `Error: HTTP Error: 403, Unknown Error` erro, then you may try again.
-
-### Funtions Test
-
-- If you whish to test Functions, you may do so with the following;
-
-```
-$ cd functions
-$ npm test
-$ npm test:algolia
-```
 
 ## Image Picker Setup
 
@@ -1316,7 +1331,7 @@ It needs to `category` of the forum and a callback which will be called if there
 Call `fetchPosts()` method the ForumData instance and fireflutter will get posts from Firestore storing the posts in `ForumData.posts` and the app can render the posts within the callback of ForumData instance.
 
 - Do [Firestore security rules](#firestore-security-rules). When the app list posts, it will require indexes.
-- Do [Cloud Functions](#cloud-functions). When the app is displaying posts, the Clould Funtions soubld be ready.
+- Do [Cloud Functions Setup](#cloud-functions-setup). When the app is displaying posts, the Clould Funtions soubld be ready.
 - See [smaple app's forum-list branch](https://github.com/thruthesky/fireflutter_sample_app/tree/forum-list) for the sample code.
   - You would open [forum.list.dart](https://github.com/thruthesky/fireflutter_sample_app/blob/forum-list/lib/screens/forum/forum.list.dart) to see what's going on to list a forum.
     - It first gets category
@@ -1641,9 +1656,20 @@ void main() async {
 }
 ```
 
-- If the app is forcing users to verify their numbers, then skip button shouldn't appear and the user can't get away from phone verification page.
-
 - We recommend you to use [country_code_picker](https://pub.dev/packages/country_code_picker) package for selecting country code. But it's up to you to use it or not.
+
+- If the app is forcing users to verify their numbers,
+
+  - skip button shouldn't appear but the user can still go back.
+  - all the menu will redirect phone auth page except home screen.
+    This is done in `redirectCallback()` of `main.dart` in phone-verification branch.
+
+- If `block-non-verified-users-to-create` is set to true,
+
+  - It displays warning dialog when user press on create button.
+  - It displays warning dialog when user submit comment button.
+
+- See [sample app's phone verification branch](https://github.com/thruthesky/fireflutter_sample_app/tree/phone-verification) for codes. Again, it is fully customizable.
 
 # I18N
 
@@ -1684,6 +1710,10 @@ void main() async {
   - You may put the `GcpApiKey` in the source code (as in FireFlutter initialization) but that's not recommended. -->
 
 # Trouble Shotting
+
+## Stuck in registration
+
+When `ff.register` is called, it sets data to Firestore and if Firestore is set created, then it would hang on `Firestore...doc('docId').set()`. To fix this, just enable Firestore with security rules and indexes as described in the setup section.
 
 ## MissingPluginException google_sign_in
 
