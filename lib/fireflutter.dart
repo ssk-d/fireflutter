@@ -157,14 +157,9 @@ class FireFlutter extends Base {
     };
 
     /// Merge default with new meta data.
-    meta = mergeMap([defaultMeta, meta]);
-
-    // meta.forEach((key, value) {
-    //   for (String name in value.keys) {
-    //     if (defaultMeta[key] == null) defaultMeta[key] = {};
-    //     defaultMeta[key][name] = value[name];
-    //   }
-    // });
+    if (meta != null && meta.isNotEmpty) {
+      defaultMeta = mergeMap([defaultMeta, meta]);
+    }
 
     await updateUserMeta(defaultMeta);
 

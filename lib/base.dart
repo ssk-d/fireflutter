@@ -252,8 +252,11 @@ class Base {
     /// on `iOS`, `message` has all the `data properties`.
     Map<dynamic, dynamic> data = message['data'] ?? message;
 
-    /// return if the senderUid is the owner.
-    if (data != null && data['senderUid'] == user.uid) {
+    /// Return if the senderUid is the owner.
+    /// For testing you can pass data with test: true to by pass this condition
+    if (data != null &&
+        data['senderUid'] == user.uid &&
+        data['test'] == false) {
       return;
     }
 
@@ -299,6 +302,7 @@ class Base {
     String token,
     List<String> tokens,
     String topic,
+    bool test,
   }) async {
     if (enableNotification == false) return false;
     if (firebaseServerToken == null) return false;
@@ -306,7 +310,6 @@ class Base {
     if (token == null &&
         (tokens == null || tokens.length == 0) &&
         topic == null) return false;
-    // if (topic == null) return false;
 
     final postUrl = 'https://fcm.googleapis.com/fcm/send';
 
@@ -337,11 +340,12 @@ class Base {
           "senderUid": user.uid,
           "route": "/",
           "screen": screen,
+          "test": test ?? false,
           "click_action": "FLUTTER_NOTIFICATION_CLICK",
         },
       };
 
-      print(data);
+      // print(data);
       data[el['key']] = el['value'];
       final String encodeData = jsonEncode(data);
       Dio dio = Dio();
@@ -405,25 +409,22 @@ class Base {
 
       /// If the user has subscribed the forum, then it does not need to send notification again.
       if (publicData[topicKey] == true) {
-        // uids.remove(uid);
         continue;
       }
 
       /// If the post owner has not subscribed to new comments under his post, then don't send notification.
       if (uid == post['uid'] && publicData['notification_post'] != true) {
-        // uids.remove(uid);
         continue;
       }
 
       /// If the user didn't subscribe for comments under his comments, then don't send notification.
       if (publicData['notification_comment'] != true) {
-        // uids.remove(uid);
         continue;
       }
       uidsForNotification.add(uid);
     }
 
-    // Get tokens
+    /// Get tokens
     List<String> tokens = [];
     for (var uid in uidsForNotification) {
       final docSnapshot =
@@ -431,20 +432,10 @@ class Base {
       if (!docSnapshot.exists) continue;
       Map<String, dynamic> tokensDoc = docSnapshot.data();
 
-      /// TODO: Double check if it's working.
+      /// Merge tokens
       tokens = [...tokens, ...tokensDoc.keys];
-
-      // for (var token in tokensDoc.keys) {
-      //   print(token);
-      //   tokens.add(token);
-      // }
     }
 
-    // print('tokens');
-    // print(tokens);
-    // print(uidsForNotification);
-
-    /// send notification with tokens and topic.
     sendNotification(
       post['title'],
       data['content'],

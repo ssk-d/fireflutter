@@ -821,11 +821,58 @@ ff.translationsChange.listen((x) => setState(() => updateTranslations(x)));
 
 - Settings of push notification on Android and iOS platform are done in the sample app.
 
+- Refer to [Firestore Messaging](https://pub.dev/packages/firebase_messaging)
+
   - If you are not going to use the sample app, you need to setup by yourself.
+
+### Additional Android Setup
+
+- If you dont have `google-services.json` yet, you may refer for the
+  basic configuration of [Android Setup](#android-setup).
+- If you want to be notified in your app (via onResume and onLaunch) when you 
+  click the  notification on the system tray you need to include the following `intent-filter`
+  under the `<activity>` tag of your `android/app/src/main/AndroidManifest.xml`.
+
+```xml
+<activity>
+  ---- default configuration here -----
+  <intent-filter>
+      <action android:name="FLUTTER_NOTIFICATION_CLICK" />
+      <category android:name="android.intent.category.DEFAULT" />
+  </intent-filter>
+</activity>
+```
+
+### Additional iOS Setup
+
+- To Generate the certificate required by Apple for receiving push notifcation.
+  You can follow this guideline [Generate Certificates](https://firebase.google.com/docs/cloud-messaging/ios/certs)
+  Skip the section titled "Create the Provisioning Profile".
+
+- If you dont have `GoogleService-Info.plist` yet, you may refer for the
+  basic configuration of [iOS Setup](#ios-setup).
+
+- Open Xcode, select `Runner` in the Project Navigator. 
+  In the `Capabilities` Tab turn on `Push Notifications` and `Background Modes`, and
+  enable Background fetch and Remote notifications under Background Modes.
+
+- Follow the steps in the [Upload your APNs certificate](https://firebase.google.com/docs/cloud-messaging/ios/client#upload_your_apns_certificate)
+  section of the Firebase docs.
+
+- Add/Update Capabilities.
+  - In Xcode, select `Runner` in the `Project Navigator`. In the `Capabilities Tab` turn on `Push Notifications` and `Background Modes`, and enable `Background fetch` and `Remote notifications` under `Background Modes`.
+
+- If you need to disable the method swizzling done by the FCM iOS SDK (e.g. so that you can use this plugin with other notification plugins)
+  Add the following into Info.plist
+
+```Info.plist
+  <key>FirebaseAppDelegateProxyEnabled</key>
+  <false/>
+```
 
 - To test the setup, try the code in [Push Notification](#push-notification)
 
-- Refer [Firestore Messaging](https://pub.dev/packages/firebase_messaging)
+- For more detailed information about Firebase messaging refer [Firestore Messaging](https://pub.dev/packages/firebase_messaging)
 
 ## Algolia Setup
 
@@ -1354,6 +1401,7 @@ If you are following the path of how to create a post, list posts, and edit post
 - FireFlutter comes with `Push Notification functionality`. It is disable by default.
 - To enable push notification you must set `enableNotification: true` on main in `FireFlutter init()`.
 - Once enabled it will ask the user if they want to receive push notification in iOS.
+- For android it was done automatically.
 - By default it subscribe to `allTopic`. So you can use this topic to send to all users.
 - It also subscribe to `notification_post` when new comment is created under the user post it will receive notification.
 - And `notification_comment` when a comment is created under the user comment it will receive notification also.
@@ -1386,7 +1434,7 @@ If you are following the path of how to create a post, list posts, and edit post
 - Meaning you can handle the message depending when you have receive the message.
 - For example when you recieved the notification
 
-  - And you need to show a alert message if it was send while the app is open.
+  - And you need to show an alert message, if it was send while the app is open.
   - Or move to specific page when you click the notification from tray.
 
 - Listening to incoming notification.
@@ -1428,11 +1476,37 @@ If you are following the path of how to create a post, list posts, and edit post
               'test body message',
               id: '0X1upoaLklWc2Z07dsbn',
               screen: '/forumView',
+              token: 'Replace DeviceToken here',
+            );
+          });
+        },
+        child: Text('Send Notification to Token.'),
+      ),
+      RaisedButton(
+        onPressed: () async {
+            ff.sendNotification(
+              'title message only',
+              'test body message',
+              id: '0X1upoaLklWc2Z07dsbn',
+              screen: '/forumView',
               topic: ff.allTopic,
             );
           });
         },
-        child: Text('Send Notification'),
+        child: Text('Send Notification to topic.'),
+      ),
+      RaisedButton(
+        onPressed: () async {
+            ff.sendNotification(
+              'title message only',
+              'test body message',
+              id: '0X1upoaLklWc2Z07dsbn',
+              screen: '/forumView',
+              tokens: ['Device Token', 'Another Device Token'],
+            );
+          });
+        },
+        child: Text('Send Notification to multiple tokens.'),
       ),
 ```
 
