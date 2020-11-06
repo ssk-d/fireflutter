@@ -253,9 +253,9 @@ class Base {
     Map<dynamic, dynamic> data = message['data'] ?? message;
 
     /// return if the senderUid is the owner.
-    // if (data != null && data['senderUid'] == user.uid) {
-    //   return;
-    // }
+    if (data != null && data['senderUid'] == user.uid) {
+      return;
+    }
 
     this.notification.add({
       'notification': notification,
@@ -340,23 +340,9 @@ class Base {
           "screen": screen,
           "click_action": "FLUTTER_NOTIFICATION_CLICK",
         },
-        // "android": {
-        //   // this is not working on legacy protocol
-        //   "notification": {
-        //     "sound": getNotificationSound('android'),
-        //     "click_action": "FLUTTER_NOTIFICATION_CLICK",
-        //   }
-        // },
-        // "apns": {
-        //   "payload": {
-        //     "aps": {
-        //       "sound": getNotificationSound('ios'),
-        //     }
-        //   }
-        // },
       };
 
-      // print(data);
+      print(data);
       data[el['key']] = el['value'];
       final String encodeData = jsonEncode(data);
       Dio dio = Dio();
