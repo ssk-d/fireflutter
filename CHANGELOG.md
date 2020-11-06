@@ -1,3 +1,16 @@
+## [0.0.18] - userChange event on photoURL
+
+- userChange event fires on photoURL change
+
+## [0.0.16] - deprecation of data
+
+- data variable is now deprecated. Use `userData` instead.
+
+## [0.0.16] - commentEdit
+
+- Breaking change. The parameters of commentEdit method has been changed.
+- Minor fixes.
+
 ## [0.0.15] - non-blocking initialze
 
 - Fireflutter now introduces a non-blocking initialization. It's not a breaking change.

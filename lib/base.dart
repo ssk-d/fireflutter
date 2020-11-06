@@ -50,7 +50,10 @@ class Base {
   /// ff.user.updateProfile(displayName: nicknameController.text);
   /// ```
   User user;
-  Map<String, dynamic> data = {};
+
+  /// User document data.
+  Map<String, dynamic> userData = {};
+
   bool get loggedIn => user != null;
   bool get notLoggedIn => !loggedIn;
 
@@ -58,7 +61,8 @@ class Base {
   /// - user document(without subcollection) like when user updates his profile
   /// - user log in,
   /// - user log out,
-  /// - user verify his phone nubmrer
+  /// - user verify his phone nubmer
+  /// - user profile photo changes
   ///
   /// It is important to know that [authStateChanges] event happens only when
   /// user logs in or logs out.
@@ -117,7 +121,7 @@ class Base {
           userSubscription = usersCol.doc(user.uid).snapshots().listen(
             (DocumentSnapshot snapshot) {
               if (snapshot.exists) {
-                data = snapshot.data();
+                userData = snapshot.data();
                 userChange.add(UserChangeType.document);
               }
             },
@@ -249,9 +253,9 @@ class Base {
     Map<dynamic, dynamic> data = message['data'] ?? message;
 
     /// return if the senderUid is the owner.
-    // if (data != null && data['senderUid'] == user.uid) {
-    //   return;
-    // }
+    if (data != null && data['senderUid'] == user.uid) {
+      return;
+    }
 
     this.notification.add({
       'notification': notification,
@@ -336,23 +340,9 @@ class Base {
           "screen": screen,
           "click_action": "FLUTTER_NOTIFICATION_CLICK",
         },
-        // "android": {
-        //   // this is not working on legacy protocol
-        //   "notification": {
-        //     "sound": getNotificationSound('android'),
-        //     "click_action": "FLUTTER_NOTIFICATION_CLICK",
-        //   }
-        // },
-        // "apns": {
-        //   "payload": {
-        //     "aps": {
-        //       "sound": getNotificationSound('ios'),
-        //     }
-        //   }
-        // },
       };
 
-      // print(data);
+      print(data);
       data[el['key']] = el['value'];
       final String encodeData = jsonEncode(data);
       Dio dio = Dio();

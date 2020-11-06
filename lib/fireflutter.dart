@@ -89,7 +89,7 @@ class FireFlutter extends Base {
     });
   }
 
-  bool get isAdmin => this.data['isAdmin'] == true;
+  bool get isAdmin => this.userData['isAdmin'] == true;
   bool get userIsLoggedIn => user != null;
   bool get userIsLoggedOut => !userIsLoggedIn;
 
@@ -205,6 +205,7 @@ class FireFlutter extends Base {
     await user.updateProfile(photoURL: url);
     await user.reload();
     user = FirebaseAuth.instance.currentUser;
+    userChange.add(UserChangeType.profile);
   }
 
   /////////////////////////////////////////////////////////////////////////////
@@ -257,28 +258,28 @@ class FireFlutter extends Base {
     // forum.pageNo++;
     // print('pageNo: ${forum.pageNo}');
 
-    /// Prepare query
+    // Prepare query
     Query postsQuery = postsCol.where('category', isEqualTo: forum.category);
     postsQuery = postsQuery.orderBy('createdAt', descending: true);
-    //set default limit
+    // Set default limit
     int limit = _settings['forum']['no-of-posts-per-fetch'] ?? 12;
 
-    //if it has specific limit on settings set the corresponding settings.
+    // If it has specific limit on settings set the corresponding settings.
     if (_settings[forum.category] != null &&
         _settings[forum.category]['no-of-posts-per-fetch'] != null)
       limit = _settings[forum.category]['no-of-posts-per-fetch'];
     // print(limit);
     postsQuery = postsQuery.limit(limit);
 
-    /// Fetch from the last post that had been fetched.
+    // Fetch from the last post that had been fetched.
     if (forum.posts.isNotEmpty) {
       postsQuery = postsQuery.startAfter([forum.posts.last['createdAt']]);
     }
 
-    /// Listen to coming posts.
+    // Listen to coming posts.
     forum.postQuerySubscription =
         postsQuery.snapshots().listen((QuerySnapshot snapshot) {
-      // if snapshot size is 0, means no documents has been fetched.
+      // If snapshot size is 0, means no documents has been fetched.
       if (snapshot.size == 0) {
         if (forum.posts.isEmpty) {
           forum.status = ForumStatus.noPosts;
@@ -295,28 +296,28 @@ class FireFlutter extends Base {
         post['id'] = documentChange.doc.id;
 
         if (documentChange.type == DocumentChangeType.added) {
-          /// [createdAt] is null on author mobile (since it is cached locally).
+          // [createdAt] is null on author mobile (since it is cached locally).
           if (post['createdAt'] == null) {
             forum.posts.insert(0, post);
           }
 
-          /// [createdAt] is not null on other user's mobile and have the
-          /// biggest value among other posts.
+          // [createdAt] is not null on other user's mobile and have the
+          // biggest value among other posts.
           else if (forum.posts.isNotEmpty &&
               post['createdAt'].microsecondsSinceEpoch >
                   forum.posts[0]['createdAt'].microsecondsSinceEpoch) {
             forum.posts.insert(0, post);
           }
 
-          /// Or, it is a post that should be added at the bottom for infinite
-          /// page scrolling.
+          // Or, it is a post that should be added at the bottom for infinite
+          // page scrolling.
           else {
             forum.posts.add(post);
           }
 
           if (post['comments'] == null) post['comments'] = [];
 
-          /// TODO: have a placeholder for all the posts' comments change subscription.
+          // TODO: have a placeholder for all the posts' comments change subscription.
           forum.commentsSubcriptions[post['id']] = FirebaseFirestore.instance
               .collection('posts/${post['id']}/comments')
               .orderBy('order', descending: true)
@@ -328,8 +329,8 @@ class FireFlutter extends Base {
 
               /// comment added
               if (commentsChange.type == DocumentChangeType.added) {
-                /// TODO For comments loading on post view, it does not need to loop.
-                /// TODO Only for newly created comment needs to have loop and find a position to insert.
+                // TODO For comments loading on post view, it does not need to loop.
+                // TODO Only for newly created comment needs to have loop and find a position to insert.
 
                 int found = (post['comments'] as List).indexWhere(
                     (c) => c['order'].compareTo(commentData['order']) < 0);
@@ -342,7 +343,7 @@ class FireFlutter extends Base {
                 forum.render(RenderType.commentCreate);
               }
 
-              /// comment modified
+              // comment modified
               else if (commentsChange.type == DocumentChangeType.modified) {
                 final int ci = post['comments']
                     .indexWhere((c) => c['id'] == commentData['id']);
@@ -354,7 +355,7 @@ class FireFlutter extends Base {
                 forum.render(RenderType.commentUpdate);
               }
 
-              /// comment deleted
+              // comment deleted
               else if (commentsChange.type == DocumentChangeType.removed) {
                 post['comments']
                     .removeWhere((c) => c['id'] == commentData['id']);
@@ -371,8 +372,8 @@ class FireFlutter extends Base {
 
           final int i = forum.posts.indexWhere((p) => p['id'] == post['id']);
           if (i > -1) {
-            /// after post is updated, it doesn't have the 'comments' data.
-            /// so it needs to be re-inserted.
+            // after post is updated, it doesn't have the 'comments' data.
+            // so it needs to be re-inserted.
             post['comments'] = forum.posts[i]['comments'];
             forum.posts[i] = post;
           }
@@ -393,22 +394,21 @@ class FireFlutter extends Base {
   }
 
   /// Edits (create/update) a post document.
-  /// 
+  ///
   /// [data] is a type of [Map<String, dynamic>] which will be save into firebase as a post document.
   ///
-  /// If the value of [id] key is null, it is considered as creating a post, updating otherwise.
+  /// `data['id']` can either contain a value or null.
+  /// - If it has value, it is considered as update a post document.
+  /// - If it is null, it is considered as creating a post document.
   ///
-  /// The value of [title] and [content] keys are required and also needed when sending a push notification.
-  /// 
-  /// The value of [uid] key is used to determine if the current user is eligible to update a post.
-  /// 
+  /// `data['title']` and `data['content']` values are required.
+  /// - Those values are also used when sending a push notification.
+  ///
   /// ```dart
   /// ff.editPost({
   ///     'id': 1,                    // can be null for creating a post.
   ///     'title': 'some title',
   ///     'content': 'some content',
-  ///     'uid': userID,
-  ///     'category': 'aCategory',    // If you have a category system for post ..
   ///     // Other information can be added ...
   /// });
   /// ```
@@ -416,14 +416,19 @@ class FireFlutter extends Base {
     if (data['title'] == null && data['content'] == null)
       throw "ERROR_TITLE_AND_CONTENT_EMPTY";
 
+    // update
     if (data['id'] != null) {
       data['updatedAt'] = FieldValue.serverTimestamp();
       await postsCol.doc(data['id']).set(
             data,
             SetOptions(merge: true),
           );
-    } else {
+    }
+
+    // create
+    else {
       data.remove('id');
+      data['uid'] = user.uid;
       data['createdAt'] = FieldValue.serverTimestamp();
       data['updatedAt'] = FieldValue.serverTimestamp();
       DocumentReference doc = await postsCol.add(data);
@@ -440,15 +445,24 @@ class FireFlutter extends Base {
 
   /// Edits (create/update) a comment document.
   ///
-  /// [data] is a type of [Map<String, dynamic>] which will be save into firebase as a comment document.
-  /// 
-  /// The value of [post] key is required and should contain a post document data.
+  /// [data] is the comment to save into comment document.
+  ///
+  /// If `data['id']` has value, then it will update the comment document.
+  ///
+  /// If `data['id']` is null, then it will create a new comment.
+  /// - In this case, [parentIndex] has the index of position in
+  /// [post.comments] array to get `order` of comment position. then, it will
+  /// insert the `order` into the comment. Then, when the comments are listed,
+  /// It will be sorted in proper order.
+  ///
   Future editComment(
     Map<String, dynamic> data,
-  ) async {
-    if (data['post'] == null) throw 'ERROR_POST_IS_REQUIRED';
-    final Map<String, dynamic> post = data['post'];
-    data.remove('post');
+    Map<String, dynamic> post, {
+    int parentIndex,
+  }) async {
+    // if (data['post'] == null) throw 'ERROR_POST_IS_REQUIRED';
+    // final Map<String, dynamic> post = data['post'];
+    // data.remove('post');
 
     final commentsCol = commentsCollection(post['id']);
     data.remove('postid');
@@ -461,16 +475,13 @@ class FireFlutter extends Base {
       await commentsCol.doc(data['id']).set(data, SetOptions(merge: true));
     }
 
-    /// create
+    // create
     else {
-      final int parentIndex = data['parentIndex'];
-      data.remove('parentIndex');
-
-      /// get order
+      // get order
       data['order'] = getCommentOrderOf(post, parentIndex);
       data['uid'] = user.uid;
 
-      /// get depth
+      // get depth
       dynamic parent = getCommentParent(post['comments'], parentIndex);
       data['depth'] = parent == null ? 0 : parent['depth'] + 1;
       data['like'] = 0;
@@ -483,12 +494,16 @@ class FireFlutter extends Base {
     }
   }
 
-  Future deletePost(String postID) async {
+  /// deletes a post document from posts collection.
+  ///
+  Future<void> deletePost(String postID) {
     if (postID == null) throw "ERROR_POST_ID_IS_REQUIRED";
-    await postsCol.doc(postID).delete();
+    return postsCol.doc(postID).delete();
   }
 
-  Future deleteComment(String postID, String commentID) async {
+  /// deletes a comment document from a post's comment collection.
+  ///
+  Future<void> deleteComment(String postID, String commentID) async {
     if (postID == null) throw "ERROR_POST_ID_IS_REQUIRED";
     if (commentID == null) throw "ERROR_COMMENT_ID_IS_REQUIRED";
     await postsCol.doc(postID).collection('comments').doc(commentID).delete();
@@ -559,30 +574,29 @@ class FireFlutter extends Base {
     return userCredential.user;
   }
 
+  /// Uploads a file to firebase storage and returns the uploaded file's url.
+  ///
   /// [folder] is the folder name on Firebase Storage.
   /// [source] is the source of file input. It can be Camera or Gallery.
   /// [maxWidth] is the max width of image to upload.
   /// [quality] is the quality of the jpeg image.
   ///
-  /// It will return a string of URL of uploaded file.
-  ///
-  /// 'upload-cancelled' may return when there is no return(no value) from file selection.
+  /// `upload-cancelled` error may return when there is no return(no value) from file selection.
   Future<String> uploadFile({
     @required String folder,
     ImageSource source,
-    // @required File file,
     double maxWidth = 1024,
     int quality = 90,
     void progress(double progress),
   }) async {
-    /// select file.
+    // select file.
     File file = await pickImage(
       source: source,
       maxWidth: maxWidth,
       quality: quality,
     );
 
-    /// if no file is selected then do nothing.
+    // if no file is selected then do nothing.
     if (file == null) throw 'upload-cancelled';
     // print('success: file picked: ${file.path}');
 
@@ -601,12 +615,14 @@ class FireFlutter extends Base {
     return url;
   }
 
+  /// Authenticates a provided phone number by sending a verification code.
+  ///
   /// [internationalNo] is the number to send the code to.
   ///
   /// [resendToken] is optional, and can be used when requesting to resend the verification code.
   /// [resendToken] can be obtained from [onCodeSent]'s return value.
   ///
-  /// [onCodeSent] will be invoked once the code is generated and send to the number.
+  /// [onCodeSent] will be invoked once the code is generated and sent to the provided number.
   /// It will include the [verificationID] and [codeResendToken].
   ///
   /// [onError] will be invoked when an error happen. It contains the error.
@@ -641,41 +657,43 @@ class FireFlutter extends Base {
     FirebaseAuth.instance.verifyPhoneNumber(
       phoneNumber: internationalNo,
 
-      /// resend token can be null.
+      // resend token can be null.
       forceResendingToken: resendToken,
 
-      /// called after the user submitted the phone number.
+      // called after the user submitted the phone number.
       codeSent: (String verID, [int forceResendToken]) async {
         // print('codeSent!');
         onCodeSent(verID, forceResendToken);
       },
 
-      /// called whenever error happens
+      // called whenever error happens
       verificationFailed: (FirebaseAuthException e) async {
         // print('verificationFailed!');
         onError(e);
       },
 
-      /// time limit allowed for the automatic code retrieval to operate.
+      // time limit allowed for the automatic code retrieval to operate.
       timeout: const Duration(seconds: 30),
 
-      /// will invoke after `timeout` duration has passed.
+      // will invoke after `timeout` duration has passed.
       codeAutoRetrievalTimeout: (String verID) {},
 
-      /// this will only be called after the automatic code retrieval is performed.
-      /// some phone may have the automatic code retrieval. some may not.
+      // this will only be called after the automatic code retrieval is performed.
+      // some phone may have the automatic code retrieval. some may not.
       verificationCompleted: (PhoneAuthCredential credential) {
-        /// we can handle linking here.
-        /// the user doesn't need to be redirected to code verification page.
-        /// TODO: handle automatic linking/updating of user phone number.
+        // we can handle linking here.
+        // the user doesn't need to be redirected to code verification page.
+        // TODO: handle automatic linking/updating of user phone number.
       },
     );
   }
 
+  /// Verify a phone number with the code provided.
+  ///
   /// [code] is the verification code sent to user's mobile number.
   /// [verificationId] is used to verify the current session, which is associated with the user's mobile number.
   ///
-  /// After phone is verified, it will link/update the current user's phone number.
+  /// After code is verified, it will link/update the current user's phone number.
   Future mobileAuthVerifyCode({
     @required String code,
     @required String verificationId,
@@ -685,12 +703,12 @@ class FireFlutter extends Base {
       smsCode: code,
     );
 
-    /// will throw error when
-    ///   1: `code` is incorrect.
-    ///   2: the mobile number associated by the verificationId is already in linked with other user.
+    // will throw error when
+    //   1: code is incorrect.
+    //   2: the mobile number associated by the verificationId is already in linked with other user.
     await user.linkWithCredential(creds);
 
-    /// Inform the app when user phone number has changed
+    // Inform the app when user phone number has changed
     await user.reload();
     user = FirebaseAuth.instance.currentUser;
     userChange.add(UserChangeType.phoneNumber);
@@ -711,7 +729,14 @@ class FireFlutter extends Base {
   }
 
   /// Returns vote document reference.
-  _voteDoc({String postId, String commentId}) {
+  ///
+  /// [postId] is required
+  ///
+  /// if [commentId] have value, it will return a comment document.
+  _voteDoc({
+    @required String postId,
+    String commentId,
+  }) {
     DocumentReference voteDoc;
     if (commentId == null)
       voteDoc = postDocument(postId);
@@ -721,10 +746,19 @@ class FireFlutter extends Base {
     return voteDoc;
   }
 
-  /// Voting
+  /// Votes for a post or comment.
   ///
-  /// It supports post and comment.
-  Future vote({String postId, String commentId, String choice}) async {
+  /// [postId] and [choice] are required.
+  /// 
+  /// [commentId] is optional.
+  /// - If it is null, it will proceed to vote for a post.
+  /// - If it have a value, it will vote for a comment.
+  ///
+  Future vote({
+    @required String postId,
+    String commentId,
+    @required String choice,
+  }) async {
     if (choice != VoteChoice.like && choice != VoteChoice.dislike)
       throw 'wrong-choice';
     DocumentReference voteDoc = _voteDoc(postId: postId, commentId: commentId);
