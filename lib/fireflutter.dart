@@ -53,10 +53,11 @@ class FireFlutter extends Base {
     this.firebaseServerToken = firebaseServerToken;
     this.pushNotificationSound = pushNotificationSound;
 
-    /// Must be called before firebase init
+    /// Initialize settings.
     ///
+    /// Note. it must be called before firebase init.
     if (settings != null) {
-      _settings = settings;
+      _settings = mergeMap([_settings, settings]);
       settingsChange.add(_settings);
     }
 

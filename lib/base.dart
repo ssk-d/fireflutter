@@ -89,7 +89,7 @@ class Base {
 
   // PublishSubject configDownload = PublishSubject();
 
-  /// Set default properties to prevent errors.
+  /// Set default properties to prevent null errors.
   Map<String, dynamic> _settings = {'forum': {}, 'app': {}};
   // ignore: close_sinks
   BehaviorSubject settingsChange = BehaviorSubject.seeded(null);
@@ -108,10 +108,10 @@ class Base {
       /// [userChange] event fires when user is logs in or logs out.
       userChange.add(UserChangeType.auth);
 
-      /// Cancell listening user document.
+      /// Cancel listening user document.
       ///
-      /// This needs to be done when user logs out or
-      /// `cloud_firestore/permission-denied` error will appear
+      /// When user logs out, it needs to cancel the subscription, or
+      /// `cloud_firestore/permission-denied` error will happen.
       if (userSubscription != null) {
         userSubscription.cancel();
       }
