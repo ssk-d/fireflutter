@@ -392,9 +392,26 @@ class FireFlutter extends Base {
     });
   }
 
-  /// [data] is the map to save into post document.
+  /// Edits (create/update) a post document.
+  /// 
+  /// [data] is a type of [Map<String, dynamic>] which will be save into firebase as a post document.
   ///
-  /// `data['title']` and `data['content']` are needed to send push notification.
+  /// If the value of [id] key is null, it is considered as creating a post, updating otherwise.
+  ///
+  /// The value of [title] and [content] keys are required and also needed when sending a push notification.
+  /// 
+  /// The value of [uid] key is used to determine if the current user is eligible to update a post.
+  /// 
+  /// ```dart
+  /// ff.editPost({
+  ///     'id': 1,                    // can be null for creating a post.
+  ///     'title': 'some title',
+  ///     'content': 'some content',
+  ///     'uid': userID,
+  ///     'category': 'aCategory',    // If you have a category system for post ..
+  ///     // Other information can be added ...
+  /// });
+  /// ```
   Future editPost(Map<String, dynamic> data) async {
     if (data['title'] == null && data['content'] == null)
       throw "ERROR_TITLE_AND_CONTENT_EMPTY";
@@ -421,9 +438,11 @@ class FireFlutter extends Base {
     }
   }
 
-  /// [data] is the map to save into comment document.
+  /// Edits (create/update) a comment document.
   ///
-  /// `post` property of [data] is required.
+  /// [data] is a type of [Map<String, dynamic>] which will be save into firebase as a comment document.
+  /// 
+  /// The value of [post] key is required and should contain a post document data.
   Future editComment(
     Map<String, dynamic> data,
   ) async {
