@@ -633,17 +633,17 @@ class FireFlutter extends Base {
   ///  );
   /// ```
   ///
-  mobileAuthSendCode(
+  Future<void> mobileAuthSendCode(
     String internationalNo, {
     int resendToken,
-    onCodeSent(String verificationID, int codeResendToken),
-    onError(dynamic error),
+    @required onCodeSent(String verificationID, int codeResendToken),
+    @required onError(dynamic error),
   }) {
     if (internationalNo == null || internationalNo == '') {
       onError('Input your number');
     }
 
-    FirebaseAuth.instance.verifyPhoneNumber(
+    return FirebaseAuth.instance.verifyPhoneNumber(
       phoneNumber: internationalNo,
 
       // resend token can be null.

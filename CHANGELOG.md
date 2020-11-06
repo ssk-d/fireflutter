@@ -1,3 +1,11 @@
+## [0.0.20] - Phone auth
+
+- fix bug on phone auth
+
+## [0.0.19] - Push notification update
+
+- fix on push notification
+
 ## [0.0.18] - userChange event on photoURL
 
 - userChange event fires on photoURL change

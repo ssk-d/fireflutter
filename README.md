@@ -43,6 +43,8 @@ A free, open source, rapid development flutter package to build social apps, com
       - [Facebook Sign In Setup for Android](#facebook-sign-in-setup-for-android)
       - [Facebook Sign In Setup for iOS](#facebook-sign-in-setup-for-ios)
     - [Apple Sign In Setup for iOS](#apple-sign-in-setup-for-ios)
+    - [Phone Auth Setup](#phone-auth-setup)
+      - [Additional Phone Auth Setup for iOS](#additional-phone-auth-setup-for-ios)
   - [Firebase tools installation](#firebase-tools-installation)
   - [Download and Set FireFlutter Firebase Project](#download-and-set-fireflutter-firebase-project)
   - [Firestore security rules](#firestore-security-rules)
@@ -53,6 +55,8 @@ A free, open source, rapid development flutter package to build social apps, com
     - [Image Picker Setup for iOS](#image-picker-setup-for-ios)
   - [Localization Setup](#localization-setup)
   - [Push Notification Setup](#push-notification-setup)
+    - [Additional Android Setup](#additional-android-setup)
+    - [Additional iOS Setup](#additional-ios-setup)
   - [Algolia Setup](#algolia-setup)
   - [Admin Account Setting](#admin-account-setting)
 - [App Management](#app-management)
@@ -95,6 +99,7 @@ A free, open source, rapid development flutter package to build social apps, com
     - [Apple Sign In](#apple-sign-in)
   - [External Logins](#external-logins)
     - [Kakao Login](#kakao-login)
+  - [Phone Verification](#phone-verification)
 - [I18N](#i18n)
 - [Settings](#settings)
 - [Trouble Shotting](#trouble-shotting)
@@ -107,12 +112,8 @@ A free, open source, rapid development flutter package to build social apps, com
 
 # TODOs
 
-- Adding sample code for phone number verification
-- Sample code for blocking users to create posts/comments if they didn't verify their phone numbers.
-  - Do it on settings.
 - Sample code for search posts and comments with Algolia
 - Adding sample code for live change of user language.
-- Integration test
 
 # Features
 
@@ -585,6 +586,19 @@ We add `Apple sign in` only on iOS platform.
 
 - Refer [Eanble Sign In with App](https://help.apple.com/xcode/mac/11.0/#/dev50571b902) for details.
 
+### Phone Auth Setup
+
+- Enable `Phone` under Firebase => Authentication => Sign-in method
+
+#### Additional Phone Auth Setup for iOS
+
+- Get REVERSED_CLIENT_ID from GoogleService-Info.plist
+- Go to Runner(Left pane) => Runner(TARGETS) => Info => URL Types => Click (+) to add one,
+
+  - And add REVERSED_CLIENT_ID into URL Schemes.
+
+- See [FlutterFire Phone Authentication Setup](https://firebase.flutter.dev/docs/auth/phone#setup) for details.
+
 ## Firebase tools installation
 
 - Install Firebase tools with the following command. You may need root permission.
@@ -829,8 +843,8 @@ ff.translationsChange.listen((x) => setState(() => updateTranslations(x)));
 
 - If you dont have `google-services.json` yet, you may refer for the
   basic configuration of [Android Setup](#android-setup).
-- If you want to be notified in your app (via onResume and onLaunch) when you 
-  click the  notification on the system tray you need to include the following `intent-filter`
+- If you want to be notified in your app (via onResume and onLaunch) when you
+  click the notification on the system tray you need to include the following `intent-filter`
   under the `<activity>` tag of your `android/app/src/main/AndroidManifest.xml`.
 
 ```xml
@@ -852,7 +866,7 @@ ff.translationsChange.listen((x) => setState(() => updateTranslations(x)));
 - If you dont have `GoogleService-Info.plist` yet, you may refer for the
   basic configuration of [iOS Setup](#ios-setup).
 
-- Open Xcode, select `Runner` in the Project Navigator. 
+- Open Xcode, select `Runner` in the Project Navigator.
   In the `Capabilities` Tab turn on `Push Notifications` and `Background Modes`, and
   enable Background fetch and Remote notifications under Background Modes.
 
@@ -860,6 +874,7 @@ ff.translationsChange.listen((x) => setState(() => updateTranslations(x)));
   section of the Firebase docs.
 
 - Add/Update Capabilities.
+
   - In Xcode, select `Runner` in the `Project Navigator`. In the `Capabilities Tab` turn on `Push Notifications` and `Background Modes`, and enable `Background fetch` and `Remote notifications` under `Background Modes`.
 
 - If you need to disable the method swizzling done by the FCM iOS SDK (e.g. so that you can use this plugin with other notification plugins)
@@ -1586,6 +1601,49 @@ if (GetPlatform.isIOS)
 
 - Kakao login is completely separated from `fireflutter` since it is not part of `Firebase`.
   - The sample app has an example code on how to do `Kakao login` and link to `Firebase Auth` account.
+
+## Phone Verification
+
+FireFlutter phone verication relies on Firebase's Phone Authentication. We made it easy to use.
+
+The app can ask users to verify their phone numbers. It is fully customizable, but we put here few recommendations on its implementation.
+
+Admin can set rules like below
+
+- Verify phone after email/password registration.
+- Verify phone after login(all login including social login).
+- Force users to verify phone or the app does not work.
+- Block users to create post or comment without phone verification.
+
+We will apply this rules to the [sample app's phone-verification branch] and it is upto you weather you would follow this rules or not. You may want to block users to create post or comment differently on each forum.
+
+Do apply the rules,
+
+- Do [Additional Phone Auth Setup for iOS](#additional-phone-auth-setup-for-ios).
+- Push notification
+
+- First, you will need to add a setting in main.dart. Admin can overwrite all the settings in main.dart through Firestore `settings/app` document update.
+
+```dart
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await ff.init(
+    settings: {
+      'app': {
+        'verify-after-register': true,
+        'verify-after-login': true,
+        'force-verification': false,
+        'block-non-verified-users-to-create': true,
+      },
+    },
+  );
+  runApp(MainApp());
+}
+```
+
+- If the app is forcing users to verify their numbers, then skip button shouldn't appear and the user can't get away from phone verification page.
+
+- We recommend you to use [country_code_picker](https://pub.dev/packages/country_code_picker) package for selecting country code. But it's up to you to use it or not.
 
 # I18N
 
