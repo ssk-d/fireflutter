@@ -796,4 +796,8 @@ class FireFlutter extends Base {
     });
     return searchResults;
   }
+
+  Future<Map<String, dynamic>> userPublicData() async {
+    return (await myPublicDoc.get()).data();
+  }
 }

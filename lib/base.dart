@@ -547,6 +547,10 @@ class Base {
         .doc(user.uid);
   }
 
+  DocumentReference get myDoc => usersCol.doc(user.uid);
+  DocumentReference get myPublicDoc =>
+      usersCol.doc(user.uid).collection('meta').doc('public');
+
   /// Returns the order string of the new comment
   ///
   /// @TODO: Move this method to `functions.dart`.
