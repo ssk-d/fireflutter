@@ -16,7 +16,6 @@ A free, open source, rapid development flutter package to build social apps, com
 
 - [Fire Flutter](#fire-flutter)
 - [Table of Contents](#table-of-contents)
-- [TODOs](#todos)
 - [Features](#features)
 - [References](#references)
 - [Components](#components)
@@ -112,12 +111,9 @@ A free, open source, rapid development flutter package to build social apps, com
   - [operation-not-allowed](#operation-not-allowed)
   - [App crashes on second file upload](#app-crashes-on-second-file-upload)
   - [Firestore rules and indexes](#firestore-rules-and-indexes)
+  - [After ff.editPost or ff.editComment, nothing happens?](#after-ffeditpost-or-ffeditcomment-nothing-happens)
 
 <!-- /TOC -->
-
-# TODOs
-
-- Sample code for search posts and comments with Algolia
 
 # Features
 
@@ -277,6 +273,14 @@ firebase login
   - Then, a file will be downloaded.
   - Rename the file to `firebase-service-account-key.json`
   - And move(or overwrite if it exists) it to the project folder(the same folder where `.firebaserc` is).
+- Create `functions/settings.js`
+  - Then, paste the following code and save.
+
+```js
+const settings = {};
+
+module.exports.settings = settings;
+```
 
 ## Firestore security rules
 
@@ -325,12 +329,15 @@ One of the reason why we use Cloud Funtions is to enable like and dislike functi
 
 ### Funtions Test
 
-- If you whish to test Functions, you may do so with the following;
+- If you wish to test Functions,
+  - Open `functions/test/index.test.js`
+  - And edit `databaseURL` and `projectId`
+  - And run the following commands
 
 ```
+$ firebase emulators:start
 $ cd functions
 $ npm test
-$ npm test:algolia
 ```
 
 ## Firebase Email/Password Login
@@ -939,17 +946,37 @@ ff.translationsChange.listen((x) => setState(() => updateTranslations(x)));
 
 Firestore does not support full text search, which means users cannot search the title or content of posts and comments. And this is a must functionality for community and blog apps.
 
-One option(recomended by Firebase team) to solve this matter is to use Algolia. Algolia has free service and that's what we are going to use it.
+One option(recomended by Firebase team) to solve this matter is to use Algolia. Algolia has free version account and that's what we are going to use it.
 
 Before setup Algolia, you may try forum code as described in [Forum Coding](#forum-coding) to test if this settings work.
 
 - Go to Algolia site.
 - Register.
 - Create app.
-- First, you need to put ALGOLIA_ID(Application ID), ALGOLIA_ADMIN_KEY, ALGOLIA_INDEX_NAME in `firebase-settings.js`.
-  - deploy with `firebase deploy --only functions`.
-  - For testing, do `npm run test:algolia`.
-- Second, you need to add(or update) ALGOLIA_APP_ID(Application ID), ALGOLIA_SEARCH_KEY(Search Only Api Key), ALGOLIA_INDEX_NAME in Firestore `settings/app` document.
+- First, you need to put ALGOLIA_APP_ID(Application ID), ALGOLIA_ADMIN_KEY, ALGOLIA_INDEX_NAME into `functions/settings.js`.
+
+```js
+const settings = {
+  algolia: {
+    appId: "ALGOLIA APP ID",
+    adminKey: "ALGOLIA ADMIN KEY",
+    indexName: "INDEX NAME"
+  }
+};
+
+module.exports.settings = settings;
+```
+
+- Then, deploy with `firebase deploy --only functions`.
+  - For testing, run the following commands
+
+```sh
+firebase emulators:start
+cd functions
+npm run test:algolia
+```
+
+- Then, you need to add(or update) ALGOLIA_APP_ID(Application ID), ALGOLIA_SEARCH_KEY(Search Only Api Key), ALGOLIA_INDEX_NAME in Firestore `settings/app` document.
   Optionally, you can put the settings inside `FireFlutter.init()`.
 - Algolia free account give you 10,000 free search every months. This is good enough for small sized projects.
 
@@ -1791,3 +1818,7 @@ It's know to be a bug of Flutter and image_picker.
 If you see error like below, check if you have properly set Firestore rules and indexes.
 
 `[cloud_firestore/failed-precondition] Operation was rejected because the system is not in a state required for the operation's execution. If performing a query, ensure it has been indexed via the Firebase console.`
+
+## After ff.editPost or ff.editComment, nothing happens?
+
+Check Internet connectivity. And fireflutter works in offline. So, even though there is no Internet, posting would works. If you want to continue without Internet, you shuold `await`.
