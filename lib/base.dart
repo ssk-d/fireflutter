@@ -426,12 +426,12 @@ class Base {
       }
 
       /// If the post owner has not subscribed to new comments under his post, then don't send notification.
-      if (uid == post['uid'] && publicData[notifyCommentsUnderMyPost] != true) {
+      if (uid == post['uid'] && publicData[notifyPost] != true) {
         continue;
       }
 
       /// If the user didn't subscribe for comments under his comments, then don't send notification.
-      if (publicData[notifyCommentsUnderMyComment] != true) {
+      if (publicData[notifyComment] != true) {
         continue;
       }
       uidsForNotification.add(uid);
@@ -628,8 +628,8 @@ class Base {
     if (doc == null) {
       await updateProfile({}, meta: {
         'public': {
-          notifyCommentsUnderMyPost: true,
-          notifyCommentsUnderMyComment: true,
+          notifyPost: true,
+          notifyComment: true,
         },
       });
     }

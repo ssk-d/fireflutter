@@ -157,8 +157,8 @@ class FireFlutter extends Base {
     /// Notification for
     Map<String, Map<String, dynamic>> defaultMeta = {
       'public': {
-        notifyCommentsUnderMyPost: true,
-        notifyCommentsUnderMyComment: true,
+        notifyPost: true,
+        notifyComment: true,
       }
     };
 
@@ -799,7 +799,13 @@ class FireFlutter extends Base {
     return searchResults;
   }
 
+  /// Gets user's public document as map
+  ///
+  /// Returns empty Map if there is no data or document does not exists.
+  /// `/users/{uid}/meta/public` document would alway exists but just in case
+  /// it does't exist, it return empty Map.
   Future<Map<String, dynamic>> userPublicData() async {
-    return (await myPublicDoc.get()).data();
+    final Map<String, dynamic> data = (await myPublicDoc.get()).data();
+    return data == null ? {} : data;
   }
 }

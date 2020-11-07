@@ -19,10 +19,10 @@ enum ForumStatus {
 }
 
 class NotificationOptions {
-  static String notifyCommentsUnderMyPost = 'notification_post';
-  static String notifyCommentsUnderMyComment = 'notification_comment';
+  static String notifyCommentsUnderMyPost = 'notifyPost';
+  static String notifyCommentsUnderMyComment = 'notifyComment';
 
-  /// "notification_post_" + category
+  /// "notifyPost_" + category
   static String post(String category) {
     return notifyCommentsUnderMyPost + '_' + category;
   }
@@ -33,10 +33,8 @@ class NotificationOptions {
 }
 
 /// For short
-final String notifyCommentsUnderMyPost =
-    NotificationOptions.notifyCommentsUnderMyPost;
-final String notifyCommentsUnderMyComment =
-    NotificationOptions.notifyCommentsUnderMyComment;
+final String notifyPost = NotificationOptions.notifyCommentsUnderMyPost;
+final String notifyComment = NotificationOptions.notifyCommentsUnderMyComment;
 
 typedef Render = void Function(RenderType x);
 const ERROR_SIGNIN_ABORTED = 'ERROR_SIGNIN_ABORTED';
