@@ -338,11 +338,12 @@ $ npm test:algolia
 - Do [Create Firestore Database](#create-firestore-database)
 - Do [Firestore security rules](#firestore-security-rules)
 - Do [Cloud Functions Setup](#cloud-functions-setup)
+- Do [Android Setup](#android-setup) and [iOS Setup](#ios-setup)
 - Go to Authentication => Sign-in Method
 - Click `Enable/Password` (without Email link).
 - It is your choice weather you would let users to register by their email and password or not. But for installation test, just enable it.
 
-- Refer [Firebase Authentication](https://firebase.google.com/docs/auth) and [FlutterFire Social Authenticatino](https://firebase.flutter.dev/docs/auth/social) for details.
+- Refer [Firebase Authentication](https://firebase.google.com/docs/auth) and [FlutterFire Social Authentication](https://firebase.flutter.dev/docs/auth/social) for details.
 
 ## Create Flutter project
 
