@@ -1435,6 +1435,16 @@ If you are following the path of how to create a post, list posts, and edit post
 ## Push Notification
 
 - FireFlutter comes with `Push Notification functionality`. It is disable by default.
+
+- When user registers, the settings of receiving message for new comment under my post or comment will be enabled by default.
+
+- When the app boots the device will record its `push notification token` to Firestore and subscribe to `allTopic`.
+
+  - This means, when you released your app without push notification enabled at first,
+  - Then, you enabled push notification setting and republished, the app, then, will only begin to save `push notification token` to Firebase and subscribe to `allTopic` after re-install with the setting.
+  - But, all users had subscribed to `notify new comment unber my post` and `notify new comment under my comment` already. So, users no need to do anything to receive messages of new comment.
+
+- Do [Push Notification Setup](#push-notification-setup)
 - To enable push notification you must set `enableNotification: true` on main in `FireFlutter init()`.
 - Once enabled it will ask the user if they want to receive push notification in iOS.
 - For android it was done automatically.
@@ -1476,27 +1486,27 @@ If you are following the path of how to create a post, list posts, and edit post
 - Listening to incoming notification.
 
 ```dart
-  void initState() {
-    super.initState();
+void initState() {
+  super.initState();
 
-    ff.init(
-        enableNotification: true,
-        firebaseServerToken: "AAAAj...bM:APA91....ist2N........AAA"
+  ff.init(
+      enableNotification: true,
+      firebaseServerToken: "AAAAj...bM:APA91....ist2N........AAA"
+    );
+
+  ff.notification.listen(
+        (x) {
+          Map<dynamic, dynamic> notification = x['notification'];
+          Map<dynamic, dynamic> data = x['data'];
+          NotificationType type = x['type'];
+          if (type == NotificationType.onMessage) {
+            // Display or Alert the notification message
+          } else {
+            // Move to different Screen
+          }
+        },
       );
-
-    ff.notification.listen(
-          (x) {
-            Map<dynamic, dynamic> notification = x['notification'];
-            Map<dynamic, dynamic> data = x['data'];
-            NotificationType type = x['type'];
-            if (type == NotificationType.onMessage) {
-              // Display or Alert the notification message
-            } else {
-              // Move to different Screen
-            }
-          },
-        );
-  }
+}
 ```
 
 - Sending push notification
@@ -1505,45 +1515,45 @@ If you are following the path of how to create a post, list posts, and edit post
   - Providing `tokens` as list of string will send to list of Device provided.
 
 ```dart
-      RaisedButton(
-        onPressed: () async {
-            ff.sendNotification(
-              'title message only',
-              'test body message',
-              id: '0X1upoaLklWc2Z07dsbn',
-              screen: '/forumView',
-              token: 'Replace DeviceToken here',
-            );
-          });
-        },
-        child: Text('Send Notification to Token.'),
-      ),
-      RaisedButton(
-        onPressed: () async {
-            ff.sendNotification(
-              'title message only',
-              'test body message',
-              id: '0X1upoaLklWc2Z07dsbn',
-              screen: '/forumView',
-              topic: ff.allTopic,
-            );
-          });
-        },
-        child: Text('Send Notification to topic.'),
-      ),
-      RaisedButton(
-        onPressed: () async {
-            ff.sendNotification(
-              'title message only',
-              'test body message',
-              id: '0X1upoaLklWc2Z07dsbn',
-              screen: '/forumView',
-              tokens: ['Device Token', 'Another Device Token'],
-            );
-          });
-        },
-        child: Text('Send Notification to multiple tokens.'),
-      ),
+RaisedButton(
+  onPressed: () async {
+      ff.sendNotification(
+        'title message only',
+        'test body message',
+        id: '0X1upoaLklWc2Z07dsbn',
+        screen: '/forumView',
+        token: 'Replace DeviceToken here',
+      );
+    });
+  },
+  child: Text('Send Notification to Token.'),
+),
+RaisedButton(
+  onPressed: () async {
+      ff.sendNotification(
+        'title message only',
+        'test body message',
+        id: '0X1upoaLklWc2Z07dsbn',
+        screen: '/forumView',
+        topic: ff.allTopic,
+      );
+    });
+  },
+  child: Text('Send Notification to topic.'),
+),
+RaisedButton(
+  onPressed: () async {
+      ff.sendNotification(
+        'title message only',
+        'test body message',
+        id: '0X1upoaLklWc2Z07dsbn',
+        screen: '/forumView',
+        tokens: ['Device Token', 'Another Device Token'],
+      );
+    });
+  },
+  child: Text('Send Notification to multiple tokens.'),
+),
 ```
 
 ### Notification Settings for User
@@ -1552,17 +1562,15 @@ Push notification is one kind of basic functionality that all apps should have. 
 
 - By default, all users had subscribed to `notify new comment unber my post` and `notify new comment under my comment` when they registered.
 
-  - They can turn it off in settings page. (And you have to implement the settings.)
+  - They can turn it off in settings page. You have to implement the settings screen. See [sample app's settings branch](https://github.com/thruthesky/fireflutter_sample_app/tree/settings) for the code.
 
-- When app boots the device will record its `push notification token` to Firestore and subscribe to `allTopic`.
-
-  - This means, when you released your app without push notification enabled at first,
-  - Then, you decided to enable push notification, the app will only begin to save `push notification token` to Firebase and subscribe to `allTopic` after the setting has enabled.
-  - But, all users had subscribed to `notify new comment unber my post` and `notify new comment under my comment` already. So, users no need to do anything to receive messages.
-
--
-
-When user registers,
+- To test,
+  - Run app in device A and login with user A and Run app in device B and login with user B
+  - User A creates a post
+  - User B creates a comment under the post
+  - And A will get a push notificaiton.
+  - Now, user A creates a comment under the comment of User B.
+  - Then, user B will get a push notificaiton.
 
 ## Social Login
 
