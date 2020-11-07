@@ -1,6 +1,10 @@
 part of './fireflutter.dart';
 
 class Base {
+  /// Check if Firebase has initialized.
+  bool isFirebaseInitialized = false;
+
+  /// Fires after Firebase has initialized or if already initialized.
   BehaviorSubject<bool> firebaseInitialized = BehaviorSubject.seeded(false);
 
   /// Default topic that all users(devices) will subscribe to
@@ -36,20 +40,27 @@ class Base {
   /// ```
   Stream<User> authStateChanges;
 
-  /// User document at `/users/{uid}`
+  /// Firebase User instance
   ///
   /// Attention! [user] may not immediately be available after instantiating
   /// `FireFlutter` since [user] is only available after `authStateChanges`.
-  /// And `authStateChanges` produce a `StreamSubscription` which should be
+  /// And `authStateChanges` requires `StreamSubscription` which should be
   /// unsubscribed when it does not needed anymore.
-  /// For this reason, it is recommended to instantiating only once in global
-  /// space of the app's runtime.
+  /// For this reason, it is not recommended to instantiate more than once
+  /// instance of `FireFlutter`. You should create only one instance of
+  /// `FireFlutter` and keep it as global variable and share it on all
+  /// the runtime.
   ///
   /// This is firebase `User` object and it can be used as below.
   /// ```
   /// ff.user.updateProfile(displayName: nicknameController.text);
   /// ```
-  User get user => FirebaseAuth.instance.currentUser;
+  User get user {
+    if (isFirebaseInitialized)
+      return FirebaseAuth.instance.currentUser;
+    else
+      return null;
+  }
 
   /// User document data.
   Map<String, dynamic> userData = {};
@@ -136,7 +147,8 @@ class Base {
   initFirebase() {
     // WidgetsFlutterBinding.ensureInitialized();
     return Firebase.initializeApp().then((firebaseApp) {
-      firebaseInitialized.add(true);
+      isFirebaseInitialized = true;
+      firebaseInitialized.add(isFirebaseInitialized);
       FirebaseFirestore.instance.settings =
           Settings(cacheSizeBytes: Settings.CACHE_SIZE_UNLIMITED);
 
@@ -397,7 +409,7 @@ class Base {
       if (uids.indexOf(c['uid']) == -1) uids.add(c['uid']);
     }
 
-    String topicKey = 'notification_comment_' + post['category'];
+    String topicKey = NotificationOptions.comment(post['category']);
 
     // Only get uid that will recieve notification
     for (String uid in uids) {
@@ -414,12 +426,12 @@ class Base {
       }
 
       /// If the post owner has not subscribed to new comments under his post, then don't send notification.
-      if (uid == post['uid'] && publicData['notification_post'] != true) {
+      if (uid == post['uid'] && publicData[notifyCommentsUnderMyPost] != true) {
         continue;
       }
 
       /// If the user didn't subscribe for comments under his comments, then don't send notification.
-      if (publicData['notification_comment'] != true) {
+      if (publicData[notifyCommentsUnderMyComment] != true) {
         continue;
       }
       uidsForNotification.add(uid);
@@ -616,8 +628,8 @@ class Base {
     if (doc == null) {
       await updateProfile({}, meta: {
         'public': {
-          "notification_post": true,
-          "notification_comment": true,
+          notifyCommentsUnderMyPost: true,
+          notifyCommentsUnderMyComment: true,
         },
       });
     }
