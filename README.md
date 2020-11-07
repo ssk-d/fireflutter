@@ -55,7 +55,7 @@ A free, open source, rapid development flutter package to build social apps, com
       - [Additional Phone Auth Setup for iOS](#additional-phone-auth-setup-for-ios)
   - [Image Picker Setup](#image-picker-setup)
     - [Image Picker Setup for iOS](#image-picker-setup-for-ios)
-  - [Localization Setup](#localization-setup)
+  - [I18N Setup](#i18n-setup)
   - [Push Notification Setup](#push-notification-setup)
     - [Additional Android Setup](#additional-android-setup)
     - [Additional iOS Setup](#additional-ios-setup)
@@ -103,7 +103,7 @@ A free, open source, rapid development flutter package to build social apps, com
   - [External Logins](#external-logins)
     - [Kakao Login](#kakao-login)
   - [Phone Verification](#phone-verification)
-- [I18N](#i18n)
+- [Language Settings, I18N](#language-settings-i18n)
 - [Settings](#settings)
 - [Trouble Shotting](#trouble-shotting)
   - [Stuck in registration](#stuck-in-registration)
@@ -118,7 +118,6 @@ A free, open source, rapid development flutter package to build social apps, com
 # TODOs
 
 - Sample code for search posts and comments with Algolia
-- Adding sample code for live change of user language.
 
 # Features
 
@@ -733,11 +732,11 @@ Example)
 <string>$(EXECUTABLE_NAME) need access to Microphone.</string>
 ```
 
-## Localization Setup
+## I18N Setup
 
-If an app serves only for one nation with one language, the app may not need localization. But if the app serves for many nations with many languages, then the app should have localization. The app should display Chinese language for Chinese people, Korean langauge for Korean people, Japanese for Japanese people and so on.
+If an app serves only for one nation with one language, the app may not need localization. But if the app serves for many nations with many languages, then the app should have internationalization. The app should display Chinese language for Chinese people, Korean langauge for Korean people, Japanese for Japanese people and so on.
 
-You can set different texts of different languages on menu, buttons, screens.
+You can set texts on menu, buttons, screens in different languages.
 
 Android platform does not need to have any settings.
 
@@ -758,7 +757,9 @@ For iOS,
 
 - Create `translations.dart` file in the same folder of `main.dart`
   - and add the following code.
-  - In the code below, we add only English and Korean. You may add more languages and its translations.
+  - In the code below, we add only English and Korean. You may add more languages and translations.
+
+Example of translations.dart
 
 ```dart
 import 'package:get/get.dart';
@@ -795,12 +796,27 @@ class AppTranslations extends Translations {
 ```
 
 - Open main.dart
-  - Add the following into GetMaterialApp
-  - The `locale: Locale('ko')` is the default language to display texts in.
+
+- You can initialize fireflutter like below. It will set the default language when the user didn't choose his language yet.
 
 ```dart
-locale: Locale('ko'),
-translations: AppTranslations(),
+await ff.init(
+  settings: {
+    'app': {
+      'default-language': 'ko',
+    }
+  },
+  translations: translations,
+);
+```
+
+- Add `Locale(ff.userLanguage)` to GetMaterialApp() like below. `ff.userLanguage` has the user language.
+
+```dart
+GetMaterialApp(
+  locale: Locale(ff.userLanguage),
+  translations: AppTranslations(),
+)
 ```
 
 - Open home.screen.dart
@@ -813,29 +829,41 @@ Scaffold(
   ),
 ```
 
-- If you want to set device language as the display langauge, you can do so like below.
-  - If `ui.window.locale` is not available, it will fall back to Korean.
+- When user change his language, the app should change the text in user's language.
+
+Display selection box like below
 
 ```dart
-import 'dart:ui' as ui;
-// ...
-@override
-Widget build(BuildContext context) {
-  return GetMaterialApp(
-    locale: ui.window.locale ?? Locale('ko'),
-    fallbackLocale: Locale('ko'),
+DropdownButton<String>(
+  value: ff.userLanguage,
+  items: [
+    DropdownMenuItem(value: 'ko', child: Text('Korean')),
+    DropdownMenuItem(value: 'en', child: Text('English')),
+  ],
+  onChanged: (String value) {
+    ff.updateProfile({'language': value});
+  },
+),
 ```
 
-- User may want to choose what language they want to use.
-  - Display selection box and when a user choose his langauge, then update the language like below.
+Then update the language like below.
 
 ```dart
-Get.updateLocale(Locale('ko'));
+class _MainAppState extends State<MainApp> {
+  @override
+  void initState() {
+    super.initState();
+    ff.translationsChange.listen((x) => setState(() => updateTranslations(x)));
+    ff.userChange.listen((x) {
+      setState(() {
+        Get.updateLocale(Locale(ff.userLanguage));
+      });
+    });
+    // ...
 ```
 
-- Updating translations in real time.
-  - You can code like below in `initState()` of `MainApp`.
-  - It listens for the changes in Firestore translations collection and update the screen with the translations.
+- To update translations in real time,
+  - You can code like below in `initState()` of `MainApp`. It listens for the changes in Firestore translations collection and update the screen with the translations.
 
 ```dart
 ff.translationsChange.listen((x) => setState(() => updateTranslations(x)));
@@ -1699,22 +1727,14 @@ void main() async {
 
 - See [sample app's phone verification branch](https://github.com/thruthesky/fireflutter_sample_app/tree/phone-verification) for codes. Again, it is fully customizable.
 
-# I18N
+# Language Settings, I18N
 
-- The app's i18n is managed by `GetX` i18n feature.
+`I18n` means to display different languages for different users. For instance, App will display texts in Korean for Korean people.
 
-- If you want to add another language,
+We decided to adopt `GetX i18n` feature. See [GetX Internationalization](https://pub.dev/packages/get#internationalization) for details
 
-  - Add the language code in `Info.plist`
-  - Add the language on `translations`
-  - Add the lanugage on `FireFlutter.init()`
-  - Add the language on `FireFlutter.settingsChange`
-  - Add the language on Firebase `settings` collection.
-
-- Default i18n translations(texts) can be set through `FireFlutter` initializatin and is overwritten by the `translations` collection of Firebase.
-  The Firestore is working offline mode, so overwriting with Firestore translation would happen so quickly.
-
-- You may optionally omit `translations` in `FireFlutter.init()` if you are going to set `translations` in `GetMaterialApp` since the same initial translated texts will be merged into.
+- If you want to add a language, do [I18N Setup](#i18n-setup)
+- See [sample app's language settings branch](https://github.com/thruthesky/fireflutter_sample_app/tree/language-settings) for the code.
 
 # Settings
 
