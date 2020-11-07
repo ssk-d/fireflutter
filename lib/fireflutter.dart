@@ -2,6 +2,7 @@ library fireflutter;
 
 import 'dart:convert';
 import 'dart:io';
+import 'dart:ui' as ui;
 import 'dart:async';
 import 'package:dio/dio.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -807,5 +808,26 @@ class FireFlutter extends Base {
   Future<Map<String, dynamic>> userPublicData() async {
     final Map<String, dynamic> data = (await myPublicDoc.get()).data();
     return data == null ? {} : data;
+  }
+
+  /// Return user language
+  ///
+  /// If the user has set(choose) his language setting, then return it.
+  /// Or if admin set default language, then return it.
+  /// Or if the device has language, then return it.
+  /// Or return 'en' as English.
+  String get userLanguage {
+    if (loggedIn &&
+        userData != null &&
+        userData['language'] != null &&
+        userData['language'] != "") {
+      return userData['language'];
+    } else if (appSetting('default-language') != null) {
+      return appSetting('default-language');
+    } else if (ui.window.locale != null) {
+      return ui.window.locale.languageCode;
+    } else {
+      return 'en';
+    }
   }
 }
