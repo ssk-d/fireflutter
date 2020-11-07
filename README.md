@@ -93,6 +93,7 @@ A free, open source, rapid development flutter package to build social apps, com
     - [Voting](#voting)
       - [Logic for Vote](#logic-for-vote)
     - [Comment crud, photo upload/update, vote like/dislike](#comment-crud-photo-uploadupdate-vote-likedislike)
+  - [Search](#search)
   - [Push Notification](#push-notification)
     - [Notification Settings for User](#notification-settings-for-user)
   - [Social Login](#social-login)
@@ -1487,6 +1488,11 @@ The logic of the vote should like below;
 If you are following the path of how to create a post, list posts, and edit post, then you would have be familiar with fireflutter. If not, please practice more.
 
 [Comment crud branch of sample app](https://github.com/thruthesky/fireflutter_sample_app/tree/comment-crud) has all the source code. The code is a bit long since it has comment create form, comment list, photo upload, buttons. So, the codes are splitted into small sized of widgets.
+
+## Search
+
+- Do [Algolia Setup](#algolia-setup)
+- See [sample app's algolia branch](https://github.com/thruthesky/fireflutter_sample_app/tree/algolia) for the code.
 
 ## Push Notification
 
