@@ -782,6 +782,8 @@ class FireFlutter extends Base {
   Future<List<Map<String, dynamic>>> search(String keyword,
       {int hitsPerPage = 10, int pageNo = 0}) async {
     String algoliaIndexName = appSetting('ALGOLIA_INDEX_NAME');
+    if (algoliaIndexName == null || algoliaIndexName == "")
+      throw 'ALGOLIA_INDEX_NAME is not set';
     AlgoliaQuery query = algolia.instance
         .index(algoliaIndexName)
         .setPage(pageNo)
