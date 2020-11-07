@@ -1,3 +1,8 @@
+## [0.0.22] - push notification setting change. user language setting.
+
+- change. push notification settings has been changed.
+- language settings has been simplified by adding `userLanguage` getter.
+
 ## [0.0.21] - cancellation on user data
 
 - fix on listening on user data. It produced error on user logout due to improper way of canncellation the subscription.
