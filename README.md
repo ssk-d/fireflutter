@@ -95,6 +95,7 @@ A free, open source, rapid development flutter package to build social apps, com
       - [Logic for Vote](#logic-for-vote)
     - [Comment crud, photo upload/update, vote like/dislike](#comment-crud-photo-uploadupdate-vote-likedislike)
   - [Push Notification](#push-notification)
+    - [Notification Settings for User](#notification-settings-for-user)
   - [Social Login](#social-login)
     - [Google Sign-in](#google-sign-in)
     - [Facebook Sign In](#facebook-sign-in)
@@ -110,6 +111,7 @@ A free, open source, rapid development flutter package to build social apps, com
   - [sign_in_failed](#sign_in_failed)
   - [operation-not-allowed](#operation-not-allowed)
   - [App crashes on second file upload](#app-crashes-on-second-file-upload)
+  - [Firestore rules and indexes](#firestore-rules-and-indexes)
 
 <!-- /TOC -->
 
@@ -1436,8 +1438,8 @@ If you are following the path of how to create a post, list posts, and edit post
 - To enable push notification you must set `enableNotification: true` on main in `FireFlutter init()`.
 - Once enabled it will ask the user if they want to receive push notification in iOS.
 - For android it was done automatically.
-- By default it subscribe to `allTopic`. So you can use this topic to send to all users.
-- It also subscribe to `notification_post` when new comment is created under the user post it will receive notification.
+- By default it subscribes to `allTopic`. So you can use this topic to send to all users.
+- It also subscribes to `notification_post` when new comment is created under the user post it will receive notification.
 - And `notification_comment` when a comment is created under the user comment it will receive notification also.
 - Push Notification includes
 
@@ -1543,6 +1545,24 @@ If you are following the path of how to create a post, list posts, and edit post
         child: Text('Send Notification to multiple tokens.'),
       ),
 ```
+
+### Notification Settings for User
+
+Push notification is one kind of basic functionality that all apps should have. Hence, we put some push notification logic inside fireflutter. Once the app has enabled push notification settings, it will automactially activate push ntoification with following;
+
+- By default, all users had subscribed to `notify new comment unber my post` and `notify new comment under my comment` when they registered.
+
+  - They can turn it off in settings page. (And you have to implement the settings.)
+
+- When app boots the device will record its `push notification token` to Firestore and subscribe to `allTopic`.
+
+  - This means, when you released your app without push notification enabled at first,
+  - Then, you decided to enable push notification, the app will only begin to save `push notification token` to Firebase and subscribe to `allTopic` after the setting has enabled.
+  - But, all users had subscribed to `notify new comment unber my post` and `notify new comment under my comment` already. So, users no need to do anything to receive messages.
+
+-
+
+When user registers,
 
 ## Social Login
 
@@ -1736,3 +1756,9 @@ This error may happens when you didn't enable the sign-in method on Firebase Aut
 ## App crashes on second file upload
 
 It's know to be a bug of Flutter and image_picker.
+
+## Firestore rules and indexes
+
+If you see error like below, check if you have properly set Firestore rules and indexes.
+
+`[cloud_firestore/failed-precondition] Operation was rejected because the system is not in a state required for the operation's execution. If performing a query, ensure it has been indexed via the Firebase console.`

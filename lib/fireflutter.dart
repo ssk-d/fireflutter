@@ -153,10 +153,12 @@ class FireFlutter extends Base {
     await userDoc.set(data);
 
     /// Default meta
+    ///
+    /// Notification for
     Map<String, Map<String, dynamic>> defaultMeta = {
       'public': {
-        "notification_post": true,
-        "notification_comment": true,
+        notifyCommentsUnderMyPost: true,
+        notifyCommentsUnderMyComment: true,
       }
     };
 
@@ -393,7 +395,7 @@ class FireFlutter extends Base {
         data['content'],
         screen: '/forumView',
         id: doc.id,
-        topic: "notification_post_" + data['category'],
+        topic: NotificationOptions.post(data['category']),
       );
     }
   }
