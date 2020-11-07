@@ -1,3 +1,8 @@
+## [0.0.23] - search
+
+- document update.
+- algolia search settings.
+
 ## [0.0.22] - push notification setting change. user language setting.
 
 - change. push notification settings has been changed.
