@@ -426,12 +426,12 @@ class Base {
       }
 
       /// If the post owner has not subscribed to new comments under his post, then don't send notification.
-      if (uid == post['uid'] && publicData[notifyCommentsUnderMyPost] != true) {
+      if (uid == post['uid'] && publicData[notifyPost] != true) {
         continue;
       }
 
       /// If the user didn't subscribe for comments under his comments, then don't send notification.
-      if (publicData[notifyCommentsUnderMyComment] != true) {
+      if (publicData[notifyComment] != true) {
         continue;
       }
       uidsForNotification.add(uid);
@@ -559,6 +559,10 @@ class Base {
         .doc(user.uid);
   }
 
+  DocumentReference get myDoc => usersCol.doc(user.uid);
+  DocumentReference get myPublicDoc =>
+      usersCol.doc(user.uid).collection('meta').doc('public');
+
   /// Returns the order string of the new comment
   ///
   /// @TODO: Move this method to `functions.dart`.
@@ -624,8 +628,8 @@ class Base {
     if (doc == null) {
       await updateProfile({}, meta: {
         'public': {
-          notifyCommentsUnderMyPost: true,
-          notifyCommentsUnderMyComment: true,
+          notifyPost: true,
+          notifyComment: true,
         },
       });
     }
