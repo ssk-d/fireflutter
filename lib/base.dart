@@ -56,9 +56,9 @@ class Base {
   /// ff.user.updateProfile(displayName: nicknameController.text);
   /// ```
   User get user {
-    if (isFirebaseInitialized)
+    if (isFirebaseInitialized) {
       return FirebaseAuth.instance.currentUser;
-    else
+    } else
       return null;
   }
 
@@ -626,6 +626,8 @@ class Base {
 
     final Map<String, dynamic> doc = await profile();
     if (doc == null) {
+      /// first time registration
+      await onRegister(user);
       await updateProfile({}, meta: {
         'public': {
           notifyPost: true,
@@ -641,6 +643,16 @@ class Base {
   Future<void> onLogin(User user) async {
     await updateToken(user);
     await updateUserSubscription(user);
+  }
+
+  /// First time registration
+  ///
+  /// This method will be called on Email
+  Future<void> onRegister(User user) async {
+    await updateProfile({
+      'createdAt': FieldValue.serverTimestamp(),
+      'updatedAt': FieldValue.serverTimestamp(),
+    });
   }
 
   /// Pick an image from Camera or Gallery,
@@ -807,7 +819,9 @@ class Base {
   ///
   /// After update, `user` will have updated `displayName` and `photoURL`.
   ///
-  /// TODO Make a model(interface type)
+  /// Note. Whenever this method is called, it updates [updatedAt], which means
+  /// it will always update user document and fires [userChange] event.
+  ///
   Future<void> updateProfile(
     Map<String, dynamic> data, {
     Map<String, Map<String, dynamic>> meta,
@@ -826,6 +840,7 @@ class Base {
 
     data.remove('displayName');
     data.remove('photoURL');
+    data['updatedAt'] = FieldValue.serverTimestamp();
     await userDoc.set(data, SetOptions(merge: true));
 
     await updateUserMeta(meta);

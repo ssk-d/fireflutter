@@ -152,6 +152,7 @@ class FireFlutter extends Base {
 
     // Set user extra information
     await userDoc.set(data);
+    await onRegister(userCredential.user);
 
     /// Default meta
     ///
