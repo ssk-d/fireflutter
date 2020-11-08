@@ -161,6 +161,12 @@ class Base {
   /// Update user meta data.
   ///
   /// It is merging with existing data.
+  ///
+  /// ```dart
+  /// ff.updateUserMeta({
+  ///   'public': { notifyPost: value },
+  /// });
+  /// ```
   Future<void> updateUserMeta(Map<String, Map<String, dynamic>> meta) async {
     // Push default meta to user meta
     if (meta != null) {
@@ -170,6 +176,17 @@ class Base {
         await metaCol.doc(key).set(meta[key], SetOptions(merge: true));
       }
     }
+  }
+
+  /// Update user public data in `/users/{uid}/meta/public` document.
+  ///
+  /// [name] is the document property name
+  Future<void> updateUserPublic(String name, dynamic value) {
+    return updateUserMeta({
+      'public': {
+        name: value,
+      },
+    });
   }
 
   /// Update push notification token to Firestore

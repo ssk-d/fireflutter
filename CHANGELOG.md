@@ -1,3 +1,7 @@
+## [0.0.25] - updateUserPublic
+
+- `updateUserPublic` method is added to update user public data.
+
 ## [0.0.24] - createdAt, updatedAt on user document
 
 - When user registers, `createdAt` and `updatedAt` will be added to user document.
