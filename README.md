@@ -101,7 +101,8 @@ A free, open source, rapid development flutter package to build social apps, com
     - [Comment crud, photo upload/update, vote like/dislike](#comment-crud-photo-uploadupdate-vote-likedislike)
   - [Search](#search)
   - [Push Notification](#push-notification)
-    - [Notification Settings for User](#notification-settings-for-user)
+    - [Notification Settings for the Reactions](#notification-settings-for-the-reactions)
+    - [Notification Settings for Forum Subscription](#notification-settings-for-forum-subscription)
   - [Social Login](#social-login)
     - [Google Sign-in](#google-sign-in)
     - [Facebook Sign In](#facebook-sign-in)
@@ -111,6 +112,8 @@ A free, open source, rapid development flutter package to build social apps, com
   - [Phone Verification](#phone-verification)
 - [Language Settings, I18N](#language-settings-i18n)
 - [Settings](#settings)
+  - [Phone number verification](#phone-number-verification)
+  - [Forum Settings](#forum-settings)
 - [Integration Test](#integration-test)
 - [Trouble Shotting](#trouble-shotting)
   - [Stuck in registration](#stuck-in-registration)
@@ -555,7 +558,7 @@ Most of interactive apps need Social login like Google, Apple, Facebook and the 
 - Click save.
 
 - It's important to know that you need to generate two release SHA1 keys for production app. One for upload SHA1, the other for deploy SHA1.
-- [Facebook Sign In Setup for Android](#facebook-sign-in-setup-for-android) is required to sign in with Google (in our case). Since Facebook login package relies on Google sign in package, when you do Google sign in, you need to set Fafcebook sign in setting also.
+- [Facebook Sign In Setup for Android](#facebook-sign-in-setup-for-android) is required to sign in with Google (in our case). Since Facebook login package is installed and relies on Google sign in package, it will produce missing plugin error when you try Google sign in. You can by pass Facebook settings as described in trouble shooting.
 
 - To see if this setting works, try the code in [Google Sign-in](#google-sign-in) section.
 
@@ -1634,7 +1637,7 @@ RaisedButton(
 ),
 ```
 
-### Notification Settings for User
+### Notification Settings for the Reactions
 
 Push notification is one kind of basic functionality that all apps should have. Hence, we put some push notification logic inside fireflutter. Once the app has enabled push notification settings, it will automactially activate push ntoification with following;
 
@@ -1649,6 +1652,14 @@ Push notification is one kind of basic functionality that all apps should have. 
   - And A will get a push notificaiton.
   - Now, user A creates a comment under the comment of User B.
   - Then, user B will get a push notificaiton.
+
+### Notification Settings for Forum Subscription
+
+A user can subscribe a forum for new post or comment.
+
+If you want to enable the forum subscription, then add option button on each forum list.
+
+- See [forum-subscription branch](https://github.com/thruthesky/fireflutter_sample_app/tree/forum-subscription) for the code.
 
 ## Social Login
 
@@ -1791,9 +1802,36 @@ We decided to adopt `GetX i18n` feature. See [GetX Internationalization](https:/
 - Default settings can be set through `FireFlutter` initialization and is overwritten by `settings` collection of Firebase.
   The Firestore is working offline mode, so overwriting with Firestore translation would happen so quickly.
 
-- If `show-phone-verification-after-login` is set to true, then users who do not have their phone numbers will be redirected to phone verification page.
-  - Developers can customize it by putting 'skip' button.
-- If `create-phone-verified-user-only` is set to true, only the user who verified thier phone numbers can create posts and comments.
+## Phone number verification
+
+We recommend you to follow our logic of phone number verification. You need to copy the code from sample app. You can customise everything byself, though.
+
+- If `verify-after-register` in `/settings/app/{verify-after-register: boolean }` is set to true, then newly registered users will be directed to phone verification screen.
+
+- If `verify-after-login` in `/settings/app/{verify-after-login: boolean }` is set to true, then unverified users will be directed to phone verification screen.
+
+- If `force-verification` is set to true, then all user must verify to continue using app.
+
+- If `block-non-verified-users-to-create` is set to true, non verified users cannot create post or comment.
+
+## Forum Settings
+
+All the settings of forum are overwritable by `/settings` collection in real time.
+
+For instance, to get the settings of showing like or dislike buttons, the app will
+
+- look for settings in the forum category at `/settings/{category name}` document, and if there is no settings about it
+- then, look for settings in the forum at `/settings/forum` document, and if there is no settings about it,
+- then, look for settings in `ff.init(settings: { ... })`, and if there is no settings about it,
+- then, it will use the hard coded setting in fireflutter.
+
+The `/settings/forum` has global settings of all forum categories and can be overwritten by each category setting. For instance, the settings are set like `/settings/forum/{like: true}` and `/settings/qna/{like: false}`. Then like button will appear on all forum categories except qna category.
+
+The settings are
+
+- like: boolean
+- dislike: boolean
+- no-of-posts-per-fetch: int
 
 <!-- - `GcpApiKey` is the GCP ApiKey and if you don't know what it is, then here is a simple tip. `GCP ApiKey` is a API Key to access GCP service and should be kept in secret. `Firebase` is a part of GCP Service and GCP ApiKey is needed to use Firebase functionality. And FireFlutter needs this key to access GCP service like phone number verification.
   - To get `GcpApiKey`,
