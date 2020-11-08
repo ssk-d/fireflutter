@@ -12,10 +12,8 @@ A free, open source, rapid development flutter package to build social apps, com
 
 # TODOs
 
-- add more sample code on integration test
 - push notification settings sampe code for each forum.
-- solve some of git issues.
-- Upload youtube of speed coding tutorial on each settings and insert it into readme markdown.
+- Upload youtube of speed coding tutorial on each settings and insert it into readme markdown with a default image and when clicked open the youtube url.
 
 # Table of Contents
 
@@ -117,6 +115,8 @@ A free, open source, rapid development flutter package to build social apps, com
 - [Trouble Shotting](#trouble-shotting)
   - [Stuck in registration](#stuck-in-registration)
   - [MissingPluginException google_sign_in](#missingpluginexception-google_sign_in)
+    - [By passing MissingPluginException google_sign_in error](#by-passing-missingpluginexception-google_sign_in-error)
+  - [com.apple.AuthenticationServices.AuthorizationError error 1001 or if the app hangs on Apple login](#comappleauthenticationservicesauthorizationerror-error-1001-or-if-the-app-hangs-on-apple-login)
   - [sign_in_failed](#sign_in_failed)
   - [operation-not-allowed](#operation-not-allowed)
   - [App crashes on second file upload](#app-crashes-on-second-file-upload)
@@ -529,9 +529,8 @@ keytool -exportcert -alias YOUR_RELEASE_KEY_ALIAS -keystore YOUR_RELEASE_KEY_PAT
 
 ### Google Sign-in Setup
 
-Most of interactive apps need Social login like Google, Apple, Facebook and the likes. Once you put Google sign button in the app, then it is mandatory to put Apple sign in button also. Or your app will be rejected on iOS review. When you have Google and Apple
+Most of interactive apps need Social login like Google, Apple, Facebook and the likes. Once you put Google sign button in the app, then it is mandatory to put Apple sign in button also. Or your app will be rejected on iOS review. When you have Google and Apple, you would definitedly like to have Facebook login. Fireflutter has the code for these three social logins. If you want more social logins, then you need to implement it by yourself.
 
-- Do [Facebook Sign In Setup](#facebook-sign-in-setup)
 - Go to Authentication => Sign-in method
 - Click Google
 - Click Enable
@@ -556,7 +555,7 @@ Most of interactive apps need Social login like Google, Apple, Facebook and the 
 - Click save.
 
 - It's important to know that you need to generate two release SHA1 keys for production app. One for upload SHA1, the other for deploy SHA1.
-- [Facebook Sign In Setup for Android](#facebook-sign-in-setup-for-android) is required to sign in with Google (in our case).
+- [Facebook Sign In Setup for Android](#facebook-sign-in-setup-for-android) is required to sign in with Google (in our case). Since Facebook login package relies on Google sign in package, when you do Google sign in, you need to set Fafcebook sign in setting also.
 
 - To see if this setting works, try the code in [Google Sign-in](#google-sign-in) section.
 
@@ -1822,12 +1821,6 @@ And we don't do widget testing. Instead, we do integration test.
 
 - Youtube video on integration test
 
-<iframe width="560" height="315"
-src="https://www.youtube.com/embed/MUQfKFzIOeU" 
-frameborder="0" 
-allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" 
-allowfullscreen></iframe>
-
 [![IMAGE ALT TEXT HERE](https://img.youtube.com/vi/wg4yTldihh8/0.jpg)](https://www.youtube.com/watch?v=wg4yTldihh8)
 
 # Trouble Shotting
@@ -1841,6 +1834,60 @@ When `ff.register` is called, it sets data to Firestore and if Firestore is set 
 `MissingPluginException(No implementation found for method init on channel plugins.flutter.io/google_sign_in)`
 
 This error happens (at least in our case) when Flutter has google_sign_in package and facebook sign in package. If facebook sign in is depending on google_sign_in package, setting for facebok sign in is mandatory to use google_sign_in. In short, do the settings for both google sign in and facebook sign in.
+
+### By passing MissingPluginException google_sign_in error
+
+If really don't want to implement Facebook sign in or you want to skip Facebook sign in for the mean time while you are implementing Gogole sign in, then you may add the following settings. You can just put fake data on `strings.xml`.
+
+Open main/AndroidManifest.xml and update below.
+
+```xml
+<application ... android:label="@string/app_name" ...>
+```
+
+Open /android/app/src/main/res/values/strings.xml ( or create if it is not existing)
+And copy facebook_app_id and fb_login_protocol_scheme, past into the XML file like below.
+
+```xml
+<resources>
+    <string name="app_name">Your app name</string>
+    <string name="facebook_app_id">xxxxxxxxxxxxxxxxx</string>
+    <string name="fb_login_protocol_scheme">xxxxxxxxxxxxxxxxx</string>
+</resources>
+```
+
+Open android/app/src/main/AndroidManifest.xml
+Add the following uses-permission element after the application element (outside application tag)
+
+```xml
+  <uses-permission android:name="android.permission.INTERNET"/>
+```
+
+Add the following meta-data element, an activity for Facebook, and an activity and intent filter for Chrome Custom Tabs inside your application element:
+
+```xml
+<meta-data android:name="com.facebook.sdk.ApplicationId" android:value="@string/facebook_app_id"/>
+<activity android:name="com.facebook.FacebookActivity" android:configChanges=
+            "keyboard|keyboardHidden|screenLayout|screenSize|orientation" android:label="@string/app_name" />
+<activity android:name="com.facebook.CustomTabActivity" android:exported="true">
+  <intent-filter>
+    <action android:name="android.intent.action.VIEW" />
+    <category android:name="android.intent.category.DEFAULT" />
+    <category android:name="android.intent.category.BROWSABLE" />
+    <data android:scheme="@string/fb_login_protocol_scheme" />
+  </intent-filter>
+</activity>
+```
+
+## com.apple.AuthenticationServices.AuthorizationError error 1001 or if the app hangs on Apple login
+
+If you meet error message like this,
+
+`SignInWithAppleAuthorizationError(AuthorizationErrorCode.canceled, The operation couldn’t be completed. (com.apple.AuthenticationServices.AuthorizationError error 1001.))`
+
+Then, check if you have enabled Facebook login under Firebase => Sign-in method.
+
+And then, try to login with real device.
 
 ## sign_in_failed
 

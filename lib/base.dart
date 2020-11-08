@@ -768,7 +768,11 @@ class Base {
     });
   }
 
-  /// Returns vote setting
+  /// Returns boolean based on the vote setting.
+  ///
+  /// [category] is the forum category and vote can be one of
+  /// `VoteChoice.like` or `VoteChoice.dislike`.
+  /// The default value is true if it is not set.
   bool voteSetting(String category, String vote) {
     if (_settings[category] == null || _settings[category][vote] == null) {
       return _settings['forum'][vote] ?? true;
