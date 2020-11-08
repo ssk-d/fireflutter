@@ -10,11 +10,19 @@ A free, open source, rapid development flutter package to build social apps, com
 - Real time.\
   We design it to be real time when it is applied to your app. All the events like post and comment creation, voting(like, dislike), deletion would appears on all the user's phone immediately after the event.
 
+# TODOs
+
+- add more sample code on integration test
+- push notification settings sampe code for each forum.
+- solve some of git issues.
+- Upload youtube of speed coding tutorial on each settings.
+
 # Table of Contents
 
 <!-- TOC -->
 
 - [Fire Flutter](#fire-flutter)
+- [TODOs](#todos)
 - [Table of Contents](#table-of-contents)
 - [Features](#features)
 - [References](#references)
@@ -105,6 +113,7 @@ A free, open source, rapid development flutter package to build social apps, com
   - [Phone Verification](#phone-verification)
 - [Language Settings, I18N](#language-settings-i18n)
 - [Settings](#settings)
+- [Integration Test](#integration-test)
 - [Trouble Shotting](#trouble-shotting)
   - [Stuck in registration](#stuck-in-registration)
   - [MissingPluginException google_sign_in](#missingpluginexception-google_sign_in)
@@ -141,6 +150,10 @@ A free, open source, rapid development flutter package to build social apps, com
     - If a user create a comment, it will appear on other user's phone. And this goes same to all edit/delete, likes/dislikes.
   - A category of forum could be re-designed for online shopping mall purpose.
 
+- Search
+
+  - posts and comments search.
+
 - Push notifications
 
   - Admin can send push notifications to all users.
@@ -167,8 +180,9 @@ A free, open source, rapid development flutter package to build social apps, com
 # References
 
 - [FireFlutter Package](https://pub.dev/packages/fireflutter) - This package.
-- [FireFlutter Sample App](https://github.com/thruthesky/fireflutter_sample_app) - Sample flutter application.
 - [FireFlutter Firebase Project](https://github.com/thruthesky/fireflutter-firebase) - Firebase project for Firestore security rules and Functions.
+
+- [FireFlutter Sample App](https://github.com/thruthesky/fireflutter_sample_app) - Sample flutter application.
 
 # Components
 
@@ -515,6 +529,9 @@ keytool -exportcert -alias YOUR_RELEASE_KEY_ALIAS -keystore YOUR_RELEASE_KEY_PAT
 
 ### Google Sign-in Setup
 
+Most of interactive apps need Social login like Google, Apple, Facebook and the likes. Once you put Google sign button in the app, then it is mandatory to put Apple sign in button also. Or your app will be rejected on iOS review. When you have Google and Apple
+
+- Do [Facebook Sign In Setup](#facebook-sign-in-setup)
 - Go to Authentication => Sign-in method
 - Click Google
 - Click Enable
@@ -903,7 +920,7 @@ ff.translationsChange.listen((x) => setState(() => updateTranslations(x)));
 
 ```xml
 <activity>
-  ---- default configuration here -----
+  <!-- default configuration here -->
   <intent-filter>
       <action android:name="FLUTTER_NOTIFICATION_CLICK" />
       <category android:name="android.intent.category.DEFAULT" />
@@ -1790,6 +1807,18 @@ We decided to adopt `GetX i18n` feature. See [GetX Internationalization](https:/
     - Copy the Api Key on `FireFlutterApiKey`.
     - Paste it into `Firestore` => `/settings` collection => `app` document => `GcpApiKey`.
   - You may put the `GcpApiKey` in the source code (as in FireFlutter initialization) but that's not recommended. -->
+
+# Integration Test
+
+Please read [Testing Flutter apps](https://flutter.dev/docs/testing) for details about Flutter app testing.
+
+We don't do unit testing on fireflutter since its backend is Firebase and there is no doubt about Firebase's performance and quality assurance.
+
+And we don't do widget testing. Instead, we do integration test.
+
+- See [sample app's intergration-test branch](https://github.com/thruthesky/fireflutter_sample_app) for the codes.
+
+- We have tested it on Android app only since iOS app displays push notification consent box and it annoys the test.
 
 # Trouble Shotting
 
