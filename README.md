@@ -15,7 +15,7 @@ A free, open source, rapid development flutter package to build social apps, com
 - add more sample code on integration test
 - push notification settings sampe code for each forum.
 - solve some of git issues.
-- Upload youtube of speed coding tutorial on each settings.
+- Upload youtube of speed coding tutorial on each settings and insert it into readme markdown.
 
 # Table of Contents
 
@@ -1819,6 +1819,10 @@ And we don't do widget testing. Instead, we do integration test.
 - See [sample app's intergration-test branch](https://github.com/thruthesky/fireflutter_sample_app) for the codes.
 
 - We have tested it on Android app only since iOS app displays push notification consent box and it annoys the test.
+
+- Youtube video on integration test
+
+<iframe width="560" height="315" src="https://www.youtube.com/embed/wg4yTldihh8" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 
 # Trouble Shotting
 
