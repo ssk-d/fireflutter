@@ -1,4 +1,7 @@
-## [0.0.23] - search
+## [0.0.24] - createdAt, updatedAt on user document
+
+- When user registers, `createdAt` and `updatedAt` will be added to user document.
+- Whenever user updates profile, `updatedAt` will be updated and `userChange` event fires.
 
 - document update.
 - algolia search settings.
