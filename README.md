@@ -1822,7 +1822,7 @@ And we don't do widget testing. Instead, we do integration test.
 
 - Youtube video on integration test
 
-<iframe width="560" height="315" src="https://www.youtube.com/embed/wg4yTldihh8" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+[![IMAGE ALT TEXT HERE](https://img.youtube.com/vi/wg4yTldihh8/0.jpg)](https://www.youtube.com/watch?v=wg4yTldihh8)
 
 # Trouble Shotting
 
