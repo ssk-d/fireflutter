@@ -917,11 +917,7 @@ ff.translationsChange.listen((x) => setState(() => updateTranslations(x)));
 - If you dont have `google-services.json` yet, you may refer for the
   basic configuration of [Android Setup](#android-setup).
 - If you want to be notified in your app (via onResume and onLaunch) when you
-<<<<<<< HEAD
-  click the  notification on the system tray you need to include the following `intent-filter`
-=======
   click the notification on the system tray you need to include the following `intent-filter`
->>>>>>> 65b90e3a054eb7bb34c7811765716a73377025be
   under the `<activity>` tag of your `android/app/src/main/AndroidManifest.xml`.
 
 ```xml
