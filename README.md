@@ -125,6 +125,7 @@ A free, open source, rapid development flutter package to build social apps, com
   - [App crashes on second file upload](#app-crashes-on-second-file-upload)
   - [Firestore rules and indexes](#firestore-rules-and-indexes)
   - [After ff.editPost or ff.editComment, nothing happens?](#after-ffeditpost-or-ffeditcomment-nothing-happens)
+  - [flutter_image_compress error](#flutter_image_compress-error)
 
 <!-- /TOC -->
 
@@ -1958,3 +1959,18 @@ If you see error like below, check if you have properly set Firestore rules and 
 ## After ff.editPost or ff.editComment, nothing happens?
 
 Check Internet connectivity. And fireflutter works in offline. So, even though there is no Internet, posting would works. If you want to continue without Internet, you shuold `await`.
+
+## flutter_image_compress error
+
+When you meet error like below,
+
+```text
+Undefined symbols for architecture arm64:
+  "_SDImageCoderEncodeCompressionQuality", referenced from:
+      +[CompressHandler compressDataWithImage:quality:format:] in CompressHandler.o
+ld: symbol(s) not found for architecture arm64
+clang: error: linker command failed with exit code 1 (use -v to see invocation)
+```
+
+open `~/bin/flutter/.pub-cache/hosted/pub.dartlang.org/flutter_image_compress-0.7.0/ios/Classes/CompressHandler.m` file and comment out some code as described in [its Git issue](https://github.com/OpenFlutter/flutter_image_compress/issues/160).
+
