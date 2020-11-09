@@ -14,6 +14,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_facebook_auth/flutter_facebook_auth.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
+import 'package:geoflutterfire/geoflutterfire.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:merge_map/merge_map.dart';
@@ -832,5 +833,27 @@ class FireFlutter extends Base {
     } else {
       return 'en';
     }
+  }
+
+  /// Updates user location
+  ///
+  /// ```dart
+  /// ff.updateUserLocation(
+  ///   latitude: _latitude,
+  ///   longitude: _longitude,
+  /// );
+  /// ```
+  updateUserLocation({
+    @required double latitude,
+    @required double longitude,
+  }) async {
+    final GeoFirePoint point = new GeoFirePoint(latitude, longitude);
+
+    return await updateProfile({}, meta: {
+      'public': {
+        'location': point.geoPoint,
+        'geohash': point.hash,
+      }
+    });
   }
 }
