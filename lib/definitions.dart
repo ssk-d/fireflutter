@@ -18,6 +18,24 @@ enum ForumStatus {
   noMorePosts,
 }
 
+class NotificationOptions {
+  static String notifyCommentsUnderMyPost = 'notifyPost';
+  static String notifyCommentsUnderMyComment = 'notifyComment';
+
+  /// "notifyPost_" + category
+  static String post(String category) {
+    return notifyCommentsUnderMyPost + '_' + category;
+  }
+
+  static String comment(String category) {
+    return notifyCommentsUnderMyComment + '_' + category;
+  }
+}
+
+/// For short
+final String notifyPost = NotificationOptions.notifyCommentsUnderMyPost;
+final String notifyComment = NotificationOptions.notifyCommentsUnderMyComment;
+
 typedef Render = void Function(RenderType x);
 const ERROR_SIGNIN_ABORTED = 'ERROR_SIGNIN_ABORTED';
 

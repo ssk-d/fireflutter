@@ -1,6 +1,10 @@
 part of './fireflutter.dart';
 
 class Base {
+  /// Check if Firebase has initialized.
+  bool isFirebaseInitialized = false;
+
+  /// Fires after Firebase has initialized or if already initialized.
   BehaviorSubject<bool> firebaseInitialized = BehaviorSubject.seeded(false);
 
   /// Default topic that all users(devices) will subscribe to
@@ -36,20 +40,27 @@ class Base {
   /// ```
   Stream<User> authStateChanges;
 
-  /// User document at `/users/{uid}`
+  /// Firebase User instance
   ///
   /// Attention! [user] may not immediately be available after instantiating
   /// `FireFlutter` since [user] is only available after `authStateChanges`.
-  /// And `authStateChanges` produce a `StreamSubscription` which should be
+  /// And `authStateChanges` requires `StreamSubscription` which should be
   /// unsubscribed when it does not needed anymore.
-  /// For this reason, it is recommended to instantiating only once in global
-  /// space of the app's runtime.
+  /// For this reason, it is not recommended to instantiate more than once
+  /// instance of `FireFlutter`. You should create only one instance of
+  /// `FireFlutter` and keep it as global variable and share it on all
+  /// the runtime.
   ///
   /// This is firebase `User` object and it can be used as below.
   /// ```
   /// ff.user.updateProfile(displayName: nicknameController.text);
   /// ```
-  User user;
+  User get user {
+    if (isFirebaseInitialized) {
+      return FirebaseAuth.instance.currentUser;
+    } else
+      return null;
+  }
 
   /// User document data.
   Map<String, dynamic> userData = {};
@@ -89,7 +100,7 @@ class Base {
 
   // PublishSubject configDownload = PublishSubject();
 
-  /// Set default properties to prevent errors.
+  /// Set default properties to prevent null errors.
   Map<String, dynamic> _settings = {'forum': {}, 'app': {}};
   // ignore: close_sinks
   BehaviorSubject settingsChange = BehaviorSubject.seeded(null);
@@ -104,31 +115,30 @@ class Base {
     authStateChanges = FirebaseAuth.instance.authStateChanges();
 
     /// Note: listen handler will called twice if Firestore is working as offlien mode.
-    authStateChanges.listen(
-      (User user) {
-        this.user = user;
+    authStateChanges.listen((User user) {
+      /// [userChange] event fires when user is logs in or logs out.
+      userChange.add(UserChangeType.auth);
 
-        /// [userChange] event fires when user is logs in or logs out.
-        userChange.add(UserChangeType.auth);
+      /// Cancel listening user document.
+      ///
+      /// When user logs out, it needs to cancel the subscription, or
+      /// `cloud_firestore/permission-denied` error will happen.
+      if (userSubscription != null) {
+        userSubscription.cancel();
+      }
 
-        if (this.user == null) {
-        } else {
-          if (userSubscription != null) {
-            userSubscription.cancel();
-          }
-
-          /// Note: listen handler will called twice if Firestore is working as offlien mode.
-          userSubscription = usersCol.doc(user.uid).snapshots().listen(
-            (DocumentSnapshot snapshot) {
-              if (snapshot.exists) {
-                userData = snapshot.data();
-                userChange.add(UserChangeType.document);
-              }
-            },
-          );
-        }
-      },
-    );
+      if (user != null) {
+        /// Note: listen handler will called twice if Firestore is working as offlien mode.
+        userSubscription = usersCol.doc(user.uid).snapshots().listen(
+          (DocumentSnapshot snapshot) {
+            if (snapshot.exists) {
+              userData = snapshot.data();
+              userChange.add(UserChangeType.document);
+            }
+          },
+        );
+      }
+    });
   }
 
   /// Initialize Firebase
@@ -137,7 +147,8 @@ class Base {
   initFirebase() {
     // WidgetsFlutterBinding.ensureInitialized();
     return Firebase.initializeApp().then((firebaseApp) {
-      firebaseInitialized.add(true);
+      isFirebaseInitialized = true;
+      firebaseInitialized.add(isFirebaseInitialized);
       FirebaseFirestore.instance.settings =
           Settings(cacheSizeBytes: Settings.CACHE_SIZE_UNLIMITED);
 
@@ -150,6 +161,12 @@ class Base {
   /// Update user meta data.
   ///
   /// It is merging with existing data.
+  ///
+  /// ```dart
+  /// ff.updateUserMeta({
+  ///   'public': { notifyPost: value },
+  /// });
+  /// ```
   Future<void> updateUserMeta(Map<String, Map<String, dynamic>> meta) async {
     // Push default meta to user meta
     if (meta != null) {
@@ -161,15 +178,27 @@ class Base {
     }
   }
 
+  /// Update user public data in `/users/{uid}/meta/public` document.
+  ///
+  /// [name] is the document property name
+  Future<void> updateUserPublic(String name, dynamic value) {
+    return updateUserMeta({
+      'public': {
+        name: value,
+      },
+    });
+  }
+
   /// Update push notification token to Firestore
   ///
   /// [user] is needed because when this method may be called immediately
   ///   after login but before `Firebase.AuthStateChange()` and when it happens,
   ///   the user appears not to be logged in even if the user already logged in.
-  updateToken(User user) {
-    if (enableNotification == false) return;
-    if (firebaseMessagingToken == null) return;
-    FirebaseFirestore.instance
+  ///
+  Future<void> updateToken(User user) {
+    if (enableNotification == false) return null;
+    if (firebaseMessagingToken == null) return null;
+    return FirebaseFirestore.instance
         .collection('users')
         .doc(user.uid)
         .collection('meta')
@@ -177,7 +206,7 @@ class Base {
         .set({firebaseMessagingToken: true}, SetOptions(merge: true));
   }
 
-  updateUserSubscription(User user) async {
+  Future<void> updateUserSubscription(User user) async {
     if (enableNotification == false) return;
     if (firebaseMessagingToken == null) return;
     final docSnapshot =
@@ -185,12 +214,13 @@ class Base {
     if (!docSnapshot.exists) return;
     Map<String, dynamic> tokensDoc = docSnapshot.data();
 
-    tokensDoc.forEach((key, value) {
+    tokensDoc.forEach((key, value) async {
       if (key.indexOf('notification_') != -1) {
-        if (value == true)
-          subscribeTopic(key);
-        else
-          unsubscribeTopic(key);
+        if (value == true) {
+          await subscribeTopic(key);
+        } else {
+          await unsubscribeTopic(key);
+        }
       }
     });
   }
@@ -212,7 +242,7 @@ class Base {
     // print('token');
     // print(firebaseMessagingToken);
     if (user != null) {
-      updateToken(user);
+      await updateToken(user);
     }
 
     /// subscribe to all topic
@@ -397,7 +427,7 @@ class Base {
       if (uids.indexOf(c['uid']) == -1) uids.add(c['uid']);
     }
 
-    String topicKey = 'notification_comment_' + post['category'];
+    String topicKey = NotificationOptions.comment(post['category']);
 
     // Only get uid that will recieve notification
     for (String uid in uids) {
@@ -414,12 +444,12 @@ class Base {
       }
 
       /// If the post owner has not subscribed to new comments under his post, then don't send notification.
-      if (uid == post['uid'] && publicData['notification_post'] != true) {
+      if (uid == post['uid'] && publicData[notifyPost] != true) {
         continue;
       }
 
       /// If the user didn't subscribe for comments under his comments, then don't send notification.
-      if (publicData['notification_comment'] != true) {
+      if (publicData[notifyComment] != true) {
         continue;
       }
       uidsForNotification.add(uid);
@@ -547,6 +577,10 @@ class Base {
         .doc(user.uid);
   }
 
+  DocumentReference get myDoc => usersCol.doc(user.uid);
+  DocumentReference get myPublicDoc =>
+      usersCol.doc(user.uid).collection('meta').doc('public');
+
   /// Returns the order string of the new comment
   ///
   /// @TODO: Move this method to `functions.dart`.
@@ -610,10 +644,12 @@ class Base {
 
     final Map<String, dynamic> doc = await profile();
     if (doc == null) {
+      /// first time registration
+      await onRegister(user);
       await updateProfile({}, meta: {
         'public': {
-          "notification_post": true,
-          "notification_comment": true,
+          notifyPost: true,
+          notifyComment: true,
         },
       });
     }
@@ -621,9 +657,20 @@ class Base {
     await onLogin(user);
   }
 
-  onLogin(User user) {
-    updateToken(user);
-    updateUserSubscription(user);
+  ///
+  Future<void> onLogin(User user) async {
+    await updateToken(user);
+    await updateUserSubscription(user);
+  }
+
+  /// First time registration
+  ///
+  /// This method will be called on Email
+  Future<void> onRegister(User user) async {
+    await updateProfile({
+      'createdAt': FieldValue.serverTimestamp(),
+      'updatedAt': FieldValue.serverTimestamp(),
+    });
   }
 
   /// Pick an image from Camera or Gallery,
@@ -739,7 +786,11 @@ class Base {
     });
   }
 
-  /// Returns vote setting
+  /// Returns boolean based on the vote setting.
+  ///
+  /// [category] is the forum category and vote can be one of
+  /// `VoteChoice.like` or `VoteChoice.dislike`.
+  /// The default value is true if it is not set.
   bool voteSetting(String category, String vote) {
     if (_settings[category] == null || _settings[category][vote] == null) {
       return _settings['forum'][vote] ?? true;
@@ -790,7 +841,9 @@ class Base {
   ///
   /// After update, `user` will have updated `displayName` and `photoURL`.
   ///
-  /// TODO Make a model(interface type)
+  /// Note. Whenever this method is called, it updates [updatedAt], which means
+  /// it will always update user document and fires [userChange] event.
+  ///
   Future<void> updateProfile(
     Map<String, dynamic> data, {
     Map<String, Map<String, dynamic>> meta,
@@ -804,12 +857,12 @@ class Base {
     }
 
     await user.reload();
-    user = FirebaseAuth.instance.currentUser;
     final userDoc =
         FirebaseFirestore.instance.collection('users').doc(user.uid);
 
     data.remove('displayName');
     data.remove('photoURL');
+    data['updatedAt'] = FieldValue.serverTimestamp();
     await userDoc.set(data, SetOptions(merge: true));
 
     await updateUserMeta(meta);

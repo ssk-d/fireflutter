@@ -2,6 +2,7 @@ library fireflutter;
 
 import 'dart:convert';
 import 'dart:io';
+import 'dart:ui' as ui;
 import 'dart:async';
 import 'package:dio/dio.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -53,10 +54,11 @@ class FireFlutter extends Base {
     this.firebaseServerToken = firebaseServerToken;
     this.pushNotificationSound = pushNotificationSound;
 
-    /// Must be called before firebase init
+    /// Initialize settings.
     ///
+    /// Note. it must be called before firebase init.
     if (settings != null) {
-      _settings = settings;
+      _settings = mergeMap([_settings, settings]);
       settingsChange.add(_settings);
     }
 
@@ -134,7 +136,6 @@ class FireFlutter extends Base {
     );
 
     await userCredential.user.reload();
-    user = FirebaseAuth.instance.currentUser;
 
     // Remove default data.
     // And if there is no more properties to save into document, then save
@@ -151,12 +152,15 @@ class FireFlutter extends Base {
 
     // Set user extra information
     await userDoc.set(data);
+    await onRegister(userCredential.user);
 
     /// Default meta
+    ///
+    /// Notification for
     Map<String, Map<String, dynamic>> defaultMeta = {
       'public': {
-        "notification_post": true,
-        "notification_comment": true,
+        notifyPost: true,
+        notifyComment: true,
       }
     };
 
@@ -193,7 +197,7 @@ class FireFlutter extends Base {
       password: password,
     );
     await updateUserMeta(meta);
-    onLogin(userCredential.user);
+    await onLogin(userCredential.user);
     return userCredential.user;
   }
 
@@ -203,7 +207,6 @@ class FireFlutter extends Base {
   Future<void> updatePhoto(String url) async {
     await user.updateProfile(photoURL: url);
     await user.reload();
-    user = FirebaseAuth.instance.currentUser;
     userChange.add(UserChangeType.profile);
   }
 
@@ -394,7 +397,7 @@ class FireFlutter extends Base {
         data['content'],
         screen: '/forumView',
         id: doc.id,
-        topic: "notification_post_" + data['category'],
+        topic: NotificationOptions.post(data['category']),
       );
     }
   }
@@ -633,17 +636,17 @@ class FireFlutter extends Base {
   ///  );
   /// ```
   ///
-  mobileAuthSendCode(
+  Future<void> mobileAuthSendCode(
     String internationalNo, {
     int resendToken,
-    onCodeSent(String verificationID, int codeResendToken),
-    onError(dynamic error),
+    @required onCodeSent(String verificationID, int codeResendToken),
+    @required onError(dynamic error),
   }) {
     if (internationalNo == null || internationalNo == '') {
       onError('Input your number');
     }
 
-    FirebaseAuth.instance.verifyPhoneNumber(
+    return FirebaseAuth.instance.verifyPhoneNumber(
       phoneNumber: internationalNo,
 
       // resend token can be null.
@@ -708,7 +711,6 @@ class FireFlutter extends Base {
 
     // Inform the app when user phone number has changed
     await user.reload();
-    user = FirebaseAuth.instance.currentUser;
     userChange.add(UserChangeType.phoneNumber);
   }
 
@@ -781,6 +783,8 @@ class FireFlutter extends Base {
   Future<List<Map<String, dynamic>>> search(String keyword,
       {int hitsPerPage = 10, int pageNo = 0}) async {
     String algoliaIndexName = appSetting('ALGOLIA_INDEX_NAME');
+    if (algoliaIndexName == null || algoliaIndexName == "")
+      throw 'ALGOLIA_INDEX_NAME is not set';
     AlgoliaQuery query = algolia.instance
         .index(algoliaIndexName)
         .setPage(pageNo)
@@ -797,5 +801,36 @@ class FireFlutter extends Base {
       searchResults.add(data);
     });
     return searchResults;
+  }
+
+  /// Gets user's public document as map
+  ///
+  /// Returns empty Map if there is no data or document does not exists.
+  /// `/users/{uid}/meta/public` document would alway exists but just in case
+  /// it does't exist, it return empty Map.
+  Future<Map<String, dynamic>> userPublicData() async {
+    final Map<String, dynamic> data = (await myPublicDoc.get()).data();
+    return data == null ? {} : data;
+  }
+
+  /// Return user language
+  ///
+  /// If the user has set(choose) his language setting, then return it.
+  /// Or if admin set default language, then return it.
+  /// Or if the device has language, then return it.
+  /// Or return 'en' as English.
+  String get userLanguage {
+    if (loggedIn &&
+        userData != null &&
+        userData['language'] != null &&
+        userData['language'] != "") {
+      return userData['language'];
+    } else if (appSetting('default-language') != null) {
+      return appSetting('default-language');
+    } else if (ui.window.locale != null) {
+      return ui.window.locale.languageCode;
+    } else {
+      return 'en';
+    }
   }
 }

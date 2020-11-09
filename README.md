@@ -10,21 +10,33 @@ A free, open source, rapid development flutter package to build social apps, com
 - Real time.\
   We design it to be real time when it is applied to your app. All the events like post and comment creation, voting(like, dislike), deletion would appears on all the user's phone immediately after the event.
 
+# TODOs
+
+- push notification settings sampe code for each forum.
+- Upload youtube of speed coding tutorial on each settings and insert it into readme markdown with a default image and when clicked open the youtube url.
+
 # Table of Contents
 
 <!-- TOC -->
 
 - [Fire Flutter](#fire-flutter)
-- [Table of Contents](#table-of-contents)
 - [TODOs](#todos)
+- [Table of Contents](#table-of-contents)
 - [Features](#features)
 - [References](#references)
 - [Components](#components)
 - [Requirements](#requirements)
 - [Installation](#installation)
-  - [Firebase Project Creation](#firebase-project-creation)
+  - [Create Firebase Project](#create-firebase-project)
+    - [Enable Firestore](#enable-firestore)
+    - [Enable Functions](#enable-functions)
+    - [Firebase tools installation](#firebase-tools-installation)
+    - [Download and Set FireFlutter Firebase Project](#download-and-set-fireflutter-firebase-project)
+  - [Firestore security rules](#firestore-security-rules)
+    - [Security Rules Testing](#security-rules-testing)
+  - [Cloud Functions Setup](#cloud-functions-setup)
+    - [Funtions Test](#funtions-test)
   - [Firebase Email/Password Login](#firebase-emailpassword-login)
-  - [Create Firestore Database](#create-firestore-database)
   - [Create Flutter project](#create-flutter-project)
     - [Setup Flutter to connect to Firebase](#setup-flutter-to-connect-to-firebase)
       - [iOS Setup](#ios-setup)
@@ -43,16 +55,15 @@ A free, open source, rapid development flutter package to build social apps, com
       - [Facebook Sign In Setup for Android](#facebook-sign-in-setup-for-android)
       - [Facebook Sign In Setup for iOS](#facebook-sign-in-setup-for-ios)
     - [Apple Sign In Setup for iOS](#apple-sign-in-setup-for-ios)
-  - [Firebase tools installation](#firebase-tools-installation)
-  - [Download and Set FireFlutter Firebase Project](#download-and-set-fireflutter-firebase-project)
-  - [Firestore security rules](#firestore-security-rules)
-    - [Security Rules Testing](#security-rules-testing)
-  - [Cloud Functions](#cloud-functions)
-    - [Funtions Test](#funtions-test)
+    - [Phone Auth Setup](#phone-auth-setup)
+      - [Additional Phone Auth Setup for Android](#additional-phone-auth-setup-for-android)
+      - [Additional Phone Auth Setup for iOS](#additional-phone-auth-setup-for-ios)
   - [Image Picker Setup](#image-picker-setup)
     - [Image Picker Setup for iOS](#image-picker-setup-for-ios)
-  - [Localization Setup](#localization-setup)
+  - [I18N Setup](#i18n-setup)
   - [Push Notification Setup](#push-notification-setup)
+    - [Additional Android Setup](#additional-android-setup)
+    - [Additional iOS Setup](#additional-ios-setup)
   - [Algolia Setup](#algolia-setup)
   - [Admin Account Setting](#admin-account-setting)
 - [App Management](#app-management)
@@ -88,31 +99,34 @@ A free, open source, rapid development flutter package to build social apps, com
     - [Voting](#voting)
       - [Logic for Vote](#logic-for-vote)
     - [Comment crud, photo upload/update, vote like/dislike](#comment-crud-photo-uploadupdate-vote-likedislike)
+  - [Search](#search)
   - [Push Notification](#push-notification)
+    - [Notification Settings for the Reactions](#notification-settings-for-the-reactions)
+    - [Notification Settings for Forum Subscription](#notification-settings-for-forum-subscription)
   - [Social Login](#social-login)
     - [Google Sign-in](#google-sign-in)
     - [Facebook Sign In](#facebook-sign-in)
     - [Apple Sign In](#apple-sign-in)
   - [External Logins](#external-logins)
     - [Kakao Login](#kakao-login)
-- [I18N](#i18n)
+  - [Phone Verification](#phone-verification)
+- [Language Settings, I18N](#language-settings-i18n)
 - [Settings](#settings)
+  - [Phone number verification](#phone-number-verification)
+  - [Forum Settings](#forum-settings)
+- [Integration Test](#integration-test)
 - [Trouble Shotting](#trouble-shotting)
+  - [Stuck in registration](#stuck-in-registration)
   - [MissingPluginException google_sign_in](#missingpluginexception-google_sign_in)
+    - [By passing MissingPluginException google_sign_in error](#by-passing-missingpluginexception-google_sign_in-error)
+  - [com.apple.AuthenticationServices.AuthorizationError error 1001 or if the app hangs on Apple login](#comappleauthenticationservicesauthorizationerror-error-1001-or-if-the-app-hangs-on-apple-login)
   - [sign_in_failed](#sign_in_failed)
   - [operation-not-allowed](#operation-not-allowed)
   - [App crashes on second file upload](#app-crashes-on-second-file-upload)
+  - [Firestore rules and indexes](#firestore-rules-and-indexes)
+  - [After ff.editPost or ff.editComment, nothing happens?](#after-ffeditpost-or-ffeditcomment-nothing-happens)
 
 <!-- /TOC -->
-
-# TODOs
-
-- Adding sample code for phone number verification
-- Sample code for blocking users to create posts/comments if they didn't verify their phone numbers.
-  - Do it on settings.
-- Sample code for search posts and comments with Algolia
-- Adding sample code for live change of user language.
-- Integration test
 
 # Features
 
@@ -138,6 +152,10 @@ A free, open source, rapid development flutter package to build social apps, com
   - Real time.
     - If a user create a comment, it will appear on other user's phone. And this goes same to all edit/delete, likes/dislikes.
   - A category of forum could be re-designed for online shopping mall purpose.
+
+- Search
+
+  - posts and comments search.
 
 - Push notifications
 
@@ -165,8 +183,9 @@ A free, open source, rapid development flutter package to build social apps, com
 # References
 
 - [FireFlutter Package](https://pub.dev/packages/fireflutter) - This package.
-- [FireFlutter Sample App](https://github.com/thruthesky/fireflutter_sample_app) - Sample flutter application.
 - [FireFlutter Firebase Project](https://github.com/thruthesky/fireflutter-firebase) - Firebase project for Firestore security rules and Functions.
+
+- [FireFlutter Sample App](https://github.com/thruthesky/fireflutter_sample_app) - Sample flutter application.
 
 # Components
 
@@ -209,7 +228,7 @@ A free, open source, rapid development flutter package to build social apps, com
 
 - We also have a premium paid servie to support installation and development.
 
-## Firebase Project Creation
+## Create Firebase Project
 
 - You need to create a Firebase project for the first time. You may use existing Firebase project.
 
@@ -225,15 +244,7 @@ A free, open source, rapid development flutter package to build social apps, com
 
 - Read [Understand Firebase projects](https://firebase.google.com/docs/projects/learn-more) for details.
 
-## Firebase Email/Password Login
-
-- Go to Authentication => Sign-in Method
-- Click `Enable/Password` (without Email link).
-- It is your choice weather you would let users to register by their email and password or not. But for installation test, just enable it.
-
-- Refer [Firebase Authentication](https://firebase.google.com/docs/auth) and [FlutterFire Social Authenticatino](https://firebase.flutter.dev/docs/auth/social) for details.
-
-## Create Firestore Database
+### Enable Firestore
 
 - Go to `Cloud Firestore` menu.
 - Click `Create Database`.
@@ -241,6 +252,123 @@ A free, open source, rapid development flutter package to build social apps, com
 - Click `Next`.
 - Choose nearest `Cloud Firestore location`.
 - Click `Enable`.
+
+### Enable Functions
+
+- Go to Firebase => Functions => Click `Get Started` => Click `Continue` => Click `Finish`
+
+### Firebase tools installation
+
+- Install Firebase tools with the following command. You may need root permission.
+
+```sh
+npm install -g firebase-tools
+```
+
+- Then, login to Firebase with the follow command.
+
+```sh
+firebase login
+```
+
+- Refer [Set up or update the CLI](https://firebase.google.com/docs/cli#mac-linux-npm) for details.
+
+### Download and Set FireFlutter Firebase Project
+
+- Install firebase tools as described at [Firebase tools installation](#firebase-tools-installation)
+
+- Git clone(or fork) https://github.com/thruthesky/fireflutter-firebase
+  - And enter the project folder
+  - `$ cd fireflutter-firebase`
+- Install node modules with the following command.
+  - `$ npm i`.
+- Update Firebase project ID in `.firebaserc ==> projects ==> default`.
+- Set `Firebase SDK Admin Service Key`
+  - Go to Project settings => Service accounts => Firebae Admin SDK
+  - Click `Node.js`
+  - Click `Generate new priate key`
+  - Click `Generate Key`
+  - Then, a file will be downloaded.
+  - Rename the file to `firebase-service-account-key.json`
+  - And move(or overwrite if it exists) it to the project folder(the same folder where `.firebaserc` is).
+- Create `functions/settings.js`
+  - Then, paste the following code and save.
+
+```js
+const settings = {};
+
+module.exports.settings = settings;
+```
+
+## Firestore security rules
+
+Firestore needs security rules to secure its data or it might loose all data by hackers.
+
+- Do [Download and Set FireFlutter Firebase Project](#download-and-set-fireflutter-firebase-project)
+- Run `firebase deploy --only firestore`.
+
+### Security Rules Testing
+
+- If you wish to test Firestore security rules, you may do so with the following;
+
+Run Firebase emualtor first.
+
+```
+$ firebase emulators:start --only firestore
+```
+
+run the tests.
+
+```
+$ npm run test
+$ npm run test:basic
+$ npm run test:user
+$ npm run test:admin
+$ npm run test:category
+$ npm run test:post
+$ npm run test:comment
+$ npm run test:vote
+$ npm run test:user.token
+```
+
+## Cloud Functions Setup
+
+We tried to limit the usage of Cloud Functions as minimum as possible. But there are some functionalities we cannot achive without it.
+
+One of the reason why we use Cloud Funtions is to enable like and dislike functionality. It is a simple functionality but when it comes with Firestore security rule, it's not an easy work. And Cloud Functions does better with it.
+
+- Do [Download and Set FireFlutter Firebase Project](#download-and-set-fireflutter-firebase-project)
+- Install node modules under functions folder.
+  - `$ cd functions`
+  - `$ npm i`
+  - `$ cd ..`
+- Run `firebase deploy --only functions`. You will need Firebase `Pay as you go` plan to deploy it.
+  - If you meet `Error: HTTP Error: 403, Unknown Error` erro, then you may try again.
+
+### Funtions Test
+
+- If you wish to test Functions,
+  - Open `functions/test/index.test.js`
+  - And edit `databaseURL` and `projectId`
+  - And run the following commands
+
+```
+$ firebase emulators:start
+$ cd functions
+$ npm test
+```
+
+## Firebase Email/Password Login
+
+- Do [Create Firestore Database](#create-firestore-database)
+- Do [Firestore security rules](#firestore-security-rules)
+- Do [Cloud Functions Setup](#cloud-functions-setup)
+- Do [Android Setup](#android-setup) and [iOS Setup](#ios-setup)
+- Go to Authentication => Sign-in Method
+- Click `Enable/Password` (without Email link).
+- It is your choice weather you would let users to register by their email and password or not. But for installation test, just enable it.
+
+- Refer [Firebase Authentication](https://firebase.google.com/docs/auth) and [FlutterFire Social Authentication](https://firebase.flutter.dev/docs/auth/social) for details.
 
 ## Create Flutter project
 
@@ -404,6 +532,8 @@ keytool -exportcert -alias YOUR_RELEASE_KEY_ALIAS -keystore YOUR_RELEASE_KEY_PAT
 
 ### Google Sign-in Setup
 
+Most of interactive apps need Social login like Google, Apple, Facebook and the likes. Once you put Google sign button in the app, then it is mandatory to put Apple sign in button also. Or your app will be rejected on iOS review. When you have Google and Apple, you would definitedly like to have Facebook login. Fireflutter has the code for these three social logins. If you want more social logins, then you need to implement it by yourself.
+
 - Go to Authentication => Sign-in method
 - Click Google
 - Click Enable
@@ -428,7 +558,7 @@ keytool -exportcert -alias YOUR_RELEASE_KEY_ALIAS -keystore YOUR_RELEASE_KEY_PAT
 - Click save.
 
 - It's important to know that you need to generate two release SHA1 keys for production app. One for upload SHA1, the other for deploy SHA1.
-- [Facebook Sign In Setup for Android](#facebook-sign-in-setup-for-android) is required to sign in with Google (in our case).
+- [Facebook Sign In Setup for Android](#facebook-sign-in-setup-for-android) is required to sign in with Google (in our case). Since Facebook login package is installed and relies on Google sign in package, it will produce missing plugin error when you try Google sign in. You can by pass Facebook settings as described in trouble shooting.
 
 - To see if this setting works, try the code in [Google Sign-in](#google-sign-in) section.
 
@@ -585,95 +715,23 @@ We add `Apple sign in` only on iOS platform.
 
 - Refer [Eanble Sign In with App](https://help.apple.com/xcode/mac/11.0/#/dev50571b902) for details.
 
-## Firebase tools installation
+### Phone Auth Setup
 
-- Install Firebase tools with the following command. You may need root permission.
+- Enable `Phone` under Firebase => Authentication => Sign-in method
 
-```sh
-npm install -g firebase-tools
-```
+#### Additional Phone Auth Setup for Android
 
-- Then, login to Firebase with the follow command.
+- Do [Debug hash key](#debug-hash-key) for test mode.
+- Do [Release hash key](#release-hash-key) for release mode.
 
-```sh
-firebase login
-```
+#### Additional Phone Auth Setup for iOS
 
-- Refer [Set up or update the CLI](https://firebase.google.com/docs/cli#mac-linux-npm) for details.
+- Get REVERSED_CLIENT_ID from GoogleService-Info.plist
+- Go to Runner(Left pane) => Runner(TARGETS) => Info => URL Types => Click (+) to add one,
 
-## Download and Set FireFlutter Firebase Project
+  - And add REVERSED_CLIENT_ID into URL Schemes.
 
-- Install firebase tools as described at [Firebase tools installation](#firebase-tools-installation)
-
-- Git clone(or fork) https://github.com/thruthesky/fireflutter-firebase
-  - And enter the project folder
-  - `$ cd fireflutter-firebase`
-- Install node modules with the following command.
-  - `$ npm i`.
-- Update Firebase project ID in `.firebaserc ==> projects ==> default`.
-- Set `Firebase SDK Admin Service Key`
-  - Go to Project settings => Service accounts => Firebae Admin SDK
-  - Click `Node.js`
-  - Click `Generate new priate key`
-  - Click `Generate Key`
-  - Then, a file will be downloaded.
-  - Rename the file to `firebase-service-account-key.json`
-  - And move(or overwrite if it exists) it to the project folder(the same folder where `.firebaserc` is).
-
-## Firestore security rules
-
-Firestore needs security rules to secure its data or it might loose all data by hackers.
-
-- Do [Download and Set FireFlutter Firebase Project](#download-and-set-fireflutter-firebase-project)
-- Run `firebase deploy --only firestore`.
-
-### Security Rules Testing
-
-- If you wish to test Firestore security rules, you may do so with the following;
-
-Run Firebase emualtor first.
-
-```
-$ firebase emulators:start --only firestore
-```
-
-run the tests.
-
-```
-$ npm run test
-$ npm run test:basic
-$ npm run test:user
-$ npm run test:admin
-$ npm run test:category
-$ npm run test:post
-$ npm run test:comment
-$ npm run test:vote
-$ npm run test:user.token
-```
-
-## Cloud Functions
-
-We tried to limit the usage of Cloud Functions as minimum as possible. But there are some functionalities we cannot achive without it.
-
-One of the reason why we use Cloud Funtions is to enable like and dislike functionality. It is a simple functionality but when it comes with Firestore security rule, it's not an easy work. And Cloud Functions does better with it.
-
-- Do [Download and Set FireFlutter Firebase Project](#download-and-set-fireflutter-firebase-project)
-- Install node modules under functions folder.
-  - `$ cd functions`
-  - `$ npm i`
-  - `$ cd ..`
-- Run `firebase deploy --only functions`. You will need Firebase `Pay as you go` plan to deploy it.
-  - If you meet `Error: HTTP Error: 403, Unknown Error` erro, then you may try again.
-
-### Funtions Test
-
-- If you whish to test Functions, you may do so with the following;
-
-```
-$ cd functions
-$ npm test
-$ npm test:algolia
-```
+- See [FlutterFire Phone Authentication Setup](https://firebase.flutter.dev/docs/auth/phone#setup) for details.
 
 ## Image Picker Setup
 
@@ -702,11 +760,11 @@ Example)
 <string>$(EXECUTABLE_NAME) need access to Microphone.</string>
 ```
 
-## Localization Setup
+## I18N Setup
 
-If an app serves only for one nation with one language, the app may not need localization. But if the app serves for many nations with many languages, then the app should have localization. The app should display Chinese language for Chinese people, Korean langauge for Korean people, Japanese for Japanese people and so on.
+If an app serves only for one nation with one language, the app may not need localization. But if the app serves for many nations with many languages, then the app should have internationalization. The app should display Chinese language for Chinese people, Korean langauge for Korean people, Japanese for Japanese people and so on.
 
-You can set different texts of different languages on menu, buttons, screens.
+You can set texts on menu, buttons, screens in different languages.
 
 Android platform does not need to have any settings.
 
@@ -727,7 +785,9 @@ For iOS,
 
 - Create `translations.dart` file in the same folder of `main.dart`
   - and add the following code.
-  - In the code below, we add only English and Korean. You may add more languages and its translations.
+  - In the code below, we add only English and Korean. You may add more languages and translations.
+
+Example of translations.dart
 
 ```dart
 import 'package:get/get.dart';
@@ -764,12 +824,27 @@ class AppTranslations extends Translations {
 ```
 
 - Open main.dart
-  - Add the following into GetMaterialApp
-  - The `locale: Locale('ko')` is the default language to display texts in.
+
+- You can initialize fireflutter like below. It will set the default language when the user didn't choose his language yet.
 
 ```dart
-locale: Locale('ko'),
-translations: AppTranslations(),
+await ff.init(
+  settings: {
+    'app': {
+      'default-language': 'ko',
+    }
+  },
+  translations: translations,
+);
+```
+
+- Add `Locale(ff.userLanguage)` to GetMaterialApp() like below. `ff.userLanguage` has the user language.
+
+```dart
+GetMaterialApp(
+  locale: Locale(ff.userLanguage),
+  translations: AppTranslations(),
+)
 ```
 
 - Open home.screen.dart
@@ -782,29 +857,41 @@ Scaffold(
   ),
 ```
 
-- If you want to set device language as the display langauge, you can do so like below.
-  - If `ui.window.locale` is not available, it will fall back to Korean.
+- When user change his language, the app should change the text in user's language.
+
+Display selection box like below
 
 ```dart
-import 'dart:ui' as ui;
-// ...
-@override
-Widget build(BuildContext context) {
-  return GetMaterialApp(
-    locale: ui.window.locale ?? Locale('ko'),
-    fallbackLocale: Locale('ko'),
+DropdownButton<String>(
+  value: ff.userLanguage,
+  items: [
+    DropdownMenuItem(value: 'ko', child: Text('Korean')),
+    DropdownMenuItem(value: 'en', child: Text('English')),
+  ],
+  onChanged: (String value) {
+    ff.updateProfile({'language': value});
+  },
+),
 ```
 
-- User may want to choose what language they want to use.
-  - Display selection box and when a user choose his langauge, then update the language like below.
+Then update the language like below.
 
 ```dart
-Get.updateLocale(Locale('ko'));
+class _MainAppState extends State<MainApp> {
+  @override
+  void initState() {
+    super.initState();
+    ff.translationsChange.listen((x) => setState(() => updateTranslations(x)));
+    ff.userChange.listen((x) {
+      setState(() {
+        Get.updateLocale(Locale(ff.userLanguage));
+      });
+    });
+    // ...
 ```
 
-- Updating translations in real time.
-  - You can code like below in `initState()` of `MainApp`.
-  - It listens for the changes in Firestore translations collection and update the screen with the translations.
+- To update translations in real time,
+  - You can code like below in `initState()` of `MainApp`. It listens for the changes in Firestore translations collection and update the screen with the translations.
 
 ```dart
 ff.translationsChange.listen((x) => setState(() => updateTranslations(x)));
@@ -830,12 +917,16 @@ ff.translationsChange.listen((x) => setState(() => updateTranslations(x)));
 - If you dont have `google-services.json` yet, you may refer for the
   basic configuration of [Android Setup](#android-setup).
 - If you want to be notified in your app (via onResume and onLaunch) when you
+<<<<<<< HEAD
   click the  notification on the system tray you need to include the following `intent-filter`
+=======
+  click the notification on the system tray you need to include the following `intent-filter`
+>>>>>>> 65b90e3a054eb7bb34c7811765716a73377025be
   under the `<activity>` tag of your `android/app/src/main/AndroidManifest.xml`.
 
 ```xml
 <activity>
-  ---- default configuration here -----
+  <!-- default configuration here -->
   <intent-filter>
       <action android:name="FLUTTER_NOTIFICATION_CLICK" />
       <category android:name="android.intent.category.DEFAULT" />
@@ -858,7 +949,7 @@ ff.translationsChange.listen((x) => setState(() => updateTranslations(x)));
 - If you dont have `GoogleService-Info.plist` yet, you may refer for the
   basic configuration of [iOS Setup](#ios-setup).
 
-- Open Xcode, select `Runner` in the Project Navigator. 
+- Open Xcode, select `Runner` in the Project Navigator.
   In the `Capabilities` Tab turn on `Push Notifications` and `Background Modes`, and
   enable Background fetch and Remote notifications under Background Modes.
 
@@ -866,6 +957,7 @@ ff.translationsChange.listen((x) => setState(() => updateTranslations(x)));
   section of the Firebase docs.
 
 - Add/Update Capabilities.
+
   - In Xcode, select `Runner` in the `Project Navigator`. In the `Capabilities Tab` turn on `Push Notifications` and `Background Modes`, and enable `Background fetch` and `Remote notifications` under `Background Modes`.
 
 - If you need to disable the method swizzling done by the FCM iOS SDK (e.g. so that you can use this plugin with other notification plugins)
@@ -884,17 +976,37 @@ ff.translationsChange.listen((x) => setState(() => updateTranslations(x)));
 
 Firestore does not support full text search, which means users cannot search the title or content of posts and comments. And this is a must functionality for community and blog apps.
 
-One option(recomended by Firebase team) to solve this matter is to use Algolia. Algolia has free service and that's what we are going to use it.
+One option(recomended by Firebase team) to solve this matter is to use Algolia. Algolia has free version account and that's what we are going to use it.
 
 Before setup Algolia, you may try forum code as described in [Forum Coding](#forum-coding) to test if this settings work.
 
 - Go to Algolia site.
 - Register.
 - Create app.
-- First, you need to put ALGOLIA_ID(Application ID), ALGOLIA_ADMIN_KEY, ALGOLIA_INDEX_NAME in `firebase-settings.js`.
-  - deploy with `firebase deploy --only functions`.
-  - For testing, do `npm run test:algolia`.
-- Second, you need to add(or update) ALGOLIA_APP_ID(Application ID), ALGOLIA_SEARCH_KEY(Search Only Api Key), ALGOLIA_INDEX_NAME in Firestore `settings/app` document.
+- First, you need to put ALGOLIA_APP_ID(Application ID), ALGOLIA_ADMIN_KEY, ALGOLIA_INDEX_NAME into `functions/settings.js`.
+
+```js
+const settings = {
+  algolia: {
+    appId: "ALGOLIA APP ID",
+    adminKey: "ALGOLIA ADMIN KEY",
+    indexName: "INDEX NAME"
+  }
+};
+
+module.exports.settings = settings;
+```
+
+- Then, deploy with `firebase deploy --only functions`.
+  - For testing, run the following commands
+
+```sh
+firebase emulators:start
+cd functions
+npm run test:algolia
+```
+
+- Then, you need to add(or update) ALGOLIA_APP_ID(Application ID), ALGOLIA_SEARCH_KEY(Search Only Api Key), ALGOLIA_INDEX_NAME in Firestore `settings/app` document.
   Optionally, you can put the settings inside `FireFlutter.init()`.
 - Algolia free account give you 10,000 free search every months. This is good enough for small sized projects.
 
@@ -1307,7 +1419,7 @@ It needs to `category` of the forum and a callback which will be called if there
 Call `fetchPosts()` method the ForumData instance and fireflutter will get posts from Firestore storing the posts in `ForumData.posts` and the app can render the posts within the callback of ForumData instance.
 
 - Do [Firestore security rules](#firestore-security-rules). When the app list posts, it will require indexes.
-- Do [Cloud Functions](#cloud-functions). When the app is displaying posts, the Clould Funtions soubld be ready.
+- Do [Cloud Functions Setup](#cloud-functions-setup). When the app is displaying posts, the Clould Funtions soubld be ready.
 - See [smaple app's forum-list branch](https://github.com/thruthesky/fireflutter_sample_app/tree/forum-list) for the sample code.
   - You would open [forum.list.dart](https://github.com/thruthesky/fireflutter_sample_app/blob/forum-list/lib/screens/forum/forum.list.dart) to see what's going on to list a forum.
     - It first gets category
@@ -1406,14 +1518,29 @@ If you are following the path of how to create a post, list posts, and edit post
 
 [Comment crud branch of sample app](https://github.com/thruthesky/fireflutter_sample_app/tree/comment-crud) has all the source code. The code is a bit long since it has comment create form, comment list, photo upload, buttons. So, the codes are splitted into small sized of widgets.
 
+## Search
+
+- Do [Algolia Setup](#algolia-setup)
+- See [sample app's algolia branch](https://github.com/thruthesky/fireflutter_sample_app/tree/algolia) for the code.
+
 ## Push Notification
 
 - FireFlutter comes with `Push Notification functionality`. It is disable by default.
+
+- When user registers, the settings of receiving message for new comment under my post or comment will be enabled by default.
+
+- When the app boots the device will record its `push notification token` to Firestore and subscribe to `allTopic`.
+
+  - This means, when you released your app without push notification enabled at first,
+  - Then, you enabled push notification setting and republished, the app, then, will only begin to save `push notification token` to Firebase and subscribe to `allTopic` after re-install with the setting.
+  - But, all users had subscribed to `notify new comment unber my post` and `notify new comment under my comment` already. So, users no need to do anything to receive messages of new comment.
+
+- Do [Push Notification Setup](#push-notification-setup)
 - To enable push notification you must set `enableNotification: true` on main in `FireFlutter init()`.
 - Once enabled it will ask the user if they want to receive push notification in iOS.
 - For android it was done automatically.
-- By default it subscribe to `allTopic`. So you can use this topic to send to all users.
-- It also subscribe to `notification_post` when new comment is created under the user post it will receive notification.
+- By default it subscribes to `allTopic`. So you can use this topic to send to all users.
+- It also subscribes to `notification_post` when new comment is created under the user post it will receive notification.
 - And `notification_comment` when a comment is created under the user comment it will receive notification also.
 - Push Notification includes
 
@@ -1450,27 +1577,27 @@ If you are following the path of how to create a post, list posts, and edit post
 - Listening to incoming notification.
 
 ```dart
-  void initState() {
-    super.initState();
+void initState() {
+  super.initState();
 
-    ff.init(
-        enableNotification: true,
-        firebaseServerToken: "AAAAj...bM:APA91....ist2N........AAA"
+  ff.init(
+      enableNotification: true,
+      firebaseServerToken: "AAAAj...bM:APA91....ist2N........AAA"
+    );
+
+  ff.notification.listen(
+        (x) {
+          Map<dynamic, dynamic> notification = x['notification'];
+          Map<dynamic, dynamic> data = x['data'];
+          NotificationType type = x['type'];
+          if (type == NotificationType.onMessage) {
+            // Display or Alert the notification message
+          } else {
+            // Move to different Screen
+          }
+        },
       );
-
-    ff.notification.listen(
-          (x) {
-            Map<dynamic, dynamic> notification = x['notification'];
-            Map<dynamic, dynamic> data = x['data'];
-            NotificationType type = x['type'];
-            if (type == NotificationType.onMessage) {
-              // Display or Alert the notification message
-            } else {
-              // Move to different Screen
-            }
-          },
-        );
-  }
+}
 ```
 
 - Sending push notification
@@ -1479,46 +1606,70 @@ If you are following the path of how to create a post, list posts, and edit post
   - Providing `tokens` as list of string will send to list of Device provided.
 
 ```dart
-      RaisedButton(
-        onPressed: () async {
-            ff.sendNotification(
-              'title message only',
-              'test body message',
-              id: '0X1upoaLklWc2Z07dsbn',
-              screen: '/forumView',
-              token: 'Replace DeviceToken here',
-            );
-          });
-        },
-        child: Text('Send Notification to Token.'),
-      ),
-      RaisedButton(
-        onPressed: () async {
-            ff.sendNotification(
-              'title message only',
-              'test body message',
-              id: '0X1upoaLklWc2Z07dsbn',
-              screen: '/forumView',
-              topic: ff.allTopic,
-            );
-          });
-        },
-        child: Text('Send Notification to topic.'),
-      ),
-      RaisedButton(
-        onPressed: () async {
-            ff.sendNotification(
-              'title message only',
-              'test body message',
-              id: '0X1upoaLklWc2Z07dsbn',
-              screen: '/forumView',
-              tokens: ['Device Token', 'Another Device Token'],
-            );
-          });
-        },
-        child: Text('Send Notification to multiple tokens.'),
-      ),
+RaisedButton(
+  onPressed: () async {
+      ff.sendNotification(
+        'title message only',
+        'test body message',
+        id: '0X1upoaLklWc2Z07dsbn',
+        screen: '/forumView',
+        token: 'Replace DeviceToken here',
+      );
+    });
+  },
+  child: Text('Send Notification to Token.'),
+),
+RaisedButton(
+  onPressed: () async {
+      ff.sendNotification(
+        'title message only',
+        'test body message',
+        id: '0X1upoaLklWc2Z07dsbn',
+        screen: '/forumView',
+        topic: ff.allTopic,
+      );
+    });
+  },
+  child: Text('Send Notification to topic.'),
+),
+RaisedButton(
+  onPressed: () async {
+      ff.sendNotification(
+        'title message only',
+        'test body message',
+        id: '0X1upoaLklWc2Z07dsbn',
+        screen: '/forumView',
+        tokens: ['Device Token', 'Another Device Token'],
+      );
+    });
+  },
+  child: Text('Send Notification to multiple tokens.'),
+),
 ```
+
+### Notification Settings for the Reactions
+
+Push notification is one kind of basic functionality that all apps should have. Hence, we put some push notification logic inside fireflutter. Once the app has enabled push notification settings, it will automactially activate push ntoification with following;
+
+- By default, all users had subscribed to `notify new comment unber my post` and `notify new comment under my comment` when they registered.
+
+  - They can turn it off in settings page. You have to implement the settings screen. See [sample app's settings branch](https://github.com/thruthesky/fireflutter_sample_app/tree/settings) for the code.
+
+- To test,
+  - Run app in device A and login with user A and Run app in device B and login with user B
+  - User A creates a post
+  - User B creates a comment under the post
+  - And A will get a push notificaiton.
+  - Now, user A creates a comment under the comment of User B.
+  - Then, user B will get a push notificaiton.
+
+### Notification Settings for Forum Subscription
+
+A user can subscribe a forum for new post or comment.
+
+If you want to enable the forum subscription, then add option button on each forum list.
+
+- See [forum-subscription branch](https://github.com/thruthesky/fireflutter_sample_app/tree/forum-subscription) for the code.
 
 ## Social Login
 
@@ -1593,31 +1744,104 @@ if (GetPlatform.isIOS)
 - Kakao login is completely separated from `fireflutter` since it is not part of `Firebase`.
   - The sample app has an example code on how to do `Kakao login` and link to `Firebase Auth` account.
 
-# I18N
+## Phone Verification
 
-- The app's i18n is managed by `GetX` i18n feature.
+FireFlutter phone verication relies on Firebase's Phone Authentication. We made it easy to use.
 
-- If you want to add another language,
+The app can ask users to verify their phone numbers. It is fully customizable, but we put here few recommendations on its implementation.
 
-  - Add the language code in `Info.plist`
-  - Add the language on `translations`
-  - Add the lanugage on `FireFlutter.init()`
-  - Add the language on `FireFlutter.settingsChange`
-  - Add the language on Firebase `settings` collection.
+Admin can set rules like below
 
-- Default i18n translations(texts) can be set through `FireFlutter` initializatin and is overwritten by the `translations` collection of Firebase.
-  The Firestore is working offline mode, so overwriting with Firestore translation would happen so quickly.
+- Verify phone after email/password registration.
+- Verify phone after login(all login including social login).
+- Force users to verify phone or the app does not work.
+- Block users to create post or comment without phone verification.
 
-- You may optionally omit `translations` in `FireFlutter.init()` if you are going to set `translations` in `GetMaterialApp` since the same initial translated texts will be merged into.
+We will apply this rules to the [sample app's phone-verification branch] and it is upto you weather you would follow this rules or not. You may want to block users to create post or comment differently on each forum.
+
+Do apply the rules,
+
+- Do [Additional Phone Auth Setup for iOS](#additional-phone-auth-setup-for-ios).
+- Push notification
+
+- First, you will need to add a setting in main.dart. Admin can overwrite all the settings in main.dart through Firestore `settings/app` document update.
+
+```dart
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await ff.init(
+    settings: {
+      'app': {
+        'verify-after-register': true,
+        'verify-after-login': true,
+        'force-verification': false,
+        'block-non-verified-users-to-create': true,
+      },
+    },
+  );
+  runApp(MainApp());
+}
+```
+
+- We recommend you to use [country_code_picker](https://pub.dev/packages/country_code_picker) package for selecting country code. But it's up to you to use it or not.
+
+- If the app is forcing users to verify their numbers,
+
+  - skip button shouldn't appear but the user can still go back.
+  - all the menu will redirect phone auth page except home screen.
+    This is done in `redirectCallback()` of `main.dart` in phone-verification branch.
+
+- If `block-non-verified-users-to-create` is set to true,
+
+  - It displays warning dialog when user press on create button.
+  - It displays warning dialog when user submit comment button.
+
+- See [sample app's phone verification branch](https://github.com/thruthesky/fireflutter_sample_app/tree/phone-verification) for codes. Again, it is fully customizable.
+
+# Language Settings, I18N
+
+`I18n` means to display different languages for different users. For instance, App will display texts in Korean for Korean people.
+
+We decided to adopt `GetX i18n` feature. See [GetX Internationalization](https://pub.dev/packages/get#internationalization) for details
+
+- If you want to add a language, do [I18N Setup](#i18n-setup)
+- See [sample app's language settings branch](https://github.com/thruthesky/fireflutter_sample_app/tree/language-settings) for the code.
 
 # Settings
 
 - Default settings can be set through `FireFlutter` initialization and is overwritten by `settings` collection of Firebase.
   The Firestore is working offline mode, so overwriting with Firestore translation would happen so quickly.
 
-- If `show-phone-verification-after-login` is set to true, then users who do not have their phone numbers will be redirected to phone verification page.
-  - Developers can customize it by putting 'skip' button.
-- If `create-phone-verified-user-only` is set to true, only the user who verified thier phone numbers can create posts and comments.
+## Phone number verification
+
+We recommend you to follow our logic of phone number verification. You need to copy the code from sample app. You can customise everything byself, though.
+
+- If `verify-after-register` in `/settings/app/{verify-after-register: boolean }` is set to true, then newly registered users will be directed to phone verification screen.
+
+- If `verify-after-login` in `/settings/app/{verify-after-login: boolean }` is set to true, then unverified users will be directed to phone verification screen.
+
+- If `force-verification` is set to true, then all user must verify to continue using app.
+
+- If `block-non-verified-users-to-create` is set to true, non verified users cannot create post or comment.
+
+## Forum Settings
+
+All the settings of forum are overwritable by `/settings` collection in real time.
+
+For instance, to get the settings of showing like or dislike buttons, the app will
+
+- look for settings in the forum category at `/settings/{category name}` document, and if there is no settings about it
+- then, look for settings in the forum at `/settings/forum` document, and if there is no settings about it,
+- then, look for settings in `ff.init(settings: { ... })`, and if there is no settings about it,
+- then, it will use the hard coded setting in fireflutter.
+
+The `/settings/forum` has global settings of all forum categories and can be overwritten by each category setting. For instance, the settings are set like `/settings/forum/{like: true}` and `/settings/qna/{like: false}`. Then like button will appear on all forum categories except qna category.
+
+The settings are
+
+- like: boolean
+- dislike: boolean
+- no-of-posts-per-fetch: int
 
 <!-- - `GcpApiKey` is the GCP ApiKey and if you don't know what it is, then here is a simple tip. `GCP ApiKey` is a API Key to access GCP service and should be kept in secret. `Firebase` is a part of GCP Service and GCP ApiKey is needed to use Firebase functionality. And FireFlutter needs this key to access GCP service like phone number verification.
   - To get `GcpApiKey`,
@@ -1631,13 +1855,87 @@ if (GetPlatform.isIOS)
     - Paste it into `Firestore` => `/settings` collection => `app` document => `GcpApiKey`.
   - You may put the `GcpApiKey` in the source code (as in FireFlutter initialization) but that's not recommended. -->
 
+# Integration Test
+
+Please read [Testing Flutter apps](https://flutter.dev/docs/testing) for details about Flutter app testing.
+
+We don't do unit testing on fireflutter since its backend is Firebase and there is no doubt about Firebase's performance and quality assurance.
+
+And we don't do widget testing. Instead, we do integration test.
+
+- See [sample app's intergration-test branch](https://github.com/thruthesky/fireflutter_sample_app) for the codes.
+
+- We have tested it on Android app only since iOS app displays push notification consent box and it annoys the test.
+
+- Youtube video on integration test
+
+[![IMAGE ALT TEXT HERE](https://img.youtube.com/vi/wg4yTldihh8/0.jpg)](https://www.youtube.com/watch?v=wg4yTldihh8)
+
 # Trouble Shotting
+
+## Stuck in registration
+
+When `ff.register` is called, it sets data to Firestore and if Firestore is set created, then it would hang on `Firestore...doc('docId').set()`. To fix this, just enable Firestore with security rules and indexes as described in the setup section.
 
 ## MissingPluginException google_sign_in
 
 `MissingPluginException(No implementation found for method init on channel plugins.flutter.io/google_sign_in)`
 
 This error happens (at least in our case) when Flutter has google_sign_in package and facebook sign in package. If facebook sign in is depending on google_sign_in package, setting for facebok sign in is mandatory to use google_sign_in. In short, do the settings for both google sign in and facebook sign in.
+
+### By passing MissingPluginException google_sign_in error
+
+If really don't want to implement Facebook sign in or you want to skip Facebook sign in for the mean time while you are implementing Gogole sign in, then you may add the following settings. You can just put fake data on `strings.xml`.
+
+Open main/AndroidManifest.xml and update below.
+
+```xml
+<application ... android:label="@string/app_name" ...>
+```
+
+Open /android/app/src/main/res/values/strings.xml ( or create if it is not existing)
+And copy facebook_app_id and fb_login_protocol_scheme, past into the XML file like below.
+
+```xml
+<resources>
+    <string name="app_name">Your app name</string>
+    <string name="facebook_app_id">xxxxxxxxxxxxxxxxx</string>
+    <string name="fb_login_protocol_scheme">xxxxxxxxxxxxxxxxx</string>
+</resources>
+```
+
+Open android/app/src/main/AndroidManifest.xml
+Add the following uses-permission element after the application element (outside application tag)
+
+```xml
+  <uses-permission android:name="android.permission.INTERNET"/>
+```
+
+Add the following meta-data element, an activity for Facebook, and an activity and intent filter for Chrome Custom Tabs inside your application element:
+
+```xml
+<meta-data android:name="com.facebook.sdk.ApplicationId" android:value="@string/facebook_app_id"/>
+<activity android:name="com.facebook.FacebookActivity" android:configChanges=
+            "keyboard|keyboardHidden|screenLayout|screenSize|orientation" android:label="@string/app_name" />
+<activity android:name="com.facebook.CustomTabActivity" android:exported="true">
+  <intent-filter>
+    <action android:name="android.intent.action.VIEW" />
+    <category android:name="android.intent.category.DEFAULT" />
+    <category android:name="android.intent.category.BROWSABLE" />
+    <data android:scheme="@string/fb_login_protocol_scheme" />
+  </intent-filter>
+</activity>
+```
+
+## com.apple.AuthenticationServices.AuthorizationError error 1001 or if the app hangs on Apple login
+
+If you meet error message like this,
+
+`SignInWithAppleAuthorizationError(AuthorizationErrorCode.canceled, The operation couldn’t be completed. (com.apple.AuthenticationServices.AuthorizationError error 1001.))`
+
+Then, check if you have enabled Facebook login under Firebase => Sign-in method.
+
+And then, try to login with real device.
 
 ## sign_in_failed
 
@@ -1654,3 +1952,13 @@ This error may happens when you didn't enable the sign-in method on Firebase Aut
 ## App crashes on second file upload
 
 It's know to be a bug of Flutter and image_picker.
+
+## Firestore rules and indexes
+
+If you see error like below, check if you have properly set Firestore rules and indexes.
+
+`[cloud_firestore/failed-precondition] Operation was rejected because the system is not in a state required for the operation's execution. If performing a query, ensure it has been indexed via the Firebase console.`
+
+## After ff.editPost or ff.editComment, nothing happens?
+
+Check Internet connectivity. And fireflutter works in offline. So, even though there is no Internet, posting would works. If you want to continue without Internet, you shuold `await`.

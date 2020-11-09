@@ -1,3 +1,32 @@
+## [0.0.25] - updateUserPublic
+
+- `updateUserPublic` method is added to update user public data.
+
+## [0.0.24] - createdAt, updatedAt on user document
+
+- When user registers, `createdAt` and `updatedAt` will be added to user document.
+- Whenever user updates profile, `updatedAt` will be updated and `userChange` event fires.
+
+- document update.
+- algolia search settings.
+
+## [0.0.22] - push notification setting change. user language setting.
+
+- change. push notification settings has been changed.
+- language settings has been simplified by adding `userLanguage` getter.
+
+## [0.0.21] - cancellation on user data
+
+- fix on listening on user data. It produced error on user logout due to improper way of canncellation the subscription.
+
+## [0.0.20] - Phone auth
+
+- fix bug on phone auth
+
+## [0.0.19] - Push notification update
+
+- fix on push notification
+
 ## [0.0.18] - userChange event on photoURL
 
 - userChange event fires on photoURL change
