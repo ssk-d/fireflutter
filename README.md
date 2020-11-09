@@ -829,7 +829,7 @@ ff.translationsChange.listen((x) => setState(() => updateTranslations(x)));
 
 - If you dont have `google-services.json` yet, you may refer for the
   basic configuration of [Android Setup](#android-setup).
-- If you want to be notified in your app (via onResume and onLaunch) when you 
+- If you want to be notified in your app (via onResume and onLaunch) when you
   click the  notification on the system tray you need to include the following `intent-filter`
   under the `<activity>` tag of your `android/app/src/main/AndroidManifest.xml`.
 
@@ -842,6 +842,12 @@ ff.translationsChange.listen((x) => setState(() => updateTranslations(x)));
   </intent-filter>
 </activity>
 ```
+
+- For testing on real device you need to add the `SHA certificate fingerprints` on your firebase console project.
+  - To get the SHA-1 you can refer to [Debug hash key](#debug-hash-key).
+  - Open [Firebase Console](https://console.firebase.google.com)
+  - Project `Settings` => `General` =>  `Your Apps`, Select `Android apps` then under `SHA certificate fingerprints`
+    you can add the SHA-1 that you have copy from your pc.
 
 ### Additional iOS Setup
 
