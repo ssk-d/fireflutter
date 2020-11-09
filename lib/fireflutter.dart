@@ -835,6 +835,15 @@ class FireFlutter extends Base {
     }
   }
 
+  /// Returns an [GeoFirePoint] object from latitude & longitude.
+  ///
+  getGeoFirePoint({
+    @required double latitude,
+    @required double longitude,
+  }) {
+    return new GeoFirePoint(latitude, longitude);
+  }
+
   /// Updates user location
   ///
   /// ```dart
@@ -847,12 +856,15 @@ class FireFlutter extends Base {
     @required double latitude,
     @required double longitude,
   }) async {
-    final GeoFirePoint point = new GeoFirePoint(latitude, longitude);
+    final GeoFirePoint point = getGeoFirePoint(
+      latitude: latitude,
+      longitude: longitude,
+    );
 
     return await updateProfile({}, meta: {
       'public': {
-        'location': point.geoPoint,
         'geohash': point.hash,
+        'coordinates': point.geoPoint,
       }
     });
   }
