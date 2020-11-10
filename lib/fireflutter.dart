@@ -14,7 +14,6 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_facebook_auth/flutter_facebook_auth.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
-import 'package:geoflutterfire/geoflutterfire.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:merge_map/merge_map.dart';
@@ -837,55 +836,5 @@ class FireFlutter extends Base {
     } else {
       return 'en';
     }
-  }
-
-  /// Updates user location
-  ///
-  /// This will add a document under firebase storage [users-public] collection,
-  /// with a document id the same as the value the current user's uid.
-  ///
-  /// ```dart
-  /// ff.updateUserLocation(
-  ///   latitude: _latitude,
-  ///   longitude: _longitude,
-  /// );
-  /// ```
-  updateUserLocation({
-    @required double latitude,
-    @required double longitude,
-  }) async {
-    final GeoFirePoint point = geo.point(
-      latitude: latitude,
-      longitude: longitude,
-    );
-
-    return await usersPublicCol.doc(user.uid).set(
-      {'location': point.data},
-      SetOptions(merge: true),
-    );
-  }
-
-  /// returns list of locations near the given [latitude] and [longitude] within the [searchRadius].
-  ///
-  /// [searchRadius] is by kilometers
-  Stream<List<DocumentSnapshot>> findLocationsNearMe({
-    @required double latitude,
-    @required double longitude,
-    double searchRadius = 2,
-  }) {
-    final GeoFirePoint point = geo.point(
-      latitude: latitude,
-      longitude: longitude,
-    );
-
-    // query for "nearby me"
-    // [radius] is by kilometers
-    // cancel subscription later.
-    return geo.collection(collectionRef: usersPublicCol).within(
-          center: point,
-          radius: searchRadius,
-          field: 'location',
-          strictMode: true,
-        );
   }
 }
