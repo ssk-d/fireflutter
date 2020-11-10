@@ -769,7 +769,8 @@ Example)
 
 ## Geo Location Setup
 
-- We will use [geoflutterfire](https://pub.dev/packages/geoflutterfire)
+- We will use `geoflutterfire` package.
+  - see [geoflutterfire](https://pub.dev/packages/geoflutterfire) for more information.
 
 - Enable Google map SDK for Android and iOs (or which ever platform it is needed)
   - go to [console.cloud.google.com](console.cloud.google.com)
