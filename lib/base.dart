@@ -24,8 +24,12 @@ class Base {
   CollectionReference usersCol;
   CollectionReference usersPublicCol;
 
-  FirebaseMessaging firebaseMessaging = FirebaseMessaging();
+  DocumentReference get publicDoc =>
+      db.collection('meta').doc('user').collection('public').doc(user.uid);
+  DocumentReference get tokenDoc =>
+      db.collection('meta').doc('user').collection('token').doc(user.uid);
 
+  FirebaseMessaging firebaseMessaging = FirebaseMessaging();
 
   Geoflutterfire geo = Geoflutterfire();
 
@@ -175,26 +179,38 @@ class Base {
   ///   'public': { notifyPost: value },
   /// });
   /// ```
-  Future<void> updateUserMeta(Map<String, Map<String, dynamic>> meta) async {
-    // Push default meta to user meta
-    if (meta != null) {
-      CollectionReference metaCol = usersCol.doc(user.uid).collection('meta');
-      for (final key in meta.keys) {
-        // Save data for each path.
-        await metaCol.doc(key).set(meta[key], SetOptions(merge: true));
-      }
-    }
-  }
+  // Future<void> updateUserMeta(Map<String, Map<String, dynamic>> meta) async {
+  //   // Push default meta to user meta
+  //   if (meta != null) {
+  //     CollectionReference metaCol = usersCol.doc(user.uid).collection('meta');
+  //     for (final key in meta.keys) {
+  //       // Save data for each path.
+  //       await metaCol.doc(key).set(meta[key], SetOptions(merge: true));
+  //     }
+  //   }
+  // }
 
   /// Update user public data in `/users/{uid}/meta/public` document.
   ///
-  /// [name] is the document property name
-  Future<void> updateUserPublic(String name, dynamic value) {
-    return updateUserMeta({
-      'public': {
-        name: value,
-      },
-    });
+  /// [name] is the document data or property name
+  /// if [value] is null, then [name] is considered as Map and it will merge
+  /// into to public document.
+  /// If [value] is not null, then [name] is a property of the public document
+  /// and it will update only one property.
+  Future<void> updateUserPublic(dynamic name, [dynamic value]) {
+    if (name is Map) {
+      return publicDoc.set(name, SetOptions(merge: true));
+    } else {
+      return publicDoc.set({name: value}, SetOptions(merge: true));
+    }
+  }
+
+  Future<dynamic> updateUserToken() async {
+    if (notLoggedIn) return false;
+    if (enableNotification == false) return false;
+    if (firebaseMessagingToken == null) return false;
+    return tokenDoc
+        .set({firebaseMessagingToken: true}, SetOptions(merge: true));
   }
 
   /// Update push notification token to Firestore
@@ -203,16 +219,16 @@ class Base {
   ///   after login but before `Firebase.AuthStateChange()` and when it happens,
   ///   the user appears not to be logged in even if the user already logged in.
   ///
-  Future<void> updateToken(User user) {
-    if (enableNotification == false) return null;
-    if (firebaseMessagingToken == null) return null;
-    return FirebaseFirestore.instance
-        .collection('users')
-        .doc(user.uid)
-        .collection('meta')
-        .doc('tokens')
-        .set({firebaseMessagingToken: true}, SetOptions(merge: true));
-  }
+  // Future<void> updateToken(User user) {
+  //   if (enableNotification == false) return null;
+  //   if (firebaseMessagingToken == null) return null;
+  //   return FirebaseFirestore.instance
+  //       .collection('users')
+  //       .doc(user.uid)
+  //       .collection('meta')
+  //       .doc('tokens')
+  //       .set({firebaseMessagingToken: true}, SetOptions(merge: true));
+  // }
 
   Future<void> updateUserSubscription(User user) async {
     if (enableNotification == false) return;
@@ -250,7 +266,7 @@ class Base {
     // print('token');
     // print(firebaseMessagingToken);
     if (user != null) {
-      await updateToken(user);
+      await updateUserToken();
     }
 
     /// subscribe to all topic
@@ -654,11 +670,9 @@ class Base {
     if (doc == null) {
       /// first time registration
       await onRegister(user);
-      await updateProfile({}, meta: {
-        'public': {
-          notifyPost: true,
-          notifyComment: true,
-        },
+      await updateProfile({}, public: {
+        notifyPost: true,
+        notifyComment: true,
       });
     }
 
@@ -667,7 +681,7 @@ class Base {
 
   ///
   Future<void> onLogin(User user) async {
-    await updateToken(user);
+    await updateUserToken();
     await updateUserSubscription(user);
   }
 
@@ -852,10 +866,9 @@ class Base {
   /// Note. Whenever this method is called, it updates [updatedAt], which means
   /// it will always update user document and fires [userChange] event.
   ///
-  Future<void> updateProfile(
-    Map<String, dynamic> data, {
-    Map<String, Map<String, dynamic>> meta,
-  }) async {
+  /// It updates push notification token if the app needs.
+  Future<void> updateProfile(Map<String, dynamic> data,
+      {Map<String, dynamic> public}) async {
     if (data == null) return;
     if (data['displayName'] != null) {
       await user.updateProfile(displayName: data['displayName']);
@@ -873,6 +886,7 @@ class Base {
     data['updatedAt'] = FieldValue.serverTimestamp();
     await userDoc.set(data, SetOptions(merge: true));
 
-    await updateUserMeta(meta);
+    await updateUserPublic(public);
+    await updateUserToken();
   }
 }

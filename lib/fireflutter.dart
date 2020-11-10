@@ -115,7 +115,8 @@ class FireFlutter extends Base {
   /// to add extra data on registration.
   Future<User> register(
     Map<String, dynamic> data, {
-    Map<String, Map<String, dynamic>> meta,
+    Map<String, dynamic> public,
+    String token,
   }) async {
     assert(data['photoUrl'] == null, 'Use photoURL');
 
@@ -158,19 +159,22 @@ class FireFlutter extends Base {
     /// Default meta
     ///
     /// Notification for
-    Map<String, Map<String, dynamic>> defaultMeta = {
-      'public': {
-        notifyPost: true,
-        notifyComment: true,
-      }
+    Map<String, dynamic> defaultPublicData = {
+      notifyPost: true,
+      notifyComment: true,
     };
 
     /// Merge default with new meta data.
-    if (meta != null && meta.isNotEmpty) {
-      defaultMeta = mergeMap([defaultMeta, meta]);
+    if (public != null && public.isNotEmpty) {
+      public = mergeMap([defaultPublicData, public]);
     }
 
-    await updateUserMeta(defaultMeta);
+    /// Default public data
+    await updateUserPublic(public);
+
+    await updateUserToken();
+
+    // await updateUserMeta(defaultMeta);
 
     onLogin(user);
     return user;
@@ -189,7 +193,7 @@ class FireFlutter extends Base {
   Future<User> login({
     @required String email,
     @required String password,
-    Map<String, Map<String, dynamic>> meta,
+    Map<String, dynamic> public,
   }) async {
     // print('email: $email');
     UserCredential userCredential =
@@ -197,7 +201,7 @@ class FireFlutter extends Base {
       email: email,
       password: password,
     );
-    await updateUserMeta(meta);
+    await updateUserPublic(public);
     await onLogin(userCredential.user);
     return userCredential.user;
   }
