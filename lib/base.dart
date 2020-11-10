@@ -24,14 +24,11 @@ class Base {
   CollectionReference usersCol;
   CollectionReference usersPublicCol;
 
-<<<<<<< HEAD
   DocumentReference get publicDoc =>
       db.collection('meta').doc('user').collection('public').doc(user.uid);
   DocumentReference get tokenDoc =>
       db.collection('meta').doc('user').collection('token').doc(user.uid);
 
-=======
->>>>>>> 8e27427a7f15d9b1470eb971a3f8d32f3447c12b
   FirebaseMessaging firebaseMessaging = FirebaseMessaging();
 
   /// Device token for Firebase messaging.
@@ -688,12 +685,17 @@ class Base {
 
   /// First time registration
   ///
-  /// This method will be called on Email
+  /// This method will be called on email/password registeration, all social
+  /// logins for the first time, and kinds of registration.
   Future<void> onRegister(User user) async {
-    await updateProfile({
+    await myDoc.set({
       'createdAt': FieldValue.serverTimestamp(),
       'updatedAt': FieldValue.serverTimestamp(),
-    });
+    }, SetOptions(merge: true));
+    // await updateProfile({
+    //   'createdAt': FieldValue.serverTimestamp(),
+    //   'updatedAt': FieldValue.serverTimestamp(),
+    // });
   }
 
   /// Pick an image from Camera or Gallery,
@@ -879,13 +881,13 @@ class Base {
     }
 
     await user.reload();
-    final userDoc =
-        FirebaseFirestore.instance.collection('users').doc(user.uid);
+    // final userDoc =
+    //     FirebaseFirestore.instance.collection('users').doc(user.uid);
 
     data.remove('displayName');
     data.remove('photoURL');
     data['updatedAt'] = FieldValue.serverTimestamp();
-    await userDoc.set(data, SetOptions(merge: true));
+    await myDoc.set(data, SetOptions(merge: true));
 
     await updateUserPublic(public);
     await updateUserToken();

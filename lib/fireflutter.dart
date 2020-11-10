@@ -147,12 +147,12 @@ class FireFlutter extends Base {
     data.remove('photoURL');
 
     // Login Success
-    DocumentReference userDoc = FirebaseFirestore.instance
-        .collection('users')
-        .doc(userCredential.user.uid);
+    // DocumentReference userDoc = FirebaseFirestore.instance
+    //     .collection('users')
+    //     .doc(userCredential.user.uid);
 
     // Set user extra information
-    await userDoc.set(data);
+    await myDoc.set(data);
     await onRegister(userCredential.user);
 
     /// Default meta
