@@ -863,8 +863,10 @@ class FireFlutter extends Base {
 
     return await updateProfile({}, meta: {
       'public': {
-        'geohash': point.hash,
-        'coordinates': point.geoPoint,
+        'location': {
+          'geohash': point.hash,
+          'coordinates': point.geoPoint,
+        }
       }
     });
   }
