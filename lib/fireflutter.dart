@@ -14,7 +14,6 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_facebook_auth/flutter_facebook_auth.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
-import 'package:geoflutterfire/geoflutterfire.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:merge_map/merge_map.dart';
@@ -113,9 +112,10 @@ class FireFlutter extends Base {
   ///
   /// Consideration: It cannot have a fixed data type since developers may want
   /// to add extra data on registration.
+  ///
   Future<User> register(
     Map<String, dynamic> data, {
-    Map<String, Map<String, dynamic>> meta,
+    Map<String, dynamic> public,
   }) async {
     assert(data['photoUrl'] == null, 'Use photoURL');
 
@@ -147,30 +147,33 @@ class FireFlutter extends Base {
     data.remove('photoURL');
 
     // Login Success
-    DocumentReference userDoc = FirebaseFirestore.instance
-        .collection('users')
-        .doc(userCredential.user.uid);
 
     // Set user extra information
-    await userDoc.set(data);
+    await myDoc.set(data);
     await onRegister(userCredential.user);
 
     /// Default meta
     ///
-    /// Notification for
-    Map<String, Map<String, dynamic>> defaultMeta = {
-      'public': {
-        notifyPost: true,
-        notifyComment: true,
-      }
+    /// It subscribe for the reactions of the user's posts and comments by
+    /// default
+    Map<String, dynamic> defaultPublicData = {
+      notifyPost: true,
+      notifyComment: true,
     };
 
     /// Merge default with new meta data.
-    if (meta != null && meta.isNotEmpty) {
-      defaultMeta = mergeMap([defaultMeta, meta]);
+    if (public == null) {
+      public = defaultPublicData;
+    } else {
+      public = mergeMap([defaultPublicData, public]);
     }
 
-    await updateUserMeta(defaultMeta);
+    /// Default public data
+    await updateUserPublic(public);
+
+    await updateUserToken();
+
+    // await updateUserMeta(defaultMeta);
 
     onLogin(user);
     return user;
@@ -189,7 +192,7 @@ class FireFlutter extends Base {
   Future<User> login({
     @required String email,
     @required String password,
-    Map<String, Map<String, dynamic>> meta,
+    Map<String, dynamic> public,
   }) async {
     // print('email: $email');
     UserCredential userCredential =
@@ -197,7 +200,7 @@ class FireFlutter extends Base {
       email: email,
       password: password,
     );
-    await updateUserMeta(meta);
+    await updateUserPublic(public);
     await onLogin(userCredential.user);
     return userCredential.user;
   }
@@ -833,45 +836,5 @@ class FireFlutter extends Base {
     } else {
       return 'en';
     }
-  }
-
-  /// Returns an [GeoFirePoint] object from latitude & longitude.
-  /// 
-  /// The object returned will also contain the location's [geohash].
-  ///
-  getGeoFirePoint({
-    @required double latitude,
-    @required double longitude,
-  }) {
-    return geo.point(
-      latitude: latitude,
-      longitude: longitude,
-    );
-  }
-
-  /// Updates user location
-  ///
-  /// This will add a document under firebase storage [users-public] collection,
-  /// with a document id the same as the value the current user's uid.
-  ///
-  /// ```dart
-  /// ff.updateUserLocation(
-  ///   latitude: _latitude,
-  ///   longitude: _longitude,
-  /// );
-  /// ```
-  updateUserLocation({
-    @required double latitude,
-    @required double longitude,
-  }) async {
-    final GeoFirePoint point = getGeoFirePoint(
-      latitude: latitude,
-      longitude: longitude,
-    );
-
-    return await db.collection('users-public').doc(user.uid).set(
-      {'location': point.data},
-      SetOptions(merge: true),
-    );
   }
 }
