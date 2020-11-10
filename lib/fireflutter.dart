@@ -836,15 +836,23 @@ class FireFlutter extends Base {
   }
 
   /// Returns an [GeoFirePoint] object from latitude & longitude.
+  /// 
+  /// The object returned will also contain the location's [geohash].
   ///
   getGeoFirePoint({
     @required double latitude,
     @required double longitude,
   }) {
-    return new GeoFirePoint(latitude, longitude);
+    return geo.point(
+      latitude: latitude,
+      longitude: longitude,
+    );
   }
 
   /// Updates user location
+  ///
+  /// This will add a document under firebase storage [users-public] collection,
+  /// with a document id the same as the value the current user's uid.
   ///
   /// ```dart
   /// ff.updateUserLocation(
@@ -861,9 +869,9 @@ class FireFlutter extends Base {
       longitude: longitude,
     );
 
-    return await db.collection('users-public').doc(user.uid).set({
-      'geohash': point.hash,
-      'coordinates': point.geoPoint,
-    }, SetOptions(merge: true));
+    return await db.collection('users-public').doc(user.uid).set(
+      {'location': point.data},
+      SetOptions(merge: true),
+    );
   }
 }
