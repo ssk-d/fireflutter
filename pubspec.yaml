@@ -36,8 +36,6 @@ dependencies:
   algolia: ^0.1.7
   merge_map: ^1.0.2
 
-  geoflutterfire: ^2.2.1
-
 dev_dependencies:
   flutter_test:
     sdk: flutter
