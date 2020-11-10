@@ -835,20 +835,6 @@ class FireFlutter extends Base {
     }
   }
 
-  /// Returns an [GeoFirePoint] object from latitude & longitude.
-  /// 
-  /// The object returned will also contain the location's [geohash].
-  ///
-  getGeoFirePoint({
-    @required double latitude,
-    @required double longitude,
-  }) {
-    return geo.point(
-      latitude: latitude,
-      longitude: longitude,
-    );
-  }
-
   /// Updates user location
   ///
   /// This will add a document under firebase storage [users-public] collection,
@@ -864,27 +850,26 @@ class FireFlutter extends Base {
     @required double latitude,
     @required double longitude,
   }) async {
-    final GeoFirePoint point = getGeoFirePoint(
+    final GeoFirePoint point = geo.point(
       latitude: latitude,
       longitude: longitude,
     );
 
-    return await db.collection('users-public').doc(user.uid).set(
+    return await usersPublicCol.doc(user.uid).set(
       {'location': point.data},
       SetOptions(merge: true),
     );
   }
 
   /// returns list of locations near the given [latitude] and [longitude] within the [searchRadius].
-  /// 
+  ///
   /// [searchRadius] is by kilometers
   Stream<List<DocumentSnapshot>> findLocationsNearMe({
     @required double latitude,
     @required double longitude,
-    double searchRadius = 2
+    double searchRadius = 2,
   }) {
-
-    GeoFirePoint point = getGeoFirePoint(
+    final GeoFirePoint point = geo.point(
       latitude: latitude,
       longitude: longitude,
     );
@@ -892,9 +877,7 @@ class FireFlutter extends Base {
     // query for "nearby me"
     // [radius] is by kilometers
     // cancel subscription later.
-    return geo
-        .collection(collectionRef: usersPublicCol)
-        .within(
+    return geo.collection(collectionRef: usersPublicCol).within(
           center: point,
           radius: searchRadius,
           field: 'location',
