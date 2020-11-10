@@ -7,8 +7,11 @@ class Base {
   /// Fires after Firebase has initialized or if already initialized.
   BehaviorSubject<bool> firebaseInitialized = BehaviorSubject.seeded(false);
 
+  /// Returns Firestore instance. Firebase database instance.
+  FirebaseFirestore get db => FirebaseFirestore.instance;
+
   /// Default topic that all users(devices) will subscribe to
-  final String allTopic = 'allTopic';
+  final String allTopic = 'allTopicqwerty';
 
   /// To send push notification
   String firebaseServerToken;
@@ -285,6 +288,7 @@ class Base {
     /// Return if the senderUid is the owner.
     /// For testing you can pass data with test: true to by pass this condition
     if (data != null &&
+        user != null &&
         data['senderUid'] == user.uid &&
         data['test'] == false) {
       return;
@@ -365,11 +369,11 @@ class Base {
         },
         "priority": "high",
         "data": {
-          "id": id,
+          "id": id ?? '',
           "status": "done",
-          "senderUid": user.uid,
+          "senderUid": loggedIn ? user.uid : '',
           "route": "/",
-          "screen": screen,
+          "screen": screen ?? '',
           "test": test ?? false,
           "click_action": "FLUTTER_NOTIFICATION_CLICK",
         },

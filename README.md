@@ -22,6 +22,7 @@ A free, open source, rapid development flutter package to build social apps, com
 - [Fire Flutter](#fire-flutter)
 - [TODOs](#todos)
 - [Table of Contents](#table-of-contents)
+- [- SDK version not match](#ullisdk-version-not-matchliul)
 - [Features](#features)
 - [References](#references)
 - [Components](#components)
@@ -125,6 +126,13 @@ A free, open source, rapid development flutter package to build social apps, com
   - [App crashes on second file upload](#app-crashes-on-second-file-upload)
   - [Firestore rules and indexes](#firestore-rules-and-indexes)
   - [After ff.editPost or ff.editComment, nothing happens?](#after-ffeditpost-or-ffeditcomment-nothing-happens)
+  - [SDK version not match](#sdk-version-not-match)
+  - [flutter_image_compress error](#flutter_image_compress-error)
+<<<<<<< HEAD
+  - [SDK version not match](#sdk-version-not-match)
+=======
+  - [flutter_image_compress error](#flutter_image_compress-error)
+>>>>>>> 00641f778922dfa17883cae43b985ff3b6f25e66
 
 <!-- /TOC -->
 
@@ -929,6 +937,12 @@ ff.translationsChange.listen((x) => setState(() => updateTranslations(x)));
   </intent-filter>
 </activity>
 ```
+
+- For testing on real device you need to add the `SHA certificate fingerprints` on your firebase console project.
+  - To get the SHA-1 you can refer to [Debug hash key](#debug-hash-key).
+  - Open [Firebase Console](https://console.firebase.google.com)
+  - Project `Settings` => `General` =>  `Your Apps`, Select `Android apps` then under `SHA certificate fingerprints`
+    you can add the SHA-1 that you have copy from your pc.
 
 ### Additional iOS Setup
 
@@ -1952,3 +1966,24 @@ If you see error like below, check if you have properly set Firestore rules and 
 ## After ff.editPost or ff.editComment, nothing happens?
 
 Check Internet connectivity. And fireflutter works in offline. So, even though there is no Internet, posting would works. If you want to continue without Internet, you shuold `await`.
+
+
+## SDK version not match
+
+if you see error like `sdk version not match`, then, try to update flutter sdk 1.22.x
+
+
+## flutter_image_compress error
+
+When you meet error like below,
+
+```text
+Undefined symbols for architecture arm64:
+  "_SDImageCoderEncodeCompressionQuality", referenced from:
+      +[CompressHandler compressDataWithImage:quality:format:] in CompressHandler.o
+ld: symbol(s) not found for architecture arm64
+clang: error: linker command failed with exit code 1 (use -v to see invocation)
+```
+
+open `~/bin/flutter/.pub-cache/hosted/pub.dartlang.org/flutter_image_compress-0.7.0/ios/Classes/CompressHandler.m` file and comment out some code as described in [its Git issue](https://github.com/OpenFlutter/flutter_image_compress/issues/160).
+
