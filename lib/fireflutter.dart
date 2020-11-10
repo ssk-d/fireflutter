@@ -861,13 +861,9 @@ class FireFlutter extends Base {
       longitude: longitude,
     );
 
-    return await updateProfile({}, meta: {
-      'public': {
-        'location': {
-          'geohash': point.hash,
-          'coordinates': point.geoPoint,
-        }
-      }
-    });
+    return await db.collection('users-public').doc(user.uid).set({
+      'geohash': point.hash,
+      'coordinates': point.geoPoint,
+    }, SetOptions(merge: true));
   }
 }
