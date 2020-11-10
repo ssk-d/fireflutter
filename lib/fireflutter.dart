@@ -14,6 +14,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_facebook_auth/flutter_facebook_auth.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
+import 'package:geoflutterfire/geoflutterfire.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:merge_map/merge_map.dart';
@@ -832,5 +833,45 @@ class FireFlutter extends Base {
     } else {
       return 'en';
     }
+  }
+
+  /// Returns an [GeoFirePoint] object from latitude & longitude.
+  /// 
+  /// The object returned will also contain the location's [geohash].
+  ///
+  getGeoFirePoint({
+    @required double latitude,
+    @required double longitude,
+  }) {
+    return geo.point(
+      latitude: latitude,
+      longitude: longitude,
+    );
+  }
+
+  /// Updates user location
+  ///
+  /// This will add a document under firebase storage [users-public] collection,
+  /// with a document id the same as the value the current user's uid.
+  ///
+  /// ```dart
+  /// ff.updateUserLocation(
+  ///   latitude: _latitude,
+  ///   longitude: _longitude,
+  /// );
+  /// ```
+  updateUserLocation({
+    @required double latitude,
+    @required double longitude,
+  }) async {
+    final GeoFirePoint point = getGeoFirePoint(
+      latitude: latitude,
+      longitude: longitude,
+    );
+
+    return await db.collection('users-public').doc(user.uid).set(
+      {'location': point.data},
+      SetOptions(merge: true),
+    );
   }
 }

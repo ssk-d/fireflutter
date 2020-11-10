@@ -25,6 +25,9 @@ class Base {
 
   FirebaseMessaging firebaseMessaging = FirebaseMessaging();
 
+
+  Geoflutterfire geo = Geoflutterfire();
+
   /// Device token for Firebase messaging.
   ///
   /// This will be available by default on Android. For iOS, this will be only\'
