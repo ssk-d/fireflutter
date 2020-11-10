@@ -231,11 +231,14 @@ class Base {
   Future<void> updateUserSubscription(User user) async {
     if (enableNotification == false) return;
     if (firebaseMessagingToken == null) return;
-    final docSnapshot =
-        await usersCol.doc(user.uid).collection('meta').doc('public').get();
+    final docSnapshot = await publicDoc.get();
+
+    /// If user public document does not exist, just return since the user
+    /// didn't have subscription.
     if (!docSnapshot.exists) return;
     Map<String, dynamic> tokensDoc = docSnapshot.data();
 
+    ///
     tokensDoc.forEach((key, value) async {
       if (key.indexOf('notification_') != -1) {
         if (value == true) {
@@ -687,6 +690,8 @@ class Base {
   ///
   /// This method will be called on email/password registeration, all social
   /// logins for the first time, and kinds of registration.
+  ///
+  /// [createdAt] holds the time that the user as registered at.
   Future<void> onRegister(User user) async {
     await myDoc.set({
       'createdAt': FieldValue.serverTimestamp(),

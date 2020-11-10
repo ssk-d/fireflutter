@@ -112,10 +112,10 @@ class FireFlutter extends Base {
   ///
   /// Consideration: It cannot have a fixed data type since developers may want
   /// to add extra data on registration.
+  ///
   Future<User> register(
     Map<String, dynamic> data, {
     Map<String, dynamic> public,
-    String token,
   }) async {
     assert(data['photoUrl'] == null, 'Use photoURL');
 
@@ -147,9 +147,6 @@ class FireFlutter extends Base {
     data.remove('photoURL');
 
     // Login Success
-    // DocumentReference userDoc = FirebaseFirestore.instance
-    //     .collection('users')
-    //     .doc(userCredential.user.uid);
 
     // Set user extra information
     await myDoc.set(data);
@@ -157,14 +154,17 @@ class FireFlutter extends Base {
 
     /// Default meta
     ///
-    /// Notification for
+    /// It subscribe for the reactions of the user's posts and comments by
+    /// default
     Map<String, dynamic> defaultPublicData = {
       notifyPost: true,
       notifyComment: true,
     };
 
     /// Merge default with new meta data.
-    if (public != null && public.isNotEmpty) {
+    if (public == null) {
+      public = defaultPublicData;
+    } else {
       public = mergeMap([defaultPublicData, public]);
     }
 
