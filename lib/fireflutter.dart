@@ -874,4 +874,31 @@ class FireFlutter extends Base {
       SetOptions(merge: true),
     );
   }
+
+  /// returns list of locations near the given [latitude] and [longitude] within the [searchRadius].
+  /// 
+  /// [searchRadius] is by kilometers
+  Stream<List<DocumentSnapshot>> findLocationsNearMe({
+    @required double latitude,
+    @required double longitude,
+    double searchRadius = 2
+  }) {
+
+    GeoFirePoint point = getGeoFirePoint(
+      latitude: latitude,
+      longitude: longitude,
+    );
+
+    // query for "nearby me"
+    // [radius] is by kilometers
+    // cancel subscription later.
+    return geo
+        .collection(collectionRef: usersPublicCol)
+        .within(
+          center: point,
+          radius: searchRadius,
+          field: 'location',
+          strictMode: true,
+        );
+  }
 }
