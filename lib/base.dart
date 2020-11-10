@@ -7,6 +7,9 @@ class Base {
   /// Fires after Firebase has initialized or if already initialized.
   BehaviorSubject<bool> firebaseInitialized = BehaviorSubject.seeded(false);
 
+  /// Returns Firestore instance. Firebase database instance.
+  FirebaseFirestore get db => FirebaseFirestore.instance;
+
   /// Default topic that all users(devices) will subscribe to
   final String allTopic = 'allTopicqwerty';
 
