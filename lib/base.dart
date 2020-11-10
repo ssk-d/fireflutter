@@ -215,7 +215,7 @@ class Base {
     Map<String, dynamic> tokensDoc = docSnapshot.data();
 
     tokensDoc.forEach((key, value) async {
-      if (key.indexOf('notification_') != -1) {
+      if (key.indexOf(notifyPost) != -1 || key.indexOf(notifyComment) != -1) {
         if (value == true) {
           await subscribeTopic(key);
         } else {
