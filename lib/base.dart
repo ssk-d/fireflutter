@@ -24,11 +24,14 @@ class Base {
   CollectionReference usersCol;
   CollectionReference usersPublicCol;
 
+<<<<<<< HEAD
   DocumentReference get publicDoc =>
       db.collection('meta').doc('user').collection('public').doc(user.uid);
   DocumentReference get tokenDoc =>
       db.collection('meta').doc('user').collection('token').doc(user.uid);
 
+=======
+>>>>>>> 8e27427a7f15d9b1470eb971a3f8d32f3447c12b
   FirebaseMessaging firebaseMessaging = FirebaseMessaging();
 
   /// Device token for Firebase messaging.
