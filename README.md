@@ -125,6 +125,7 @@ A free, open source, rapid development flutter package to build social apps, com
   - [App crashes on second file upload](#app-crashes-on-second-file-upload)
   - [Firestore rules and indexes](#firestore-rules-and-indexes)
   - [After ff.editPost or ff.editComment, nothing happens?](#after-ffeditpost-or-ffeditcomment-nothing-happens)
+  - [SDK version not match](#sdk-version-not-match)
 
 <!-- /TOC -->
 
@@ -1958,3 +1959,11 @@ If you see error like below, check if you have properly set Firestore rules and 
 ## After ff.editPost or ff.editComment, nothing happens?
 
 Check Internet connectivity. And fireflutter works in offline. So, even though there is no Internet, posting would works. If you want to continue without Internet, you shuold `await`.
+
+
+## SDK version not match
+
+if you see error like `sdk version not match`, then, try to update flutter sdk 1.22.x
+
+
+
