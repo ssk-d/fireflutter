@@ -813,7 +813,7 @@ class FireFlutter extends Base {
   /// `/users/{uid}/meta/public` document would alway exists but just in case
   /// it does't exist, it return empty Map.
   Future<Map<String, dynamic>> userPublicData() async {
-    final Map<String, dynamic> data = (await myPublicDoc.get()).data();
+    final Map<String, dynamic> data = (await publicDoc.get()).data();
     return data == null ? {} : data;
   }
 

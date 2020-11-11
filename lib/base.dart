@@ -460,8 +460,13 @@ class Base {
 
     // Only get uid that will recieve notification
     for (String uid in uids) {
-      final docSnapshot =
-          await usersCol.doc(uid).collection('meta').doc('public').get();
+      final docSnapshot = await db
+          .collection('meta')
+          .doc('user')
+          .collection('public')
+          .doc(uid)
+          .get();
+      // await usersCol.doc(uid).collection('meta').doc('public').get();
 
       if (!docSnapshot.exists) continue;
 
@@ -487,8 +492,13 @@ class Base {
     /// Get tokens
     List<String> tokens = [];
     for (var uid in uidsForNotification) {
-      final docSnapshot =
-          await usersCol.doc(uid).collection('meta').doc('tokens').get();
+      final docSnapshot = await db
+          .collection('meta')
+          .doc('user')
+          .collection('token')
+          .doc(uid)
+          .get();
+      // await usersCol.doc(uid).collection('meta').doc('tokens').get();
       if (!docSnapshot.exists) continue;
       Map<String, dynamic> tokensDoc = docSnapshot.data();
 
