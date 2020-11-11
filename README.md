@@ -104,6 +104,8 @@ A free, open source, rapid development flutter package to build social apps, com
   - [Push Notification](#push-notification)
     - [Notification Settings for the Reactions](#notification-settings-for-the-reactions)
     - [Notification Settings for Forum Subscription](#notification-settings-for-forum-subscription)
+    - [Logic of Push Notification](#logic-of-push-notification)
+      - [Cavits of push notification login](#cavits-of-push-notification-login)
   - [Social Login](#social-login)
     - [Google Sign-in](#google-sign-in)
     - [Facebook Sign In](#facebook-sign-in)
@@ -1674,6 +1676,18 @@ A user can subscribe a forum for new post or comment.
 If you want to enable the forum subscription, then add option button on each forum list.
 
 - See [forum-subscription branch](https://github.com/thruthesky/fireflutter_sample_app/tree/forum-subscription) for the code.
+
+
+### Logic of Push Notification
+
+
+
+#### Cavits of push notification login
+
+- When a user subscribed a topic with his three devices A, B, C.
+  - The user unsubscribes the topic from device A,
+  - But the user will still get push notifications from devices B, C.
+  - To solve the issues, the app use send push notifications based on tokens.
 
 ## Social Login
 

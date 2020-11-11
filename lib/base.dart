@@ -195,7 +195,13 @@ class Base {
   /// into to public document.
   /// If [value] is not null, then [name] is a property of the public document
   /// and it will update only one property.
-  Future<void> updateUserPublic(dynamic name, [dynamic value]) {
+  ///
+  /// ```dart
+  /// await updateUserPublic(public); // merge a map
+  /// await updateUserPublic('a', 'apple'); // merge a key/value
+  /// ```
+  Future<void> updateUserPublic(dynamic name, [dynamic value]) async {
+    if (name == null) return;
     if (name is Map) {
       return publicDoc.set(name, SetOptions(merge: true));
     } else {
@@ -227,7 +233,7 @@ class Base {
   //       .doc('tokens')
   //       .set({firebaseMessagingToken: true}, SetOptions(merge: true));
   // }
-
+  //
   Future<void> updateUserSubscription(User user) async {
     if (enableNotification == false) return;
     if (firebaseMessagingToken == null) return;
@@ -603,6 +609,8 @@ class Base {
   }
 
   DocumentReference get myDoc => usersCol.doc(user.uid);
+
+  @deprecated
   DocumentReference get myPublicDoc =>
       usersCol.doc(user.uid).collection('meta').doc('public');
 
