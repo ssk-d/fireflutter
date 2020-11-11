@@ -1,3 +1,7 @@
+## [0.0.25] - firestore structure change
+
+- breaking change. user public and token collection has been changed.
+
 ## [0.0.25] - updateUserPublic
 
 - `updateUserPublic` method is added to update user public data.
