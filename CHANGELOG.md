@@ -1,4 +1,8 @@
-## [0.0.25] - firestore structure change
+## [0.0.27] - meta path update
+
+- bug fix. meta path upate.
+
+## [0.0.26] - firestore structure change
 
 - breaking change. user public and token collection has been changed.
 
