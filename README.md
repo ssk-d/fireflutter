@@ -22,7 +22,6 @@ A free, open source, rapid development flutter package to build social apps, com
 - [Fire Flutter](#fire-flutter)
 - [TODOs](#todos)
 - [Table of Contents](#table-of-contents)
-- [- SDK version not match](#ullisdk-version-not-matchliul)
 - [Features](#features)
 - [References](#references)
 - [Components](#components)
@@ -121,6 +120,8 @@ A free, open source, rapid development flutter package to build social apps, com
   - [Phone number verification](#phone-number-verification)
   - [Forum Settings](#forum-settings)
 - [Integration Test](#integration-test)
+- [Developers Tips](#developers-tips)
+  - [Extension method on fireflutter](#extension-method-on-fireflutter)
 - [Trouble Shotting](#trouble-shotting)
   - [Stuck in registration](#stuck-in-registration)
   - [MissingPluginException google_sign_in](#missingpluginexception-google_sign_in)
@@ -133,7 +134,6 @@ A free, open source, rapid development flutter package to build social apps, com
   - [After ff.editPost or ff.editComment, nothing happens?](#after-ffeditpost-or-ffeditcomment-nothing-happens)
   - [SDK version not match](#sdk-version-not-match)
   - [flutter_image_compress error](#flutter_image_compress-error)
-  - [SDK version not match](#sdk-version-not-match)
 
 <!-- /TOC -->
 
@@ -1948,6 +1948,23 @@ And we don't do widget testing. Instead, we do integration test.
 - Youtube video on integration test
 
 [![IMAGE ALT TEXT HERE](https://img.youtube.com/vi/wg4yTldihh8/0.jpg)](https://www.youtube.com/watch?v=wg4yTldihh8)
+
+
+# Developers Tips
+
+## Extension method on fireflutter
+
+- To write an extension method, see the example below.
+
+```dart
+import 'package:fireflutter/fireflutter.dart';
+extension on FireFlutter {
+  getUid() {
+    return user.uid;
+  }
+}
+print('uid: ' + ff.getUid());
+```
 
 # Trouble Shotting
 
