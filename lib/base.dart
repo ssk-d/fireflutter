@@ -22,7 +22,6 @@ class Base {
 
   CollectionReference postsCol;
   CollectionReference usersCol;
-  CollectionReference usersPublicCol;
 
   DocumentReference get publicDoc =>
       db.collection('meta').doc('user').collection('public').doc(user.uid);
@@ -162,7 +161,6 @@ class Base {
           Settings(cacheSizeBytes: Settings.CACHE_SIZE_UNLIMITED);
 
       usersCol = FirebaseFirestore.instance.collection('users');
-      usersPublicCol = FirebaseFirestore.instance.collection('users-public');
       postsCol = FirebaseFirestore.instance.collection('posts');
       return firebaseApp;
     });
@@ -246,7 +244,7 @@ class Base {
 
     ///
     tokensDoc.forEach((key, value) async {
-      if (key.indexOf('notification_') != -1) {
+      if (key.indexOf(notifyPost) != -1 || key.indexOf(notifyComment) != -1) {
         if (value == true) {
           await subscribeTopic(key);
         } else {

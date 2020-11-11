@@ -61,6 +61,9 @@ A free, open source, rapid development flutter package to build social apps, com
       - [Additional Phone Auth Setup for iOS](#additional-phone-auth-setup-for-ios)
   - [Image Picker Setup](#image-picker-setup)
     - [Image Picker Setup for iOS](#image-picker-setup-for-ios)
+  - [Geo Location Setup](#geo-location-setup)
+    - [Geo Location Setup For Android](#geo-location-setup-for-android)
+    - [Geo Location Setup For iOs](#geo-location-setup-for-ios)
   - [I18N Setup](#i18n-setup)
   - [Push Notification Setup](#push-notification-setup)
     - [Additional Android Setup](#additional-android-setup)
@@ -130,11 +133,7 @@ A free, open source, rapid development flutter package to build social apps, com
   - [After ff.editPost or ff.editComment, nothing happens?](#after-ffeditpost-or-ffeditcomment-nothing-happens)
   - [SDK version not match](#sdk-version-not-match)
   - [flutter_image_compress error](#flutter_image_compress-error)
-<<<<<<< HEAD
   - [SDK version not match](#sdk-version-not-match)
-=======
-  - [flutter_image_compress error](#flutter_image_compress-error)
->>>>>>> 00641f778922dfa17883cae43b985ff3b6f25e66
 
 <!-- /TOC -->
 
@@ -768,6 +767,67 @@ Example)
 <string>$(EXECUTABLE_NAME) need access to Camera.</string>
 <key>NSMicrophoneUsageDescription</key>
 <string>$(EXECUTABLE_NAME) need access to Microphone.</string>
+```
+
+## Geo Location Setup
+
+- We will use `geoflutterfire` package.
+  - see [geoflutterfire](https://pub.dev/packages/geoflutterfire) for more information.
+
+- Enable Google map SDK for Android and iOs (or which ever platform it is needed)
+  - go to [console.cloud.google.com](console.cloud.google.com)
+  - Select your project
+  - on the side menu navigate to `APIs & Services` => `Credentials`
+    - Click `CREATE CREDENTIAL` then choose `API KEY`.
+
+### Geo Location Setup For Android
+
+- Open `AndroidManifest.xml` under `android/app/src/main` and add the following:
+
+```xml
+<manifest>
+  <application>
+    ...
+    <!-- add meta-data with API KEY value inside `application` tag -->
+    <meta-data android:name="com.google.android.get.API_KEY" android:value="API KEY" />
+  </application>
+    ...
+  <!-- add user-permission for accessing location -->
+  <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
+</manifest>
+```
+
+### Geo Location Setup For iOs
+
+- Open `Info.plist` under `ios/Runner` and add the following:
+
+```xml
+  <key>io.flutter.embedded_views_preview</key>
+  <true />
+  <key>NSLocationAlwaysUsageDescription</key>
+  <string>Reason to always having the need to access the location service</string>
+  <key>NSLocationWhenInUseUsageDescription</key>
+  <string>Reason to having the need to access location service when app is in use</string>
+  <key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+  <string>Reason to having the need to always access location service or only when app is in use</string>
+```
+
+- Add the following to `AppDelegate.swift` which is under `ios/Runner`
+
+```swift
+...
+import GoogleMaps /// import google maps
+
+@UIApplicationMain
+@objc class AppDelegate: FlutterAppDelegate {
+  override func application(
+    _ application: UIApplication,
+    didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
+  ) -> Bool {
+    GMSServices.provideAPIKey("API KEY") /// Google MAPS API KEY
+    ...
+  }
+}
 ```
 
 ## I18N Setup
