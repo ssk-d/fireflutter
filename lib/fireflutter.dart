@@ -49,7 +49,9 @@ class FireFlutter extends Base {
     String pushNotificationSound,
     Map<String, Map<dynamic, dynamic>> settings,
     Map<String, Map<String, String>> translations,
+    bool chat = false,
   }) async {
+    this.enableChat = chat;
     this.enableNotification = enableNotification;
     this.firebaseServerToken = firebaseServerToken;
     this.pushNotificationSound = pushNotificationSound;
@@ -95,9 +97,13 @@ class FireFlutter extends Base {
   bool get isAdmin => this.userData['isAdmin'] == true;
 
   /// Checks if a user is currently logged in.
+  /// @deprecated user `isLoggedIn`
+  @deprecated
   bool get userIsLoggedIn => user != null;
 
   /// Checks if no user is logged in.
+  /// @deprecated Use `notLoggedIn`
+  @deprecated
   bool get userIsLoggedOut => !userIsLoggedIn;
 
   /// Register into Firebase with email/password
@@ -203,6 +209,37 @@ class FireFlutter extends Base {
     await updateUserPublic(public);
     await onLogin(userCredential.user);
     return userCredential.user;
+  }
+
+  /// logs in or register.
+  ///
+  /// This method is for a test purpose. Do not use this method unless you
+  /// really need it.
+  ///
+  /// The input arguments are the same as `register`
+  ///
+  /// ```dart
+  /// dynamic user = await ff.loginOrRegister({
+  ///  'email': 'user-a@gmail.com',
+  ///  'password': '12345a,*',
+  ///  'displayName': 'UserA'
+  /// });
+  /// ```
+  Future<User> loginOrRegister(
+    Map<String, dynamic> data, {
+    Map<String, dynamic> public,
+  }) async {
+    try {
+      return await login(
+          email: data['email'], password: data['password'], public: public);
+    } on FirebaseAuthException catch (e) {
+      if (e.code == 'user-not-found') {
+        return await register(data, public: public);
+      }
+      rethrow;
+    } catch (e) {
+      rethrow;
+    }
   }
 
   /// Update user's profile photo.
@@ -836,5 +873,112 @@ class FireFlutter extends Base {
     } else {
       return 'en';
     }
+  }
+
+  /// Returns the room collection reference
+  ///
+  /// Do not confused with [chatMyRoomCol] which is user's (indivisual) room
+  /// list while [chatRoomCol] is the whole chat room message container.
+  CollectionReference chatRoomCol(String roomId) {
+    return db.collection('chat').doc('rooms').collection(roomId);
+  }
+
+  /// Returns /chat/rooms/{roomId}/info document reference
+  ///
+  /// ```dart
+  /// await roomInfo(roomId).set(info);
+  /// await roomInfo(roomId).update({'users': users});
+  /// ```
+  ///
+  /// Do not confused with [chatMyRoomInfo] which has the last chat message of
+  /// the chat room of the user's (indivisual) room list, while [chatRoomInfo]
+  /// is the room information that has `moderators`, `users` and all about the
+  /// chat room information.
+  DocumentReference chatRoomInfo(String roomId) {
+    return chatRoomCol(roomId).doc('info');
+  }
+
+  /// Returns my room list collection reference.
+  CollectionReference chatMyRoomCol(String uid) {
+    return db.collection('chat').doc('users').collection(uid);
+  }
+
+  /// Returns my room (that has last message of the room) document
+  /// reference.
+  DocumentReference chatMyRoom(String uid, String roomId) {
+    return chatMyRoomCol(uid).doc(roomId);
+  }
+
+  /// Create a chat room with the [users].
+  ///
+  /// [users] is a list of the UID of users.
+  /// [users] may have [or have not] include the creator's uid.
+  Future<String> chatCreateRoom({List<String> users}) async {
+    if (users == null) users = [];
+    users.add(user.uid);
+    users = [
+      ...{...users}
+    ];
+
+    String roomId = chatRoomId();
+    // print('roomId: $roomId');
+
+    Map<String, dynamic> info = {
+      'users': users,
+      'createdAt': FieldValue.serverTimestamp(),
+      'moderators': [user.uid],
+    };
+
+    await chatRoomInfo(roomId).set(info);
+    return roomId;
+  }
+
+  /// Returns the room info document.
+  ///
+  /// If the room does exists, it returns null.
+  /// The return value has [roomId] as its room id.
+  Future<Map<String, dynamic>> chatGetRoomInfo(String roomId) async {
+    DocumentSnapshot snapshot = await chatRoomInfo(roomId).get();
+    if (snapshot.exists == false) return null;
+    Map<String, dynamic> info = snapshot.data();
+    if (info == null) return null;
+    info['roomId'] = roomId;
+    return info;
+  }
+
+  /// Add a user to chat room
+  Future<void> chatAddUser(String roomId, List<String> users) async {
+    Map<String, dynamic> info = await chatGetRoomInfo(roomId);
+    users = [...List<String>.from(info['users']), ...users];
+
+    users = [
+      ...{...users}
+    ];
+    await chatRoomInfo(roomId).update({'users': users});
+  }
+
+  /// Send a message to chat room
+  ///
+  /// [info] is the room info that has roomId and users.
+  Future<Map<String, dynamic>> chatSendMessage({
+    @required info,
+    @required String text,
+  }) async {
+    Map<String, dynamic> message = {
+      'senderUid': user.uid,
+      'senderDisplayName': user.displayName,
+      'senderPhotoURL': user.photoURL,
+      'text': text,
+      'createdAt': FieldValue.serverTimestamp(),
+    };
+    chatRoomCol(info['roomId']).add(message);
+    message['newMessages'] = FieldValue.increment(1);
+    List<Future<void>> messages = [];
+    for (String uid in info['users']) {
+      messages.add(chatMyRoom(uid, info['roomId'])
+          .set(message, SetOptions(merge: true)));
+    }
+    await Future.wait(messages);
+    return message;
   }
 }

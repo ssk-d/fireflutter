@@ -117,7 +117,10 @@ class Base {
   // ignore: close_sinks
   BehaviorSubject translationsChange = BehaviorSubject.seeded({});
 
+  /// Aloglia search
   Algolia algolia;
+
+  bool enableChat;
 
   initUser() {
     authStateChanges = FirebaseAuth.instance.authStateChanges();
@@ -912,5 +915,25 @@ class Base {
 
     await updateUserPublic(public);
     await updateUserToken();
+  }
+
+  /// Generate a random `room id`.
+  String chatRoomId() {
+    String salt = user.uid;
+    DateTime now = DateTime.now();
+    String roomId = now.year.toString() +
+        '' +
+        now.month.toString() +
+        '' +
+        now.day.toString() +
+        'T' +
+        now.hour.toString() +
+        now.minute.toString() +
+        now.second.toString() +
+        '-' +
+        salt +
+        '-' +
+        getRandomString(len: 8);
+    return roomId;
   }
 }

@@ -14,6 +14,8 @@ A free, open source, rapid development flutter package to build social apps, com
 
 - push notification settings sampe code for each forum.
 - Upload youtube of speed coding tutorial on each settings and insert it into readme markdown with a default image and when clicked open the youtube url.
+- Fireflutter does not use dart data model calss since it limits the data structure.
+  - But developers may create their own data model and apply it to their needs. show an example of it.
 
 # Table of Contents
 
@@ -119,6 +121,7 @@ A free, open source, rapid development flutter package to build social apps, com
 - [Settings](#settings)
   - [Phone number verification](#phone-number-verification)
   - [Forum Settings](#forum-settings)
+- [Chat](#chat)
 - [Integration Test](#integration-test)
 - [Developers Tips](#developers-tips)
   - [Extension method on fireflutter](#extension-method-on-fireflutter)
@@ -1885,6 +1888,9 @@ We decided to adopt `GetX i18n` feature. See [GetX Internationalization](https:/
 - If you want to add a language, do [I18N Setup](#i18n-setup)
 - See [sample app's language settings branch](https://github.com/thruthesky/fireflutter_sample_app/tree/language-settings) for the code.
 
+
+
+
 # Settings
 
 - Default settings can be set through `FireFlutter` initialization and is overwritten by `settings` collection of Firebase.
@@ -1932,6 +1938,11 @@ The settings are
     - Copy the Api Key on `FireFlutterApiKey`.
     - Paste it into `Firestore` => `/settings` collection => `app` document => `GcpApiKey`.
   - You may put the `GcpApiKey` in the source code (as in FireFlutter initialization) but that's not recommended. -->
+
+# Chat
+
+- All chat functionality works with user login. If a user didn't log in, then the user must not be able to enter chat screen.
+
 
 # Integration Test
 
