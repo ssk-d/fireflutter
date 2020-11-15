@@ -877,50 +877,63 @@ class FireFlutter extends Base {
 
   /// Returns the room collection reference
   ///
-  /// Do not confused with [chatMyRoomCol] which is user's (indivisual) room
-  /// list while [chatRoomCol] is the whole chat room message container.
-  CollectionReference chatRoomCol(String roomId) {
-    return db.collection('chat').doc('rooms').collection(roomId);
+  /// Do not confused with [chatMyRoomListCol] which is user's (indivisual) room
+  /// list while [chatRoomListCol] is the whole chat room container.
+  CollectionReference get chatRoomListCol {
+    return db.collection('chat').doc('room').collection('list');
   }
 
-  /// Returns /chat/rooms/{roomId}/info document reference
-  ///
-  /// ```dart
-  /// await roomInfo(roomId).set(info);
-  /// await roomInfo(roomId).update({'users': users});
-  /// ```
+  /// Returns /chat/room/list/{roomId} document reference
   ///
   /// Do not confused with [chatMyRoomInfo] which has the last chat message of
   /// the chat room of the user's (indivisual) room list, while [chatRoomInfo]
-  /// is the room information that has `moderators`, `users` and all about the
+  /// has the room information which has `moderators`, `users` and all about the
   /// chat room information.
   DocumentReference chatRoomInfo(String roomId) {
-    return chatRoomCol(roomId).doc('info');
+    return chatRoomListCol.doc(roomId);
   }
 
   /// Returns my room list collection reference.
-  CollectionReference chatMyRoomCol(String uid) {
+  CollectionReference chatMyRoomListCol(String uid) {
     return db.collection('chat').doc('users').collection(uid);
   }
 
   /// Returns my room (that has last message of the room) document
   /// reference.
-  DocumentReference chatMyRoom(String uid, String roomId) {
-    return chatMyRoomCol(uid).doc(roomId);
+  // DocumentReference chatMyRoomInfo(String uid, String roomId) {
+  //   return chatMyRoomListCol(uid).doc(roomId);
+  // }
+
+  /// Returns my room list collection reference.
+  CollectionReference chatUserListCol(String uid) {
+    return db.collection('chat').doc('users').collection(uid);
+  }
+
+  /// Returns my room (that has last message of the room) document
+  /// reference.
+  DocumentReference chatUserRoomDoc(String uid, String roomId) {
+    return chatMyRoomListCol(uid).doc(roomId);
+  }
+
+  /// Return the collection of messages of the room id.
+  CollectionReference chatMessagesCol(String roomId) {
+    return db.collection('chat').doc('messages').collection(roomId);
   }
 
   /// Create a chat room with the [users].
   ///
   /// [users] is a list of the UID of users.
   /// [users] may have [or have not] include the creator's uid.
-  Future<String> chatCreateRoom({List<String> users}) async {
+  ///
+  /// It returns the room information with `id` of the room id.
+  Future<Map<String, dynamic>> chatCreateRoom({List<String> users}) async {
     if (users == null) users = [];
     users.add(user.uid);
     users = [
       ...{...users}
     ];
 
-    String roomId = chatRoomId();
+    // String roomId = chatRoomId();
     // print('roomId: $roomId');
 
     Map<String, dynamic> info = {
@@ -929,40 +942,77 @@ class FireFlutter extends Base {
       'moderators': [user.uid],
     };
 
-    await chatRoomInfo(roomId).set(info);
-    return roomId;
+    DocumentReference roomInfo = await chatRoomListCol.add(info);
+    info['id'] = roomInfo.id;
+    return info;
   }
 
   /// Returns the room info document.
   ///
   /// If the room does exists, it returns null.
-  /// The return value has [roomId] as its room id.
+  /// The return value has `id` as its room id.
   Future<Map<String, dynamic>> chatGetRoomInfo(String roomId) async {
     DocumentSnapshot snapshot = await chatRoomInfo(roomId).get();
     if (snapshot.exists == false) return null;
     Map<String, dynamic> info = snapshot.data();
     if (info == null) return null;
-    info['roomId'] = roomId;
+    info['id'] = roomId;
     return info;
   }
 
-  /// Add a user to chat room
-  Future<void> chatAddUser(String roomId, List<String> users) async {
-    Map<String, dynamic> info = await chatGetRoomInfo(roomId);
+  /// Add users to chat room
+  ///
+  /// Once a user has entered, `who added who` messages will be updated to all of
+  /// room users.
+  ///
+  /// TODO Get list of user uid and display name to display who are added.
+  Future<void> chatAddUser(
+      Map<String, dynamic> info, List<String> users) async {
+    // Map<String, dynamic> info = await chatGetRoomInfo(info['id']);
     users = [...List<String>.from(info['users']), ...users];
-
     users = [
       ...{...users}
     ];
-    await chatRoomInfo(roomId).update({'users': users});
+
+    /// Update last message of room users.
+    /// TODO Unit test
+    /// TODO Add user display named.
+    await chatSendMessage(info: info, text: Chat.enter, extra: {
+      'users': ['...'],
+    });
+
+    /// Leave
+    await chatRoomInfo(info['id']).update({'users': users});
+  }
+
+  /// User leaves a romm
+  ///
+  /// Once a user has left, the user will not be able to update last message of
+  /// room users.
+  /// So, before leave, it should update 'leave' last message of room users.
+  Future<void> chatRoomLeave(Map<String, dynamic> info) async {
+    /// Update last message of room users that the user is leaving.
+    await chatSendMessage(info: info, text: Chat.leave);
+
+    /// Update room info's users: array.
+  }
+
+  /// Moderator removes a user
+  ///
+  /// TODO Unit test
+  Future<void> chatRemoveUser(String roomId, String user) async {
+    /// if admin, remove the user
+    /// send messages to all user.
   }
 
   /// Send a message to chat room
   ///
   /// [info] is the room info that has roomId and users.
+  /// [extra] will be added to the message
   Future<Map<String, dynamic>> chatSendMessage({
-    @required info,
+    @required Map<String, dynamic> info,
     @required String text,
+    Map<String, dynamic> extra,
   }) async {
     Map<String, dynamic> message = {
       'senderUid': user.uid,
@@ -971,11 +1021,18 @@ class FireFlutter extends Base {
       'text': text,
       'createdAt': FieldValue.serverTimestamp(),
     };
-    chatRoomCol(info['roomId']).add(message);
+
+    /// TODO test
+    if (extra != null) {
+      message = mergeMap([message, extra]);
+    }
+    print(chatMessagesCol(info['id']).path);
+    await chatMessagesCol(info['id']).add(message);
     message['newMessages'] = FieldValue.increment(1);
     List<Future<void>> messages = [];
     for (String uid in info['users']) {
-      messages.add(chatMyRoom(uid, info['roomId'])
+      print(chatUserRoomDoc(uid, info['id']).path);
+      messages.add(chatUserRoomDoc(uid, info['id'])
           .set(message, SetOptions(merge: true)));
     }
     await Future.wait(messages);

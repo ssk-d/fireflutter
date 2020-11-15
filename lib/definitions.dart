@@ -99,3 +99,8 @@ class VoteChoice {
   static String like = 'like';
   static String dislike = 'dislike';
 }
+
+class Chat {
+  static String enter = 'enter';
+  static String leave = 'leave';
+}

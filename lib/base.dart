@@ -918,22 +918,22 @@ class Base {
   }
 
   /// Generate a random `room id`.
-  String chatRoomId() {
-    String salt = user.uid;
-    DateTime now = DateTime.now();
-    String roomId = now.year.toString() +
-        '' +
-        now.month.toString() +
-        '' +
-        now.day.toString() +
-        'T' +
-        now.hour.toString() +
-        now.minute.toString() +
-        now.second.toString() +
-        '-' +
-        salt +
-        '-' +
-        getRandomString(len: 8);
-    return roomId;
-  }
+  // String chatRoomId() {
+  //   String salt = user.uid;
+  //   DateTime now = DateTime.now();
+  //   String roomId = now.year.toString() +
+  //       '' +
+  //       now.month.toString() +
+  //       '' +
+  //       now.day.toString() +
+  //       'T' +
+  //       now.hour.toString() +
+  //       now.minute.toString() +
+  //       now.second.toString() +
+  //       '-' +
+  //       salt +
+  //       '-' +
+  //       getRandomString(len: 8);
+  //   return roomId;
+  // }
 }
