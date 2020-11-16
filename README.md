@@ -122,7 +122,11 @@ A free, open source, rapid development flutter package to build social apps, com
   - [Phone number verification](#phone-number-verification)
   - [Forum Settings](#forum-settings)
 - [Chat](#chat)
-- [Integration Test](#integration-test)
+  - [Protocols](#protocols)
+  - [Chat unit tests](#chat-unit-tests)
+- [Tests](#tests)
+  - [Unit Test](#unit-test)
+  - [Integration Test](#integration-test)
 - [Developers Tips](#developers-tips)
   - [Extension method on fireflutter](#extension-method-on-fireflutter)
 - [Trouble Shotting](#trouble-shotting)
@@ -775,6 +779,7 @@ Example)
 ## Geo Location Setup
 
 - We will use `geoflutterfire` package.
+
   - see [geoflutterfire](https://pub.dev/packages/geoflutterfire) for more information.
 
 - Enable Google map SDK for Android and iOs (or which ever platform it is needed)
@@ -1006,7 +1011,7 @@ ff.translationsChange.listen((x) => setState(() => updateTranslations(x)));
 - For testing on real device you need to add the `SHA certificate fingerprints` on your firebase console project.
   - To get the SHA-1 you can refer to [Debug hash key](#debug-hash-key).
   - Open [Firebase Console](https://console.firebase.google.com)
-  - Project `Settings` => `General` =>  `Your Apps`, Select `Android apps` then under `SHA certificate fingerprints`
+  - Project `Settings` => `General` => `Your Apps`, Select `Android apps` then under `SHA certificate fingerprints`
     you can add the SHA-1 that you have copy from your pc.
 
 ### Additional iOS Setup
@@ -1740,10 +1745,7 @@ If you want to enable the forum subscription, then add option button on each for
 
 - See [forum-subscription branch](https://github.com/thruthesky/fireflutter_sample_app/tree/forum-subscription) for the code.
 
-
 ### Logic of Push Notification
-
-
 
 #### Cavits of push notification login
 
@@ -1888,9 +1890,6 @@ We decided to adopt `GetX i18n` feature. See [GetX Internationalization](https:/
 - If you want to add a language, do [I18N Setup](#i18n-setup)
 - See [sample app's language settings branch](https://github.com/thruthesky/fireflutter_sample_app/tree/language-settings) for the code.
 
-
-
-
 # Settings
 
 - Default settings can be set through `FireFlutter` initialization and is overwritten by `settings` collection of Firebase.
@@ -1942,9 +1941,41 @@ The settings are
 # Chat
 
 - All chat functionality works with user login. If a user didn't log in, then the user must not be able to enter chat screen.
+- All chat related methods throw permission error when the user tries something that is not permitted.
 
+## Protocols
 
-# Integration Test
+- When a user is added, a message will be delivered to all room users. The text of the message is `Chat.enter` and `newUsers` property has a list of added users' name. The app can display `who added who`.
+  - When `[A, B, C]` has already joined
+  - And a user adds [C, D],
+  - Then a message will be delivered to `[A, B, C]` to inform new users of `[C, D]` has joined.
+    Even if user `C` is already joined, the message still include `C`.
+
+## Chat unit tests
+
+- See [Unit Test](#unit-test).
+
+# Tests
+
+## Unit Test
+
+Since fireflutter depends on some packages that uses UI widgets, standard unit testing is not ideal.
+
+So, we made our own unit test code.
+
+You can add the code below in Home screen. You need to fix the import path.
+
+```dart
+import 'file:///Users/thruthesky/apps/fireflutter_sample_app/packages/fireflutter/test/chat.test.dart';
+FireFlutter ff = FireFlutter();
+ff.init({});
+ChatTest ct = ChatTest(ff);
+ct.runChatTest();
+```
+
+After test, you need to remove the code.
+
+## Integration Test
 
 Please read [Testing Flutter apps](https://flutter.dev/docs/testing) for details about Flutter app testing.
 
@@ -1959,7 +1990,6 @@ And we don't do widget testing. Instead, we do integration test.
 - Youtube video on integration test
 
 [![IMAGE ALT TEXT HERE](https://img.youtube.com/vi/wg4yTldihh8/0.jpg)](https://www.youtube.com/watch?v=wg4yTldihh8)
-
 
 # Developers Tips
 
@@ -2069,11 +2099,9 @@ If you see error like below, check if you have properly set Firestore rules and 
 
 Check Internet connectivity. And fireflutter works in offline. So, even though there is no Internet, posting would works. If you want to continue without Internet, you shuold `await`.
 
-
 ## SDK version not match
 
 if you see error like `sdk version not match`, then, try to update flutter sdk 1.22.x
-
 
 ## flutter_image_compress error
 
@@ -2088,4 +2116,3 @@ clang: error: linker command failed with exit code 1 (use -v to see invocation)
 ```
 
 open `~/bin/flutter/.pub-cache/hosted/pub.dartlang.org/flutter_image_compress-0.7.0/ios/Classes/CompressHandler.m` file and comment out some code as described in [its Git issue](https://github.com/OpenFlutter/flutter_image_compress/issues/160).
-
