@@ -244,10 +244,11 @@ class FireFlutter extends Base {
 
   /// Update user's profile photo.
   ///
-  ///
+  /// This method updates user profile photo faster than `updateProfile`.
   Future<void> updatePhoto(String url) async {
     await user.updateProfile(photoURL: url);
     await user.reload();
+    await onProfileUpdate();
     userChange.add(UserChangeType.profile);
   }
 
@@ -960,6 +961,11 @@ class FireFlutter extends Base {
 
     DocumentReference roomInfo = await chatRoomListCol.add(info);
     info['id'] = roomInfo.id;
+
+    chatSendMessage(info: {
+      'id': info['id'],
+      'users': [user.uid]
+    }, text: Chat.roomCreated);
     return info;
   }
 
@@ -1104,6 +1110,8 @@ class FireFlutter extends Base {
   ///
   /// [info] is the room info that has roomId and users. [info] is required unlike other functions,
   /// since user may chat often and it will take time to get info from server.
+  /// [info] is a Map containing `id` of the room and `users` of the users who will receive the message.
+  /// `info[usrs]` can be edited to hold only the room creator(moderator) to receive a message that the room has created.
   /// [extra] will be added to the message
   Future<Map<String, dynamic>> chatSendMessage({
     @required Map<String, dynamic> info,

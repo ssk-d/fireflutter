@@ -104,4 +104,41 @@ class Chat {
   static String enter = '[chat:enter]';
   static String leave = '[chat:leave]';
   static String block = '[chat:block]';
+  static String roomCreated = '[chat:roomCreated]';
+}
+
+/// Chat room list helper class
+///
+/// This is a completely independent helper class to help to list login user's room list.
+/// You may rewrite your own helper class.
+class ChatMyRoomList {
+  FireFlutter _ff;
+  Function _render;
+  StreamSubscription _subscription;
+  List<Map<String, dynamic>> rooms = [];
+  ChatMyRoomList({@required inject, @required render})
+      : _ff = inject,
+        _render = render {
+    _subscription = _ff.chatMyRoomListCol.snapshots().listen((snapshot) {
+      snapshot.docChanges.forEach((DocumentChange documentChange) {
+        final roomInfo = documentChange.doc.data();
+        roomInfo['id'] = documentChange.doc.id;
+        if (documentChange.type == DocumentChangeType.added) {
+          rooms.add(roomInfo);
+        } else if (documentChange.type == DocumentChangeType.modified) {
+          final int i = rooms.indexWhere((r) => r['id'] == roomInfo['id']);
+          if (i > -1) {
+            rooms[i] = roomInfo;
+          }
+        } else if (documentChange.type == DocumentChangeType.removed) {
+        } else {
+          assert(false, 'This is error');
+        }
+      });
+      _render();
+    });
+  }
+  leave() {
+    _subscription.cancel();
+  }
 }

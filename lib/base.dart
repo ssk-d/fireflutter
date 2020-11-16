@@ -622,9 +622,12 @@ class Base {
 
   DocumentReference get myDoc => usersCol.doc(user.uid);
 
-  @deprecated
-  DocumentReference get myPublicDoc =>
-      usersCol.doc(user.uid).collection('meta').doc('public');
+  CollectionReference get metaUserPublic =>
+      db.collection('meta').doc('user').collection('public');
+
+  // @deprecated
+  // DocumentReference get myPublicDoc =>
+  //     usersCol.doc(user.uid).collection('meta').doc('public');
 
   /// Returns the order string of the new comment
   ///
@@ -704,9 +707,29 @@ class Base {
   ///
   /// All the login including registration and social login will be handled here.
   Future<void> onLogin(User user) async {
-    if (enableChat) {}
+    if (enableChat) {
+      await updateUserPublic({
+        'displayName': user.displayName,
+        'photoURL': user.photoURL,
+      });
+    }
     await updateUserToken();
     await updateUserSubscription(user);
+  }
+
+  /// Profile update handler
+  ///
+  /// Whenever user updates his photo or nick name
+  ///
+  /// This method may fire userChange event.
+  Future<void> onProfileUpdate() async {
+    if (enableChat) {
+      await updateUserPublic({
+        'displayName': user.displayName,
+        'photoURL': user.photoURL,
+      });
+      userChange.add(UserChangeType.profile);
+    }
   }
 
   /// First time registration
@@ -919,25 +942,6 @@ class Base {
 
     await updateUserPublic(public);
     await updateUserToken();
+    await onProfileUpdate();
   }
-
-  /// Generate a random `room id`.
-  // String chatRoomId() {
-  //   String salt = user.uid;
-  //   DateTime now = DateTime.now();
-  //   String roomId = now.year.toString() +
-  //       '' +
-  //       now.month.toString() +
-  //       '' +
-  //       now.day.toString() +
-  //       'T' +
-  //       now.hour.toString() +
-  //       now.minute.toString() +
-  //       now.second.toString() +
-  //       '-' +
-  //       salt +
-  //       '-' +
-  //       getRandomString(len: 8);
-  //   return roomId;
-  // }
 }
