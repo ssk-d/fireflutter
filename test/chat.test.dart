@@ -123,7 +123,7 @@ class ChatTest {
       isTrue(info['users'].indexOf(users['d']['uid']) > -1,
           'user D - ${users['d']['uid']} must be in users array');
 
-      /// User add to chat room
+      /// User add new users and test.
       ///
       roomInfo = await ff.chatCreateRoom(users: [users['b']['uid']]);
       info = await ff.chatGetRoomInfo(roomInfo['id']);
@@ -188,7 +188,7 @@ class ChatTest {
       await ff.login(email: userB['email'], password: userB['password']);
 
       await ff.chatRoomLeave(
-          info, users['b']['uid'], users['b']['displayName']);
+          info['id'], users['b']['uid'], users['b']['displayName']);
 
       /// Login to C to read room info
       await ff.login(email: userC['email'], password: userC['password']);
@@ -208,7 +208,7 @@ class ChatTest {
       /// C removes D. Expect error since C is a user and user cannot remove another user.
       try {
         await ff.chatBlockUser(
-            info, users['d']['uid'], users['d']['displayName']);
+            info['id'], users['d']['uid'], users['d']['displayName']);
         isTrue(false, 'Error. User cannot block other user.');
       } catch (e) {
         isTrue(true, 'User cannot block other user.');
@@ -217,7 +217,7 @@ class ChatTest {
       /// Login to A(moderator) to block a user.
       await ff.login(email: userA['email'], password: userA['password']);
       await ff.chatBlockUser(
-          info, users['d']['uid'], users['d']['displayName']);
+          info['id'], users['d']['uid'], users['d']['displayName']);
 
       info = await ff.chatGetRoomInfo(info['id']);
       isTrue(

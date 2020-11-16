@@ -120,7 +120,8 @@ class Base {
   /// Aloglia search
   Algolia algolia;
 
-  bool enableChat;
+  /// If true, it does chat logic.
+  bool enableChat = false;
 
   initUser() {
     authStateChanges = FirebaseAuth.instance.authStateChanges();
@@ -699,8 +700,11 @@ class Base {
     await onLogin(user);
   }
 
+  /// Login handler
   ///
+  /// All the login including registration and social login will be handled here.
   Future<void> onLogin(User user) async {
+    if (enableChat) {}
     await updateUserToken();
     await updateUserSubscription(user);
   }

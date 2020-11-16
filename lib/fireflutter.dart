@@ -44,14 +44,14 @@ class FireFlutter extends Base {
   /// then it will be escalated to 15.
   ///
   Future<void> init({
+    bool enableChat = false,
     bool enableNotification = false,
     String firebaseServerToken,
     String pushNotificationSound,
     Map<String, Map<dynamic, dynamic>> settings,
     Map<String, Map<String, String>> translations,
-    bool chat = false,
   }) async {
-    this.enableChat = chat;
+    this.enableChat = enableChat;
     this.enableNotification = enableNotification;
     this.firebaseServerToken = firebaseServerToken;
     this.pushNotificationSound = pushNotificationSound;
@@ -880,7 +880,7 @@ class FireFlutter extends Base {
   /// Do not confused with [chatMyRoomListCol] which is user's (indivisual) room
   /// list while [chatRoomListCol] is the whole chat room container.
   CollectionReference get chatRoomListCol {
-    return db.collection('chat').doc('room').collection('list');
+    return db.collection('chat').doc('info').collection('room-list');
   }
 
   /// Returns `/chat/room/list/{roomId}` document reference
@@ -893,35 +893,35 @@ class FireFlutter extends Base {
     return chatRoomListCol.doc(roomId);
   }
 
-  /// Returns login user's room list collection `/chat/users/my-uid` reference.
+  /// Returns login user's room list collection `/chat/my-room-list/my-uid` reference.
   ///
   ///
   CollectionReference get chatMyRoomListCol {
-    return chatUserListCol(user.uid);
+    return chatUserRoomListCol(user.uid);
   }
 
   /// Returns document reference of my room (that has last message of the room)
   ///
-  /// `/chat/usres/my-uid/{roomId}`
-  DocumentReference chatMyRoomInfo(String roomId) {
+  /// `/chat/my-room-list/my-uid/{roomId}`
+  DocumentReference chatMyRoom(String roomId) {
     return chatMyRoomListCol.doc(roomId);
   }
 
   /// Returns the document data of [roomId] room in my room list.
   Future<Map<String, dynamic>> chatLastMessage(String roomId) async {
-    return (await chatMyRoomInfo(roomId).get()).data();
+    return (await chatMyRoom(roomId).get()).data();
   }
 
-  /// Returns my room list collection `/chat/users/{uid}` reference.
+  /// Returns my room list collection `/chat/my-room-list/{uid}` reference.
   ///
-  CollectionReference chatUserListCol(String uid) {
-    return db.collection('chat').doc('users').collection(uid);
+  CollectionReference chatUserRoomListCol(String uid) {
+    return db.collection('chat').doc('my-room-list').collection(uid);
   }
 
   /// Returns my room (that has last message of the room) document
   /// reference.
   DocumentReference chatUserRoomDoc(String uid, String roomId) {
-    return chatUserListCol(uid).doc(roomId);
+    return chatUserRoomListCol(uid).doc(roomId);
   }
 
   /// Return the collection of messages of the room id.
@@ -1054,13 +1054,12 @@ class FireFlutter extends Base {
   /// But admin can remove other users.
   ///
   ///
-  Future<void> chatRoomLeave(
-      Map<String, dynamic> info, String uid, String userName,
+  Future<void> chatRoomLeave(String roomId, String uid, String userName,
       {String text}) async {
     /// Get new info from server.
     /// There might be mistake that somehow `info['users']` is not upto date.
     /// So, it is safe to get room info from server.
-    info = await chatGetRoomInfo(info['id']);
+    Map<String, dynamic> info = await chatGetRoomInfo(roomId);
 
     /// Update last message of room users that the user is leaving.
     await chatSendMessage(
@@ -1087,12 +1086,11 @@ class FireFlutter extends Base {
 
   /// Moderator removes a user
   ///
-  Future<void> chatBlockUser(
-      Map<String, dynamic> info, String uid, String userName) async {
+  Future<void> chatBlockUser(String roomId, String uid, String userName) async {
     /// if admin, remove other user. If not, he can remove himself.
     /// send messages to all user.
 
-    return chatRoomLeave(info, uid, userName, text: Chat.block);
+    return chatRoomLeave(roomId, uid, userName, text: Chat.block);
 
     // await chatSendMessage(
     //     info: info, text: Chat.leave, extra: {'userName': userName});
@@ -1104,7 +1102,8 @@ class FireFlutter extends Base {
 
   /// Send a message to chat room
   ///
-  /// [info] is the room info that has roomId and users.
+  /// [info] is the room info that has roomId and users. [info] is required unlike other functions,
+  /// since user may chat often and it will take time to get info from server.
   /// [extra] will be added to the message
   Future<Map<String, dynamic>> chatSendMessage({
     @required Map<String, dynamic> info,
@@ -1116,16 +1115,23 @@ class FireFlutter extends Base {
       'senderDisplayName': user.displayName,
       'senderPhotoURL': user.photoURL,
       'text': text,
+
+      /// Time that this message(or last message) was created.
       'createdAt': FieldValue.serverTimestamp(),
     };
 
-    /// TODO test
     if (extra != null) {
       message = mergeMap([message, extra]);
     }
+
+    /// If there is no new users, then make it empty string.
+    if (message['newUsers'] == null) {
+      message['newUsers'] = [];
+    }
     // print(chatMessagesCol(info['id']).path);
     await chatMessagesCol(info['id']).add(message);
-    message['newMessages'] = FieldValue.increment(1);
+    message['newMessages'] =
+        FieldValue.increment(1); // To increase, it must be an udpate.
     List<Future<void>> messages = [];
     for (String uid in info['users']) {
       // print(chatUserRoomDoc(uid, info['id']).path);
