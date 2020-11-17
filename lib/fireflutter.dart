@@ -322,7 +322,7 @@ class FireFlutter extends Base {
 
           if (post['comments'] == null) post['comments'] = [];
 
-          // TODO: have a placeholder for all the posts' comments change subscription.
+          // Have a placeholder for all the posts' comments change subscription.
           forum.commentsSubcriptions[post['id']] = FirebaseFirestore.instance
               .collection('posts/${post['id']}/comments')
               .orderBy('order', descending: true)
@@ -386,7 +386,7 @@ class FireFlutter extends Base {
 
         /// post delete
         else if (documentChange.type == DocumentChangeType.removed) {
-          /// TODO: when post is deleted, also remove comment list subscription to avoid memory leak.
+          // When post is deleted, also remove comment list subscription to avoid memory leak.
           forum.commentsSubcriptions[post['id']].cancel();
           forum.posts.removeWhere((p) => p['id'] == post['id']);
           forum.render(RenderType.postDelete);
