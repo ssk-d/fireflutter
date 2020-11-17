@@ -807,7 +807,6 @@ Example)
   <string>Reason to having the need to always access location service or only when app is in use</string>
 ```
 
-
 ## I18N Setup
 
 If an app serves only for one nation with one language, the app may not need localization. But if the app serves for many nations with many languages, then the app should have internationalization. The app should display Chinese language for Chinese people, Korean langauge for Korean people, Japanese for Japanese people and so on.
