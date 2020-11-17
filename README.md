@@ -778,9 +778,10 @@ Example)
 
 ## Location Setup
 
-- We recommend to use `location` package.
+When app boots we save user's location into Firestore. The app can do so much things with user location.
 
-  - see [location](https://pub.dev/packages/location) for more information.
+We use `location` package to get user's location.  
+See [location](https://pub.dev/packages/location) for more information.
 
 ### Location Setup For Android
 
@@ -806,7 +807,6 @@ Example)
   <key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
   <string>Reason to having the need to always access location service or only when app is in use</string>
 ```
-
 
 ## I18N Setup
 
