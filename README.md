@@ -1942,6 +1942,7 @@ The settings are
 
 - All chat functionality works with user login. If a user didn't log in, then the user must not be able to enter chat screen.
 - All chat related methods throw permission error when the user tries something that is not permitted.
+- To use chat functionality, `openProfile` option must be set.
 
 ## Protocols
 

@@ -111,6 +111,7 @@ class Chat {
 ///
 /// This is a completely independent helper class to help to list login user's room list.
 /// You may rewrite your own helper class.
+/// TODO When user login later or change account.
 class ChatMyRoomList {
   FireFlutter _ff;
   Function _render;
@@ -123,6 +124,8 @@ class ChatMyRoomList {
       snapshot.docChanges.forEach((DocumentChange documentChange) {
         final roomInfo = documentChange.doc.data();
         roomInfo['id'] = documentChange.doc.id;
+        // print(
+        //     'type: ${documentChange.type}, length: ${documentChange.doc.data()}, roomInfo: $roomInfo');
         if (documentChange.type == DocumentChangeType.added) {
           rooms.add(roomInfo);
         } else if (documentChange.type == DocumentChangeType.modified) {
@@ -131,6 +134,10 @@ class ChatMyRoomList {
             rooms[i] = roomInfo;
           }
         } else if (documentChange.type == DocumentChangeType.removed) {
+          final int i = rooms.indexWhere((r) => r['id'] == roomInfo['id']);
+          if (i > -1) {
+            rooms.removeAt(i);
+          }
         } else {
           assert(false, 'This is error');
         }
@@ -138,6 +145,70 @@ class ChatMyRoomList {
       _render();
     });
   }
+  leave() {
+    _subscription.cancel();
+  }
+}
+
+/// Chat room message list helper class.
+///
+/// By defining this helper class, you may open more than one chat room at the same time.
+/// ! 이전 목록을 가져오는 것은 .get() 으로 가져오고, listen 한다. 그리고 컬렉션에서는 맨 마지막 1개만 계속해서, 새로운 정보를 가져오면 된다.
+class ChatMessages {
+  FireFlutter _ff;
+  Function _render;
+  String _roomId;
+  int _noOfMessagesPerFetch;
+  StreamSubscription _subscription;
+  List<Map<String, dynamic>> messages = [];
+  ChatMessages(
+      {@required inject,
+      @required String roomId,
+      @required render,
+      noOfMessagesPerFetch = 30})
+      : _ff = inject,
+        _render = render,
+        _roomId = roomId,
+        _noOfMessagesPerFetch = noOfMessagesPerFetch {
+    _subscription = _ff
+        .chatMessagesCol(_roomId)
+        .orderBy('createdAt', descending: true)
+        .limit(1)
+        .snapshots()
+        .listen((snapshot) {
+      snapshot.docChanges.forEach((DocumentChange documentChange) {
+        final message = documentChange.doc.data();
+        message['id'] = documentChange.doc.id;
+        if (documentChange.type == DocumentChangeType.added) {
+          ///
+          messages.insert(0, message);
+        } else if (documentChange.type == DocumentChangeType.modified) {
+          /// Don't update here.
+          // final int i = messages.indexWhere((r) => r['id'] == message['id']);
+          // if (i > -1) {
+          //   messages[i] = message;
+          // }
+        } else if (documentChange.type == DocumentChangeType.removed) {
+          /// Don't remove here.
+        } else {
+          assert(false, 'This is error');
+        }
+      });
+      _render();
+    });
+  }
+  fetchMessages() async {
+    QuerySnapshot snapshot = await _ff
+        .chatMessagesCol(_roomId)
+        .orderBy('createdAt', descending: true)
+        .limit(_noOfMessagesPerFetch)
+        .get();
+
+    snapshot.docs.forEach((DocumentSnapshot doc) {
+      /// from here
+    });
+  }
+
   leave() {
     _subscription.cancel();
   }

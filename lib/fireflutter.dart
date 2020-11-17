@@ -44,14 +44,14 @@ class FireFlutter extends Base {
   /// then it will be escalated to 15.
   ///
   Future<void> init({
-    bool enableChat = false,
+    bool openProfile = false,
     bool enableNotification = false,
     String firebaseServerToken,
     String pushNotificationSound,
     Map<String, Map<dynamic, dynamic>> settings,
     Map<String, Map<String, String>> translations,
   }) async {
-    this.enableChat = enableChat;
+    this.openProfile = openProfile;
     this.enableNotification = enableNotification;
     this.firebaseServerToken = firebaseServerToken;
     this.pushNotificationSound = pushNotificationSound;
@@ -1126,22 +1126,22 @@ class FireFlutter extends Base {
 
       /// Time that this message(or last message) was created.
       'createdAt': FieldValue.serverTimestamp(),
+
+      /// Make [newUsers] empty string for re-setting previous information.
+      'newUsers': [],
+
+      if (extra != null) ...extra,
     };
 
-    if (extra != null) {
-      message = mergeMap([message, extra]);
-    }
-
-    /// If there is no new users, then make it empty string.
-    if (message['newUsers'] == null) {
-      message['newUsers'] = [];
-    }
     // print(chatMessagesCol(info['id']).path);
     await chatMessagesCol(info['id']).add(message);
     message['newMessages'] =
         FieldValue.increment(1); // To increase, it must be an udpate.
     List<Future<void>> messages = [];
-    for (String uid in info['users']) {
+
+    /// Just incase there are duplicated UIDs.
+    List<String> users = [...info['users'].toSet()];
+    for (String uid in users) {
       // print(chatUserRoomDoc(uid, info['id']).path);
       messages.add(chatUserRoomDoc(uid, info['id'])
           .set(message, SetOptions(merge: true)));

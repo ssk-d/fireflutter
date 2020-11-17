@@ -120,8 +120,13 @@ class Base {
   /// Aloglia search
   Algolia algolia;
 
-  /// If true, it does chat logic.
-  bool enableChat = false;
+  /// User profile information is private by default.
+  ///
+  /// If [openProfile] is set to true, then user profile information will be
+  /// saved into `/meta/users/{uid}/{...}` which is open to public.
+  ///
+  /// For chat and other functionalities that do user search need this option.
+  bool openProfile = false;
 
   initUser() {
     authStateChanges = FirebaseAuth.instance.authStateChanges();
@@ -707,7 +712,7 @@ class Base {
   ///
   /// All the login including registration and social login will be handled here.
   Future<void> onLogin(User user) async {
-    if (enableChat) {
+    if (openProfile) {
       await updateUserPublic({
         'displayName': user.displayName,
         'photoURL': user.photoURL,
@@ -723,7 +728,7 @@ class Base {
   ///
   /// This method may fire userChange event.
   Future<void> onProfileUpdate() async {
-    if (enableChat) {
+    if (openProfile) {
       await updateUserPublic({
         'displayName': user.displayName,
         'photoURL': user.photoURL,
