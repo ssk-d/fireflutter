@@ -131,7 +131,7 @@ class ChatTest {
           'Add user: users.length==2. roomId: ${roomInfo['id']}');
       // add user C
       await ff.chatAddUser(
-          roomInfo, {users['c']['uid']: users['c']['displayName']});
+          roomInfo['id'], {users['c']['uid']: users['c']['displayName']});
       //
       info = await ff.chatGetRoomInfo(roomInfo['id']);
       List _users = info['users'];
@@ -157,7 +157,7 @@ class ChatTest {
       // print(data);
 
       /// Add user C, D
-      await ff.chatAddUser(roomInfo, {
+      await ff.chatAddUser(roomInfo['id'], {
         users['c']['uid']: users['c']['displayName'],
         users['d']['uid']: users['d']['displayName'],
       });
