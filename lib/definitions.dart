@@ -287,6 +287,7 @@ class ChatRoom {
 
           /// if it's new message, add at bottom.
           else if (messages.length > 0 &&
+              messages[0]['createdAt'] != null &&
               message['createdAt'].microsecondsSinceEpoch >
                   messages[0]['createdAt'].microsecondsSinceEpoch) {
             messages.add(message);

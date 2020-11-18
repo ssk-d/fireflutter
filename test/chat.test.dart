@@ -214,7 +214,7 @@ class ChatTest {
         isTrue(true, 'User cannot block other user.');
       }
 
-      /// Login to A(moderator) to block a user.
+      /// Login to A(moderator) to block user D.
       await ff.login(email: userA['email'], password: userA['password']);
       await ff.chatBlockUser(
           info['id'], users['d']['uid'], users['d']['displayName']);
