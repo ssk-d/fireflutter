@@ -122,8 +122,12 @@ A free, open source, rapid development flutter package to build social apps, com
   - [Phone number verification](#phone-number-verification)
   - [Forum Settings](#forum-settings)
 - [Chat](#chat)
-  - [Protocols](#protocols)
-  - [Chat unit tests](#chat-unit-tests)
+  - [Preview of chat functionality](#preview-of-chat-functionality)
+  - [Firestore structure of chat](#firestore-structure-of-chat)
+  - [Logic of chat](#logic-of-chat)
+  - [Pitfalls of chat logic](#pitfalls-of-chat-logic)
+  - [Code of chat](#code-of-chat)
+  - [Unit tests of Chat](#unit-tests-of-chat)
 - [Tests](#tests)
   - [Unit Test](#unit-test)
   - [Integration Test](#integration-test)
@@ -1910,19 +1914,111 @@ The settings are
 
 # Chat
 
+If you are looking for a package that support a complete chat functionality, fireflutter is for you. Unlike other sample (tutorial) code on the Internet, it has really complete features like
+
+- listing my room list (chat list or friend list).
+- group chat
+- creating chat room with one user or multip users.
+- adding user.
+- blocking user.
+- search user.
+- sending photo
+- changing settings of the room like room title update.
+- and much more.
+
+## Preview of chat functionality
+
 - All chat functionality works with user login. If a user didn't log in, then the user must not be able to enter chat screen.
-- All chat related methods throw permission error when the user tries something that is not permitted.
-- To use chat functionality, `openProfile` option must be set.
+- All chat related methods throw permission error when a user tries something that is not permitted.
+- To use chat functionality, `openProfile` option of `ff.init()` must be set.
 
-## Protocols
+## Firestore structure of chat
 
-- When a user is added, a message will be delivered to all room users. The text of the message is `Chat.enter` and `newUsers` property has a list of added users' name. The app can display `who added who`.
-  - When `[A, B, C]` has already joined
-  - And a user adds [C, D],
-  - Then a message will be delivered to `[A, B, C]` to inform new users of `[C, D]` has joined.
-    Even if user `C` is already joined, the message still include `C`.
+Before we begin, let's put an assumption.
 
-## Chat unit tests
+- There are 3 users. User `A`, user `B`, user `C`, and user `D`. User A is the moderator which means he is the one who created the room.
+- The room that moderator A created is `RoomA` and there are two users in the room. User A, B.
+- The UIDs of user A, B, C, D is A, B, C, D respectively.
+- The room id of RoomA is RoomA.
+
+Firestore structure and its data are secured by Firestore security rules.
+
+- `/chat/info/room-list/{roomId}` is where each room information(setting) is stored.
+  - When a room is created, the `roomId` will be autogenrated by Firestore by adding a document under `/chat/info/room-list` collection.
+  - Document properties
+    - `moderators` is an array of user's uid. Users in this array are the moderators.
+    - `users` is an array of participant users' uid.
+    - `blockedUsers` is an array of blocked users' uid.
+    - `createdAt` has the time when the chat room was created.
+    - `title` is the title of chat room.
+- `/chat/my-room-list/{uid}/{roomId}` is where each user's room list are stored. The document has information about the room and last message.
+  - If a user has unread messages, it has no of new messages.
+  - It has last message information of who sent what, time, and more.
+  - It may have information about who added, blocked.
+    When A chat in RoomA, the (last) message goes to `/chat/info/room-list/RoomA` and to all the users in the room which are
+    - `/chat/my-room-list/A/RoomA`
+    - `/chat/my-room-list/B/RoomA`
+  - Document properties
+
+```text
+{
+  text: is the text.
+  createdAt: FieldValue.serverTimestamp() indicating when the message created.
+  newMessages: no of unread messages.
+  senderUid: the sender uid.
+  senderDisplayname: the sender name.
+  senderPhotoURL: the sender photo URL.
+  photoURL: if there is a photo coming from the sender.
+}
+```
+
+- `/chat/messages/{roomId}/{message}` is where all the chat messages for the room are stored.
+
+## Logic of chat
+
+- User who begin(or create) chat becomes the moderator.
+- Moderator can add another moderator.
+- User will enter `chat entrance screen` and the app should display all of the user's chat room list.
+- User may search another user by openning a `user search screen` and select a user (or multiple users) to begin chat. Then the app should redirect the user to `chat room screen`
+- User can enter chat room by selecting a chat room in his chat room list.
+- User can add other users by selecting add user button in the chat room.
+- User can create a chat room with the same user(s) over again. That means, A can begin chat with B by creating a room. And then, A can begin chat with B again by creating another room.
+- When a room is created, `Chat.roomCreated` message will devlivered to all users.
+  - This protocol message can be useful to display that there is no more messages or this is the first message.
+- When a room is added, `Chat.enter` message (with user information) will devlivered to all users.
+- When a room left, `Chat.leave` message (with user information) will devlivered to all users.
+- When a user is blocked, `Chat.block` message will (with user information) devlivered to all users. Only moderator can blocks a user and the user's uid will be saved in `{ blockedUsers: [ ... ]}` array.
+- When a room is created or a user is added, protocol message will be delivered to newly added users. And the room list will be appears on their room list.
+- Blocked users will not be added to the room until moderator remove the user from blockedUsers array.
+
+## Pitfalls of chat logic
+
+- User cannot remove(or block) another user. Only moderator can do it.
+  - A add B.
+  - B goes offline.
+  - B add C. Since Firebase works offline, B can still add user C even if he has no connection.
+  - A add D.
+  - At this point, there are [A, B, D] in the room. C is not added yet, since B was offline when he added C.
+  - B goes online and tries to update users array with [A, B, C].
+    - It will produce permission error since, the users in the room is [A, B, D] and when B updates [A, B, C], D is missing. It is like B is trying to add C and remove D.
+
+## Code of chat
+
+- The best code sample is in firefutter sample app.
+
+- To search users, fireflutter must have `openProfile` option.
+
+```dart
+ff.init({
+  'openProfile': true,
+})
+```
+
+This option updates user's profile name and photo under `/meta/user/public/{uid}` and users will be able to search other user's profile to chat with.
+
+## Unit tests of Chat
+
+There are two kinds of unit tests of chat. One is Firestore security rules test and the other is unit test.
 
 - See [Unit Test](#unit-test).
 

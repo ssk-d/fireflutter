@@ -101,11 +101,12 @@ class VoteChoice {
 }
 
 /// todo separate this class to `chat.dart`
+/// todo put chat protocol into { protocol: ... }, not in { text: ... }
 class Chat {
-  static String enter = '[chat:enter]';
-  static String leave = '[chat:leave]';
-  static String block = '[chat:block]';
-  static String roomCreated = '[chat:roomCreated]';
+  static String enter = 'Chat.enter';
+  static String leave = 'Chat.leave';
+  static String block = 'Chat.block';
+  static String roomCreated = 'Chat.roomCreated';
 }
 
 /// Chat room list helper class
