@@ -245,6 +245,9 @@ class ChatRoom {
     _throttling = true;
 
     page++;
+    if (page == 1) {
+      _ff.chatMyRoom(_roomId).update({'newMessages': 0}); // don't wait.
+    }
     // print('fetchMessage(): _page: $_page');
 
     /// 처음에 가져 올 때에는 startAfter 가 없으므로, 나중에 새로 추가되는 채팅(도큐먼트)도 가져온다.

@@ -1951,6 +1951,7 @@ Firestore structure and its data are secured by Firestore security rules.
     - `blockedUsers` is an array of blocked users' uid.
     - `createdAt` has the time when the chat room was created.
     - `title` is the title of chat room.
+  - When `{users: [ ... ]}` is updated to add or remove user, other properties cannot be edited.
 - `/chat/my-room-list/{uid}/{roomId}` is where each user's room list are stored. The document has information about the room and last message.
   - If a user has unread messages, it has no of new messages.
   - It has last message information of who sent what, time, and more.
@@ -1990,6 +1991,7 @@ Firestore structure and its data are secured by Firestore security rules.
 - When a user is blocked, `Chat.block` message will (with user information) devlivered to all users. Only moderator can blocks a user and the user's uid will be saved in `{ blockedUsers: [ ... ]}` array.
 - When a room is created or a user is added, protocol message will be delivered to newly added users. And the room list will be appears on their room list.
 - Blocked users will not be added to the room until moderator remove the user from blockedUsers array.
+- When a user(or a moderator) leaves the room and there is no user left in the room, then that's it.
 
 ## Pitfalls of chat logic
 

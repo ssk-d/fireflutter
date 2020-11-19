@@ -961,6 +961,7 @@ class FireFlutter extends Base {
       'title': title ?? '',
       'createdAt': FieldValue.serverTimestamp(),
       'moderators': [user.uid],
+      'newMessages': 0,
     };
 
     DocumentReference roomInfo = await chatRoomListCol.add(info);
@@ -968,7 +969,9 @@ class FireFlutter extends Base {
 
     chatSendMessage(info: {
       'id': info['id'],
-      'users': [user.uid]
+
+      /// Send message to all users.
+      'users': users
     }, text: Chat.roomCreated);
     return info;
   }
@@ -1051,8 +1054,14 @@ class FireFlutter extends Base {
       ...{...newUsers}
     ];
 
-    /// todo Update users first and then send chat messages to all users.
+    /// Update users first and then send chat messages to all users.
     /// In this way, newly entered/added user(s) will have the room in the my-room-list
+
+    /// Update users array with added user.
+    // print('users:');
+    // print(newUsers);
+    await chatRoomInfoDoc(info['id']).update({'users': newUsers});
+    info['users'] = newUsers;
 
     /// Update last message of room users.
     // print('newUserNames:');
@@ -1060,11 +1069,6 @@ class FireFlutter extends Base {
     await chatSendMessage(info: info, text: Chat.enter, extra: {
       'newUsers': users.values.toList(),
     });
-
-    /// Update users array with added user.
-    // print('users:');
-    // print(newUsers);
-    await chatRoomInfoDoc(info['id']).update({'users': newUsers});
   }
 
   /// User leaves a room.
@@ -1072,15 +1076,24 @@ class FireFlutter extends Base {
   /// Once a user has left, the user will not be able to update last message of
   /// room users. So, before leave, it should update 'leave' last message of room users.
   ///
-  /// For admin to block user, see [chatBlockUser]
+  /// For moderator to block user, see [chatBlockUser]
+  ///
+  /// [roomId] is the chat room id.
+  /// [uid] is the user to be kicked out by moderator.
+  /// [userName] is the userName to leave or to be kicked out. and it is required.
+  /// [text] is the text to send to all users.
   ///
   /// This method throws permission error when a user try to remove another user.
   /// But admin can remove other users.
   ///
   ///
-  /// Todo move this method to `ChatRoom`
-  Future<void> chatRoomLeave(String roomId, String uid, String userName,
-      {String text}) async {
+  /// TODO move this method to `ChatRoom`
+  /// TODO if moderator is leaving, it needs to remove the uid from moderator.
+  /// TODO if the last moderator tries to leave, ask the moderator to add another user to moderator.
+  /// TODO When a user(or a moderator) leaves the room and there is no user left in the room,
+  /// then move the room information from /chat/info/room-list to /chat/info/deleted-room-list.
+  Future<void> chatRoomLeave(String roomId,
+      {String uid, @required String userName, String text}) async {
     /// Get new info from server.
     /// There might be mistake that somehow `info['users']` is not upto date.
     /// So, it is safe to get room info from server.
@@ -1117,7 +1130,8 @@ class FireFlutter extends Base {
     /// if admin, remove other user. If not, he can remove himself.
     /// send messages to all user.
 
-    return chatRoomLeave(roomId, uid, userName, text: Chat.block);
+    return chatRoomLeave(roomId,
+        uid: uid, userName: userName, text: Chat.block);
 
     // await chatSendMessage(
     //     info: info, text: Chat.leave, extra: {'userName': userName});
@@ -1175,7 +1189,7 @@ class FireFlutter extends Base {
   }
 
   /// open app settings.
-  /// 
+  ///
   Future<bool> openAppSettings() {
     return permissionHander.openAppSettings();
   }
