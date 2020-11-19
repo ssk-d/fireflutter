@@ -255,6 +255,7 @@ class FireFlutter extends Base {
   /// Get more posts from Firestore
   ///
   /// This does not fetch again while it is in progress of fetching.
+  /// Todo bug check: does the last post in the list disappear when a new post added(created)?
   fetchPosts(ForumData forum) {
     if (forum.shouldNotFetch) return;
     // print('category: ${forum.category}');
@@ -301,7 +302,7 @@ class FireFlutter extends Base {
         post['id'] = documentChange.doc.id;
 
         if (documentChange.type == DocumentChangeType.added) {
-          // [createdAt] is null on author mobile (since it is cached locally).
+          // [createdAt] is null on author mobile (since FieldValue.serverTime make the event fire twice).
           if (post['createdAt'] == null) {
             forum.posts.insert(0, post);
           }
@@ -876,6 +877,7 @@ class FireFlutter extends Base {
     }
   }
 
+  /// TODO move all the chat relative members to `ChatRoom` or `ChatRoomList`
   /// Returns the room collection reference
   ///
   /// Do not confused with [chatMyRoomListCol] which is user's (indivisual) room
@@ -890,7 +892,7 @@ class FireFlutter extends Base {
   /// the chat room of the user's (indivisual) room list, while [chatRoomInfo]
   /// has the room information which has `moderators`, `users` and all about the
   /// chat room information.
-  DocumentReference chatRoomInfo(String roomId) {
+  DocumentReference chatRoomInfoDoc(String roomId) {
     return chatRoomListCol.doc(roomId);
   }
 
@@ -939,6 +941,8 @@ class FireFlutter extends Base {
   ///
   ///
   /// It returns the room information.
+  ///
+  /// Todo move this method to `ChatRoom`
   Future<Map<String, dynamic>> chatCreateRoom({
     List<String> users,
     String title,
@@ -974,18 +978,22 @@ class FireFlutter extends Base {
   /// ```dart
   /// await ff.chatUpdateRoom(info['id'], title: 'new title'); // update title
   /// ```
+  ///
+  /// Todo move this method to `ChatRoom`
   Future<void> chatUpdateRoom(String roomId, {String title}) {
     Map<String, dynamic> data = {};
     if (title != null) data['title'] = title;
-    return chatRoomInfo(roomId).update(data);
+    return chatRoomInfoDoc(roomId).update(data);
   }
 
   /// Returns the room list info `/chat/room/list/{roomId}` document.
   ///
   /// If the room does exists, it returns null.
   /// The return value has `id` as its room id.
+  ///
+  /// Todo move this method to `ChatRoom`
   Future<Map<String, dynamic>> chatGetRoomInfo(String roomId) async {
-    DocumentSnapshot snapshot = await chatRoomInfo(roomId).get();
+    DocumentSnapshot snapshot = await chatRoomInfoDoc(roomId).get();
     if (snapshot.exists == false) return null;
     Map<String, dynamic> info = snapshot.data();
     if (info == null) return null;
@@ -997,21 +1005,25 @@ class FireFlutter extends Base {
   ///
   /// Only moderator can add a user to moderator.
   /// The user must be included in `users` array.
+  ///
+  /// Todo move this method to `ChatRoom`
   Future<void> chatAddModerator(String roomId, String uid) async {
     Map<String, dynamic> info = await chatGetRoomInfo(roomId);
     List<String> moderators = [...info['moderators']];
     moderators.add(uid);
-    await chatRoomInfo(roomId).update({'moderators': moderators});
+    await chatRoomInfoDoc(roomId).update({'moderators': moderators});
   }
 
   /// Remove a moderator.
   ///
   /// Only moderator can remove a moderator.
+  ///
+  /// Todo move this method to `ChatRoom`
   Future<void> chatRemoveModerator(String roomId, String uid) async {
     Map<String, dynamic> info = await chatGetRoomInfo(roomId);
     List<String> moderators = [...info['moderators']];
     moderators.remove(uid);
-    await chatRoomInfo(roomId).update({'moderators': moderators});
+    await chatRoomInfoDoc(roomId).update({'moderators': moderators});
   }
 
   /// Add users to chat room
@@ -1019,14 +1031,17 @@ class FireFlutter extends Base {
   /// Once a user has entered, `who added who` messages will be updated to all of
   /// room users.
   ///
+  /// [users] is a Map of user uid and user name.
+  ///
   /// See readme
   ///
-  Future<void> chatAddUser(
-      Map<String, dynamic> info, Map<String, String> users) async {
+  /// todo before adding user, check if the user is in `blockedUsers` property and if yes, throw a special error code.
+  /// Todo move this method to `ChatRoom`
+  Future<void> chatAddUser(String roomId, Map<String, String> users) async {
     /// Get new info from server.
     /// There might be mistake that somehow `info['users']` is not upto date.
     /// So, it is safe to get room info from server.
-    info = await chatGetRoomInfo(info['id']);
+    Map<String, dynamic> info = await chatGetRoomInfo(roomId);
 
     List<String> newUsers = [
       ...List<String>.from(info['users']),
@@ -1035,6 +1050,9 @@ class FireFlutter extends Base {
     newUsers = [
       ...{...newUsers}
     ];
+
+    /// todo Update users first and then send chat messages to all users.
+    /// In this way, newly entered/added user(s) will have the room in the my-room-list
 
     /// Update last message of room users.
     // print('newUserNames:');
@@ -1046,7 +1064,7 @@ class FireFlutter extends Base {
     /// Update users array with added user.
     // print('users:');
     // print(newUsers);
-    await chatRoomInfo(info['id']).update({'users': newUsers});
+    await chatRoomInfoDoc(info['id']).update({'users': newUsers});
   }
 
   /// User leaves a room.
@@ -1060,6 +1078,7 @@ class FireFlutter extends Base {
   /// But admin can remove other users.
   ///
   ///
+  /// Todo move this method to `ChatRoom`
   Future<void> chatRoomLeave(String roomId, String uid, String userName,
       {String text}) async {
     /// Get new info from server.
@@ -1067,13 +1086,8 @@ class FireFlutter extends Base {
     /// So, it is safe to get room info from server.
     Map<String, dynamic> info = await chatGetRoomInfo(roomId);
 
-    /// Update last message of room users that the user is leaving.
-    await chatSendMessage(
-        info: info, text: text ?? Chat.leave, extra: {'userName': userName});
-
     /// Update room info's users: array.
     ///
-
     List<String> users = [...info['users']];
     users.remove(uid);
     print('users: $users');
@@ -1087,11 +1101,18 @@ class FireFlutter extends Base {
       blocked.add(uid);
       data['blockedUsers'] = blocked;
     }
-    return chatRoomInfo(info['id']).update(data);
+
+    /// Update blocked user first and if there is error return before sending messages to all users.
+    await chatRoomInfoDoc(info['id']).update(data);
+
+    /// Update last message of room users that the user is leaving.
+    await chatSendMessage(
+        info: info, text: text ?? Chat.leave, extra: {'userName': userName});
   }
 
   /// Moderator removes a user
   ///
+  /// Todo move this method to `ChatRoom`
   Future<void> chatBlockUser(String roomId, String uid, String userName) async {
     /// if admin, remove other user. If not, he can remove himself.
     /// send messages to all user.
@@ -1113,6 +1134,8 @@ class FireFlutter extends Base {
   /// [info] is a Map containing `id` of the room and `users` of the users who will receive the message.
   /// `info[usrs]` can be edited to hold only the room creator(moderator) to receive a message that the room has created.
   /// [extra] will be added to the message
+  ///
+  /// Todo move this method to `ChatRoom`
   Future<Map<String, dynamic>> chatSendMessage({
     @required Map<String, dynamic> info,
     @required String text,
@@ -1142,10 +1165,11 @@ class FireFlutter extends Base {
     /// Just incase there are duplicated UIDs.
     List<String> users = [...info['users'].toSet()];
     for (String uid in users) {
-      // print(chatUserRoomDoc(uid, info['id']).path);
+      print(chatUserRoomDoc(uid, info['id']).path);
       messages.add(chatUserRoomDoc(uid, info['id'])
           .set(message, SetOptions(merge: true)));
     }
+    print('send messages to: ${messages.length}');
     await Future.wait(messages);
     return message;
   }
