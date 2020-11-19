@@ -1992,6 +1992,8 @@ Firestore structure and its data are secured by Firestore security rules.
 - When a room is created or a user is added, protocol message will be delivered to newly added users. And the room list will be appears on their room list.
 - Blocked users will not be added to the room until moderator remove the user from blockedUsers array.
 - When a user(or a moderator) leaves the room and there is no user left in the room, then that's it.
+- When a user logs out or logs into another account while listening room list will causes permission error. Especially on testing, you would not open chat screen since testing uses several accounts at the same time.
+- Logically, a user can search himself and begin chat with himself. This is by design and it's not a bug. You may add some logic to prevent it if you want.
 
 ## Pitfalls of chat logic
 

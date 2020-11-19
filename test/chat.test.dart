@@ -1,6 +1,10 @@
 import 'package:fireflutter/functions.dart';
 import 'package:fireflutter/fireflutter.dart';
 
+/// Chat Test
+///
+/// ! Warning. When you test, don't open chat screen since the test uses serveral different accounts often
+/// ! and that causes permission-error on my room listening.
 class ChatTest {
   ChatTest(FireFlutter ff) : this.ff = ff;
   FireFlutter ff;
@@ -133,6 +137,7 @@ class ChatTest {
       await ff.chatAddUser(
           roomInfo['id'], {users['c']['uid']: users['c']['displayName']});
       //
+
       info = await ff.chatGetRoomInfo(roomInfo['id']);
       List _users = info['users'];
       isTrue(
@@ -174,9 +179,11 @@ class ChatTest {
       ///
       String text = "Yo! " + getRandomString();
       await ff.chatSendMessage(info: info, text: text);
+
       for (String uid in info['users']) {
         // print('get: uid:$uid, ${ff.chatUserRoomDoc(uid, info['id']).path}');
         await ff.login(email: users[uid]['email'], password: '12345a,*');
+
         Map<String, dynamic> room =
             (await ff.chatUserRoomDoc(uid, info['id']).get()).data();
 

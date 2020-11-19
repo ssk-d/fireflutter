@@ -1,6 +1,6 @@
 name: fireflutter
 description: A free, open source, complete, rapid development package for creating Social apps, Community apps, Blog aps based on Firebase.
-version: 0.0.27
+version: 0.0.28
 homepage: https://github.com/thruthesky/fireflutter
 
 environment:
@@ -30,7 +30,6 @@ dependencies:
   image_picker: ^0.6.7+12
   permission_handler: ^5.0.1+1
   flutter_image_compress: ^0.7.0
-  
 
   path_provider: ^1.6.21
 
@@ -42,4 +41,3 @@ dev_dependencies:
     sdk: flutter
 
 flutter:
-

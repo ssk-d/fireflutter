@@ -125,7 +125,6 @@ class ChatMyRoomList {
   ChatMyRoomList({@required inject, @required render})
       : _ff = inject,
         _render = render {
-    // print(' _ff.chatMyRoomListCol: ${_ff.chatMyRoomListCol.path}');
     _myRoomListSubscription =
         _ff.chatMyRoomListCol.snapshots().listen((snapshot) {
       snapshot.docChanges.forEach((DocumentChange documentChange) {
@@ -140,14 +139,16 @@ class ChatMyRoomList {
           /// Apply room settings
           /// * My room list has only information about last message. It does not have room settings.
           /// * Listen and update room settings.
-          _roomSubscriptions.add(_ff
-              .chatRoomInfoDoc(roomInfo['id'])
-              .snapshots()
-              .listen((DocumentSnapshot snapshot) {
-            roomInfo.addAll(snapshot.data());
-            // print('Room settings; $roomInfo');
-            _render();
-          }));
+          // print('listen to room info: ${_ff.chatRoomInfoDoc(roomInfo['id'])}');
+
+          _roomSubscriptions.add(
+            _ff.chatRoomInfoDoc(roomInfo['id']).snapshots().listen(
+              (DocumentSnapshot snapshot) {
+                roomInfo.addAll(snapshot.data());
+                _render();
+              },
+            ),
+          );
         } else if (documentChange.type == DocumentChangeType.modified) {
           _overwrite(roomInfo);
           // final int i = rooms.indexWhere((r) => r['id'] == roomInfo['id']);
@@ -247,7 +248,9 @@ class ChatRoom {
 
     page++;
     if (page == 1) {
-      _ff.chatMyRoom(_roomId).update({'newMessages': 0}); // don't wait.
+      _ff
+          .chatMyRoom(_roomId)
+          .set({'newMessages': 0}, SetOptions(merge: true)); // don't wait.
     }
     // print('fetchMessage(): _page: $_page');
 
@@ -308,7 +311,7 @@ class ChatRoom {
             if (snapshot.docs.length < _limit) {
               if (message['text'] == Chat.roomCreated) {
                 noMoreMessage = true;
-                print('-----> noMoreMessage: $noMoreMessage');
+                // print('-----> noMoreMessage: $noMoreMessage');
               }
             }
           }

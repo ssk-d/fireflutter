@@ -1104,7 +1104,7 @@ class FireFlutter extends Base {
     await chatRoomInfoDoc(info['id']).update({'users': info['users']});
 
     /// If I am the one who is willingly leave the room, then remove the room in my-room-list.
-    print(chatMyRoom(roomId).path);
+    // print(chatMyRoom(roomId).path);
     await chatMyRoom(roomId).delete();
   }
 
@@ -1170,6 +1170,8 @@ class FireFlutter extends Base {
       if (extra != null) ...extra,
     };
 
+    // print('my uid: ${user.uid}');
+    // print('users: ${info['users']}');
     // print(chatMessagesCol(info['id']).path);
     await chatMessagesCol(info['id']).add(message);
     message['newMessages'] =
@@ -1178,12 +1180,13 @@ class FireFlutter extends Base {
 
     /// Just incase there are duplicated UIDs.
     List<String> users = [...info['users'].toSet()];
+
     for (String uid in users) {
-      print(chatUserRoomDoc(uid, info['id']).path);
+      // print(chatUserRoomDoc(uid, info['id']).path);
       messages.add(chatUserRoomDoc(uid, info['id'])
           .set(message, SetOptions(merge: true)));
     }
-    print('send messages to: ${messages.length}');
+    // print('send messages to: ${messages.length}');
     await Future.wait(messages);
     return message;
   }
