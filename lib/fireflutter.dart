@@ -28,6 +28,7 @@ import './functions.dart';
 part './definitions.dart';
 part './base.dart';
 part './fireflutter_location.dart';
+part './fireflutter_chat.dart';
 
 /// FireFlutter
 ///
@@ -979,7 +980,7 @@ class FireFlutter extends Base {
 
       /// Send message to all users.
       'users': users
-    }, text: Chat.roomCreated);
+    }, text: ChatProtocol.roomCreated);
     return info;
   }
 
@@ -1073,7 +1074,7 @@ class FireFlutter extends Base {
     /// Update last message of room users.
     // print('newUserNames:');
     // print(users.values.toList());
-    await chatSendMessage(info: info, text: Chat.enter, extra: {
+    await chatSendMessage(info: info, text: ChatProtocol.enter, extra: {
       'newUsers': users.values.toList(),
     });
   }
@@ -1105,7 +1106,9 @@ class FireFlutter extends Base {
 
     /// Update last message of room users that the user is leaving.
     await chatSendMessage(
-        info: info, text: Chat.leave, extra: {'userName': user.displayName});
+        info: info,
+        text: ChatProtocol.leave,
+        extra: {'userName': user.displayName});
 
     /// Update users and blockedUsers first and if there is error return before sending messages to all users.
     await chatRoomInfoDoc(info['id']).update({'users': info['users']});
@@ -1125,7 +1128,7 @@ class FireFlutter extends Base {
     await chatRoomInfoDoc(info['id']).update({'users': info['users']});
 
     await chatSendMessage(
-        info: info, text: Chat.kickout, extra: {'userName': userName});
+        info: info, text: ChatProtocol.kickout, extra: {'userName': userName});
   }
 
   /// Moderator removes a user
@@ -1145,7 +1148,7 @@ class FireFlutter extends Base {
     });
 
     await chatSendMessage(
-        info: info, text: Chat.block, extra: {'userName': userName});
+        info: info, text: ChatProtocol.block, extra: {'userName': userName});
   }
 
   /// Send a message to chat room
