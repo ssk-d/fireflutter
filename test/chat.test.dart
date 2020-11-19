@@ -187,8 +187,7 @@ class ChatTest {
       /// Login to B and leave the room
       await ff.login(email: userB['email'], password: userB['password']);
 
-      await ff.chatRoomLeave(
-          info['id'], users['b']['uid'], users['b']['displayName']);
+      await ff.chatRoomLeave(info['id']);
 
       /// Login to C to read room info
       await ff.login(email: userC['email'], password: userC['password']);

@@ -105,6 +105,7 @@ class VoteChoice {
 class Chat {
   static String enter = 'Chat.enter';
   static String leave = 'Chat.leave';
+  static String kickout = 'Chat.kickout';
   static String block = 'Chat.block';
   static String roomCreated = 'Chat.roomCreated';
 }

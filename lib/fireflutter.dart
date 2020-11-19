@@ -1092,53 +1092,53 @@ class FireFlutter extends Base {
   /// TODO if the last moderator tries to leave, ask the moderator to add another user to moderator.
   /// TODO When a user(or a moderator) leaves the room and there is no user left in the room,
   /// then move the room information from /chat/info/room-list to /chat/info/deleted-room-list.
-  Future<void> chatRoomLeave(String roomId,
-      {String uid, @required String userName, String text}) async {
-    /// Get new info from server.
-    /// There might be mistake that somehow `info['users']` is not upto date.
-    /// So, it is safe to get room info from server.
+  Future<void> chatRoomLeave(String roomId) async {
     Map<String, dynamic> info = await chatGetRoomInfo(roomId);
-
-    /// Update room info's users: array.
-    ///
-    List<String> users = [...info['users']];
-    users.remove(uid);
-    print('users: $users');
-
-    Map<String, dynamic> data = {'users': users};
-
-    /// If admin blocks a user.
-    if (text == Chat.block) {
-      List<String> blocked;
-      if (info['blocked'] == null) blocked = [];
-      blocked.add(uid);
-      data['blockedUsers'] = blocked;
-    }
-
-    /// Update blocked user first and if there is error return before sending messages to all users.
-    await chatRoomInfoDoc(info['id']).update(data);
+    info['users'].remove(user.uid);
 
     /// Update last message of room users that the user is leaving.
     await chatSendMessage(
-        info: info, text: text ?? Chat.leave, extra: {'userName': userName});
+        info: info, text: Chat.leave, extra: {'userName': user.displayName});
+
+    /// Update users and blockedUsers first and if there is error return before sending messages to all users.
+    await chatRoomInfoDoc(info['id']).update({'users': info['users']});
+
+    /// If I am the one who is willingly leave the room, then remove the room in my-room-list.
+    print(chatMyRoom(roomId).path);
+    await chatMyRoom(roomId).delete();
+  }
+
+  Future<void> chatKickoutUser(
+      String roomId, String uid, String userName) async {
+    Map<String, dynamic> info = await chatGetRoomInfo(roomId);
+
+    info['users'].remove(uid);
+
+    /// Update users to inform all users including kicked-out-user.
+    await chatRoomInfoDoc(info['id']).update({'users': info['users']});
+
+    await chatSendMessage(
+        info: info, text: Chat.kickout, extra: {'userName': userName});
   }
 
   /// Moderator removes a user
   ///
   /// Todo move this method to `ChatRoom`
   Future<void> chatBlockUser(String roomId, String uid, String userName) async {
-    /// if admin, remove other user. If not, he can remove himself.
-    /// send messages to all user.
+    Map<String, dynamic> info = await chatGetRoomInfo(roomId);
+    info['users'].remove(uid);
 
-    return chatRoomLeave(roomId,
-        uid: uid, userName: userName, text: Chat.block);
+    List<String> blocked = info['blocked'] ?? [];
+    blocked.add(uid);
 
-    // await chatSendMessage(
-    //     info: info, text: Chat.leave, extra: {'userName': userName});
+    /// Update users and blockedUsers first to inform by sending a message.
+    await chatRoomInfoDoc(info['id']).update({
+      'users': info['users'],
+      'blockedUsers': blocked,
+    });
 
-    // List<String> users = info['users'];
-    // users.remove(uid);
-    // return chatRoomInfo(info['id']).update({'users': users});
+    await chatSendMessage(
+        info: info, text: Chat.block, extra: {'userName': userName});
   }
 
   /// Send a message to chat room
