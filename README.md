@@ -1,6 +1,6 @@
 # Fire Flutter
 
-A free, open source, rapid development flutter package to build social apps, community apps, blogs apps, and much more.
+A free, open source, rapid development flutter package to build apps like shopping mall, social community, or any kind of apps.
 
 - Complete features.\
   This package has complete features (see Features below) that most of apps are needed.
@@ -10,19 +10,11 @@ A free, open source, rapid development flutter package to build social apps, com
 - Real time.\
   We design it to be real time when it is applied to your app. All the events like post and comment creation, voting(like, dislike), deletion would appears on all the user's phone immediately after the event.
 
-# TODOs
-
-- push notification settings sampe code for each forum.
-- Upload youtube of speed coding tutorial on each settings and insert it into readme markdown with a default image and when clicked open the youtube url.
-- Fireflutter does not use dart data model calss since it limits the data structure.
-  - But developers may create their own data model and apply it to their needs. show an example of it.
-
 # Table of Contents
 
 <!-- TOC -->
 
 - [Fire Flutter](#fire-flutter)
-- [TODOs](#todos)
 - [Table of Contents](#table-of-contents)
 - [Features](#features)
 - [References](#references)

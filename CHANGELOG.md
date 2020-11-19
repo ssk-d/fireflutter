@@ -1,6 +1,7 @@
-## [0.0.27] - chat functionality
+## [0.0.29] - chat functionality
 
-- Basic chat functionality has been added. It's already good enough to build a chat app.
+- basic chat functionality has been added. It's already good enough to build a chat app.
+- fix on typo.
 
 ## [0.0.27] - meta path update
 
