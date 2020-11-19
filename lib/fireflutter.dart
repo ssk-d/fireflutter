@@ -20,9 +20,14 @@ import 'package:merge_map/merge_map.dart';
 import 'package:permission_handler/permission_handler.dart' as permissionHander;
 import 'package:rxdart/subjects.dart';
 import 'package:algolia/algolia.dart';
+
+import 'package:location/location.dart';
+import 'package:geoflutterfire/geoflutterfire.dart';
+
 import './functions.dart';
 part './definitions.dart';
 part './base.dart';
+part './fireflutter_location.dart';
 
 /// FireFlutter
 ///
@@ -44,6 +49,7 @@ class FireFlutter extends Base {
   /// then it will be escalated to 15.
   ///
   Future<void> init({
+    bool enableLocation = false,
     bool openProfile = false,
     bool enableNotification = false,
     String firebaseServerToken,
@@ -52,6 +58,7 @@ class FireFlutter extends Base {
     Map<String, Map<String, String>> translations,
   }) async {
     this.openProfile = openProfile;
+    this.enableLocation = enableLocation;
     this.enableNotification = enableNotification;
     this.firebaseServerToken = firebaseServerToken;
     this.pushNotificationSound = pushNotificationSound;
