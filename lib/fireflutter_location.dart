@@ -2,8 +2,8 @@ part of './fireflutter.dart';
 
 const String geoFieldName = 'location';
 
-class FireFlutterLocation {
-  FireFlutterLocation({@required FireFlutter inject}) : _ff = inject {
+class UserLocation {
+  UserLocation({@required FireFlutter inject}) : _ff = inject {
     _checkPermission();
     _initLocation();
   }
