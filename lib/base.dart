@@ -770,8 +770,9 @@ class Base {
     /// instantiate image picker.
     final picker = ImagePicker();
 
-    Permission permission =
-        source == ImageSource.camera ? Permission.camera : Permission.photos;
+    permissionHander.Permission permission = source == ImageSource.camera
+        ? permissionHander.Permission.camera
+        : permissionHander.Permission.photos;
 
     /// request permission status.
     ///
@@ -779,14 +780,15 @@ class Base {
     ///   - Camera permission is automatically granted, meaning it will not ask for permission.
     ///     unless we specify the following on the AndroidManifest.xml:
     ///       - <uses-permission android:name="android.permission.CAMERA" />
-    PermissionStatus permissionStatus = await permission.status;
+    permissionHander.PermissionStatus permissionStatus =
+        await permission.status;
     // print('permission status:');
     // print(permissionStatus);
 
     /// if permission is permanently denied,
     /// the only way to grant permission is changing in AppSettings.
     if (permissionStatus.isPermanentlyDenied) {
-      await openAppSettings();
+      await permissionHander.openAppSettings();
     }
 
     /// alert the user if the permission is restricted.

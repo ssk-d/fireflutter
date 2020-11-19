@@ -17,7 +17,7 @@ import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:merge_map/merge_map.dart';
-import 'package:permission_handler/permission_handler.dart';
+import 'package:permission_handler/permission_handler.dart' as permissionHander;
 import 'package:rxdart/subjects.dart';
 import 'package:algolia/algolia.dart';
 import './functions.dart';
@@ -1148,5 +1148,11 @@ class FireFlutter extends Base {
     }
     await Future.wait(messages);
     return message;
+  }
+
+  /// open app settings.
+  /// 
+  Future<bool> openAppSettings() {
+    return permissionHander.openAppSettings();
   }
 }
