@@ -9,45 +9,74 @@ class ChatProtocol {
   static String roomCreated = 'ChatProtocol.roomCreated';
 }
 
+class ChatBase {
+  int page = 0;
+
+  /// [noMoreMessage] becomes true when there is no more old messages to view.
+  /// The app should display 'no more message' to user.
+  bool noMoreMessage = false;
+
+  text(Map<String, dynamic> message) {
+    String text = message['text'] ?? '';
+
+    if (text == ChatProtocol.roomCreated) {
+      text = 'Chat room created. ';
+    }
+
+    /// Display `no more messages` only when user scrolled up to see more messages.
+    else if (page > 1 && noMoreMessage) {
+      text = 'No more messages. ';
+    } else if (text == ChatProtocol.enter) {
+      // print(message);
+      text = "${message['senderDisplayName']} invited ${message['newUsers']}";
+    }
+    return text;
+  }
+}
+
 /// Chat room list helper class
 ///
 /// This is a completely independent helper class to help to list login user's room list.
 /// You may rewrite your own helper class.
-/// TODO reload(re-listen) When user login later or change account.
-/// todo separate this class to `chat.dart`
-class ChatMyRoomList {
+class ChatMyRoomList extends ChatBase {
   FireFlutter _ff;
   Function _render;
 
-  /// Count the number of changes for room list collection.
-  int _listenCount = 0;
-
-  /// [loaded] is true when it already loaded the room list collection.
-  bool get loaded => _listenCount == 0;
   StreamSubscription _myRoomListSubscription;
   List<StreamSubscription> _roomSubscriptions = [];
   List<Map<String, dynamic>> rooms = [];
-  ChatMyRoomList({@required inject, @required render})
+  String _order = "";
+  ChatMyRoomList(
+      {@required FireFlutter inject,
+      @required Function render,
+      String order = "createdAt"})
       : _ff = inject,
-        _render = render {
-    _myRoomListSubscription =
-        _ff.chatMyRoomListCol.snapshots().listen((snapshot) {
-      print('listenCount: $_listenCount');
-      _listenCount++;
+        _render = render,
+        _order = order {
+    listenRoomList();
+  }
+  reset({String order}) {
+    if (order != null) {
+      _order = order;
+    }
+
+    rooms = [];
+    _myRoomListSubscription.cancel();
+    listenRoomList();
+  }
+
+  listenRoomList() {
+    _myRoomListSubscription = _ff.chatMyRoomListCol
+        .orderBy(_order, descending: true)
+        .snapshots()
+        .listen((snapshot) {
       snapshot.docChanges.forEach((DocumentChange documentChange) {
         final roomInfo = documentChange.doc.data();
         roomInfo['id'] = documentChange.doc.id;
-        // print(
-        //     'type: ${documentChange.type}, length: ${documentChange.doc.data()}, roomInfo: $roomInfo');
         if (documentChange.type == DocumentChangeType.added) {
-          // rooms.add(roomInfo);
           _overwrite(roomInfo);
 
-          /// Apply room settings
-          /// * My room list has only information about last message. It does not have room settings.
-          /// * Listen and update room settings.
-          // print('listen to room info: ${_ff.chatRoomInfoDoc(roomInfo['id'])}');
-
+          /// Listen and merge room settings into room info.
           _roomSubscriptions.add(
             _ff.chatRoomInfoDoc(roomInfo['id']).snapshots().listen(
               (DocumentSnapshot snapshot) {
@@ -58,10 +87,6 @@ class ChatMyRoomList {
           );
         } else if (documentChange.type == DocumentChangeType.modified) {
           _overwrite(roomInfo);
-          // final int i = rooms.indexWhere((r) => r['id'] == roomInfo['id']);
-          // if (i > -1) {
-          //   rooms[i] = roomInfo;
-          // }
         } else if (documentChange.type == DocumentChangeType.removed) {
           final int i = rooms.indexWhere((r) => r['id'] == roomInfo['id']);
           if (i > -1) {
@@ -74,6 +99,7 @@ class ChatMyRoomList {
       _render();
     });
   }
+
   _overwrite(roomInfo) {
     int found = rooms.indexWhere((r) => r['id'] == roomInfo['id']);
     if (found > -1) {
@@ -84,7 +110,7 @@ class ChatMyRoomList {
   }
 
   leave() {
-    _myRoomListSubscription.cancel();
+    if (_myRoomListSubscription != null) _myRoomListSubscription.cancel();
     if (_roomSubscriptions.isNotEmpty) {
       _roomSubscriptions.forEach((element) {
         element.cancel();
@@ -97,9 +123,8 @@ class ChatMyRoomList {
 ///
 /// By defining this helper class, you may open more than one chat room at the same time.
 /// todo separate this class to `chat.dart`
-class ChatRoom {
+class ChatRoom extends ChatBase {
   int _limit = 30;
-  int page = 0;
 
   /// When user scrolls to top to view previous messages, the app fires the scroll event
   /// too much, so it fetches too many batches at one time.
@@ -114,10 +139,6 @@ class ChatRoom {
   String _roomId;
   StreamSubscription _subscription;
   List<Map<String, dynamic>> messages = [];
-
-  /// [noMoreMessage] becomes true when there is no more old messages to view.
-  /// The app should display 'no more message' to user.
-  bool noMoreMessage = false;
 
   /// [loading] becomes true while the app is fetching more messages.
   /// The app should display loader while it is fetching.
@@ -144,7 +165,7 @@ class ChatRoom {
       info = event.data();
       info['id'] = event.id;
       // print('info: $info');
-      // _render();
+      _render();
     });
   }
 
