@@ -95,7 +95,27 @@ class ForumData {
   }
 }
 
-class VoteChoice {
-  static String like = 'like';
-  static String dislike = 'dislike';
-}
+// class VoteChoice {
+//   static String like = 'like';
+//   static String dislike = 'dislike';
+// }
+
+// /// Algolia search data to index
+// class SearchData {
+//   /// [path] is the path of document
+//   final String path;
+//   final String title;
+//   final String content;
+
+//   /// [stamp] is unix timestmap
+//   final String stamp;
+//   SearchData({@required this.path, this.title, this.content, this.stamp});
+//   Map<String, dynamic> toMap() {
+//     return {
+//       'path': path,
+//       if (title != null) 'title': title,
+//       if (content != null) 'content': content,
+//       if (stamp != null) 'stamp': stamp,
+//     };
+//   }
+// }

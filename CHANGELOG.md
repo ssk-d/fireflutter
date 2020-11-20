@@ -1,3 +1,10 @@
+## [0.0.31] - Remove Cloud Functions
+
+Cloud Functions has been removed from the project and security rules has been changed. Voting(like and dislike) works better now.
+
+- Algolia search works without functions.
+- Post voteing(like and dislike) works without functions.
+
 ## [0.0.30] - chat
 
 - sort options for room list.

@@ -86,7 +86,7 @@ class FireFlutter extends Base {
 
         // Initalize Algolia
         String applicationId = appSetting('ALGOLIA_APP_ID');
-        String apiKey = appSetting('ALGOLIA_SEARCH_KEY');
+        String apiKey = appSetting('ALGOLIA_ADMIN_API_KEY');
         if (applicationId != '' && apiKey != '') {
           algolia = Algolia.init(
             applicationId: applicationId,
@@ -307,6 +307,9 @@ class FireFlutter extends Base {
         final post = documentChange.doc.data();
         post['id'] = documentChange.doc.id;
 
+        print('post:');
+        print(post);
+
         if (documentChange.type == DocumentChangeType.added) {
           // [createdAt] is null on author mobile (since FieldValue.serverTime make the event fire twice).
           if (post['createdAt'] == null) {
@@ -424,22 +427,20 @@ class FireFlutter extends Base {
   /// });
   /// ```
   Future editPost(Map<String, dynamic> data) async {
-    // update
-    if (data['id'] != null) {
-      data['updatedAt'] = FieldValue.serverTimestamp();
-      await postsCol.doc(data['id']).set(
-            data,
-            SetOptions(merge: true),
-          );
-    }
-
-    // create
-    else {
+    // Create
+    if (data['id'] == null) {
       data.remove('id');
       data['uid'] = user.uid;
       data['createdAt'] = FieldValue.serverTimestamp();
       data['updatedAt'] = FieldValue.serverTimestamp();
       DocumentReference doc = await postsCol.add(data);
+
+      /// Since push notification takes time, do indexing comes first.
+      addSearchIndex(
+        path: doc.path,
+        title: data['title'],
+        content: data['content'],
+      );
 
       sendNotification(
         data['title'],
@@ -447,6 +448,20 @@ class FireFlutter extends Base {
         screen: '/forumView',
         id: doc.id,
         topic: NotificationOptions.post(data['category']),
+      );
+    }
+
+    // Update
+    else {
+      data['updatedAt'] = FieldValue.serverTimestamp();
+      await postsCol.doc(data['id']).set(
+            data,
+            SetOptions(merge: true),
+          );
+      addSearchIndex(
+        path: postsCol.doc(data['id']).path,
+        title: data['title'],
+        content: data['content'],
       );
     }
   }
@@ -481,14 +496,8 @@ class FireFlutter extends Base {
 
     // print('ref.path: ' + commentsCol.path.toString());
 
-    /// update
-    if (data['id'] != null) {
-      data['updatedAt'] = FieldValue.serverTimestamp();
-      await commentsCol.doc(data['id']).set(data, SetOptions(merge: true));
-    }
-
-    // create
-    else {
+    /// Create
+    if (data['id'] == null) {
       // get order
       data['order'] = getCommentOrderOf(post, parentIndex);
       data['uid'] = user.uid;
@@ -496,13 +505,23 @@ class FireFlutter extends Base {
       // get depth
       dynamic parent = getCommentParent(post['comments'], parentIndex);
       data['depth'] = parent == null ? 0 : parent['depth'] + 1;
-      data['like'] = 0;
-      data['dislike'] = 0;
       data['createdAt'] = FieldValue.serverTimestamp();
       data['updatedAt'] = FieldValue.serverTimestamp();
       // print('comment create data: $data');
-      await commentsCol.add(data);
+      final DocumentReference doc = await commentsCol.add(data);
+      addSearchIndex(path: doc.path, title: '', content: data['content']);
+
       sendCommentNotification(post, data);
+    }
+
+    // Update
+    else {
+      data['updatedAt'] = FieldValue.serverTimestamp();
+      await commentsCol.doc(data['id']).set(data, SetOptions(merge: true));
+      addSearchIndex(
+          path: commentsCol.doc(data['id']).path,
+          title: '',
+          content: data['content']);
     }
   }
 
@@ -782,18 +801,20 @@ class FireFlutter extends Base {
   /// [postId] is required
   ///
   /// if [commentId] have value, it will return a comment document.
-  _voteDoc({
-    @required String postId,
-    String commentId,
-  }) {
-    DocumentReference voteDoc;
-    if (commentId == null)
-      voteDoc = postDocument(postId);
-    else
-      voteDoc = commentDocument(postId, commentId);
-    voteDoc = voteDoc.collection('votes').doc(user.uid);
-    return voteDoc;
-  }
+  // _voteDoc({
+  //   @required String postId,
+  //   String commentId,
+  // }) {
+  //   DocumentReference voteDoc;
+  //   if (commentId == null) {
+
+  //   }
+  //     voteDoc = postDocument(postId);
+  //   else
+  //     voteDoc = commentDocument(postId, commentId);
+  //   voteDoc = voteDoc.collection('votes').doc(user.uid);
+  //   return voteDoc;
+  // }
 
   /// Votes for a post or comment.
   ///
@@ -811,29 +832,52 @@ class FireFlutter extends Base {
   /// );
   ///```
   Future vote({
-    @required String postId,
-    String commentId,
-    @required String choice,
+    @required Map<String, dynamic> post,
+    Map<String, dynamic> comment,
+    @required bool choice,
   }) async {
-    if (choice != VoteChoice.like && choice != VoteChoice.dislike)
-      throw 'wrong-choice';
-    DocumentReference voteDoc = _voteDoc(postId: postId, commentId: commentId);
+    // DocumentReference voteDoc = _voteDoc(postId: postId, commentId: commentId);
 
-    final String previousChoice = await _voteChoice(voteDoc);
-    if (previousChoice == null) {
-      return voteDoc.set({'choice': choice});
-    } else if (previousChoice == choice) {
-      return voteDoc.set({'choice': ''});
+    // final String previousChoice = await _voteChoice(voteDoc);
+
+    DocumentReference doc;
+    Map<String, dynamic> obj;
+    if (comment == null) {
+      doc = postDocument(post['id']);
+      obj = post;
     } else {
-      return voteDoc.set({'choice': choice});
+      doc = commentDocument(post['id'], comment['id']);
+      obj = comment;
     }
+
+    /// If I voted already,
+    if (obj['likes'] != null && obj['likes'][user.uid] != null) {
+      bool previousChoice = obj['likes'][user.uid];
+      if (previousChoice == choice) {
+        await doc.update({'likes.' + user.uid: FieldValue.delete()});
+      } else {
+        await doc.update({'likes.' + user.uid: choice});
+      }
+    } else {
+      await doc.update({'likes.' + user.uid: choice});
+    }
+
+    // if (previousChoice == null) {
+    //   return voteDoc.set({'choice': choice});
+    // } else if (previousChoice == choice) {
+    //   return voteDoc.set({'choice': ''});
+    // } else {
+    //   return voteDoc.set({'choice': choice});
+    // }
   }
 
+  /// Search algolia
   Future<List<Map<String, dynamic>>> search(String keyword,
       {int hitsPerPage = 10, int pageNo = 0}) async {
     String algoliaIndexName = appSetting('ALGOLIA_INDEX_NAME');
-    if (algoliaIndexName == null || algoliaIndexName == "")
-      throw 'ALGOLIA_INDEX_NAME is not set';
+    if (algoliaIndexName == null || algoliaIndexName == "") {
+      throw 'ALGOLIA_INDEX_NAME is empty';
+    }
     AlgoliaQuery query = algolia.instance
         .index(algoliaIndexName)
         .setPage(pageNo)
@@ -850,6 +894,50 @@ class FireFlutter extends Base {
       searchResults.add(data);
     });
     return searchResults;
+  }
+
+  /// Add a data to Algolia search
+  ///
+  /// Data can be a post, a comment, or anything to search.
+  ///
+  /// If there is error it will throw error message.
+  /// If it succeeds, it will return a Map of `{createdAt: 2020-11-20T15:15:21.623Z, objectID: 1316722002}`
+  ///
+  ///
+  ///
+  /// ```dart
+  /// ff.addSearchIndex(
+  ///   path: 'abc/def', title: 'This is apple', content: 'Oo Oo Apple!'
+  /// )
+  /// .then((value) {
+  ///   print('success: $value');
+  /// }).catchError((e) {
+  ///   print(e);
+  /// });
+  /// ```
+  Future<dynamic> addSearchIndex(
+      {@required String path,
+      @required String title,
+      @required String content}) async {
+    String algoliaIndexName = appSetting('ALGOLIA_INDEX_NAME');
+    if (algoliaIndexName == null || algoliaIndexName == "") {
+      throw 'ALGOLIA_INDEX_NAME is empty';
+    }
+
+    final added = await algolia.instance.index(algoliaIndexName).addObject({
+      'objectID': path,
+      'title': title,
+      'content': content,
+      'stamp': DateTime.now().millisecondsSinceEpoch,
+    });
+    Map<String, dynamic> data = added.data;
+    print('added data: $data');
+    if (data['createdAt'] != null && data['objectID'] != null) {
+      return data;
+    } else {
+      /// error object: `{message: Method not allowed with this API key, status: 403}`
+      throw data['message'];
+    }
   }
 
   /// Gets user's public document as map

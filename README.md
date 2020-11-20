@@ -1019,41 +1019,16 @@ ff.translationsChange.listen((x) => setState(() => updateTranslations(x)));
 
 ## Algolia Setup
 
-Firestore does not support full text search, which means users cannot search the title or content of posts and comments. And this is a must functionality for community and blog apps.
+Firestore does not support full text search, which means users cannot search the title or content of posts and comments. But this is a must functionality for those apps that provide a lot of information to usres.
 
-One option(recomended by Firebase team) to solve this matter is to use Algolia. Algolia has free version account and that's what we are going to use it.
+One option(recomended by Firebase team) to solve this matter is to use Algolia. Algolia has free account that gives 10,000 search every months. This is good enough for small sized projects.
 
 Before setup Algolia, you may try forum code as described in [Forum Coding](#forum-coding) to test if this settings work.
 
-- Go to Algolia site.
-- Register.
-- Create app.
-- First, you need to put ALGOLIA_APP_ID(Application ID), ALGOLIA_ADMIN_KEY, ALGOLIA_INDEX_NAME into `functions/settings.js`.
-
-```js
-const settings = {
-  algolia: {
-    appId: "ALGOLIA APP ID",
-    adminKey: "ALGOLIA ADMIN KEY",
-    indexName: "INDEX NAME"
-  }
-};
-
-module.exports.settings = settings;
-```
-
-- Then, deploy with `firebase deploy --only functions`.
-  - For testing, run the following commands
-
-```sh
-firebase emulators:start
-cd functions
-npm run test:algolia
-```
-
-- Then, you need to add(or update) ALGOLIA_APP_ID(Application ID), ALGOLIA_SEARCH_KEY(Search Only Api Key), ALGOLIA_INDEX_NAME in Firestore `settings/app` document.
+- Go to Algolia site and Register.
+- Create app in Algolia.
+- Then, you need to add(or update) ALGOLIA_APP_ID(Application ID), ALGOLIA_ADMIN_API_KEY, ALGOLIA_INDEX_NAME in Firestore `settings/app` document.
   Optionally, you can put the settings inside `FireFlutter.init()`.
-- Algolia free account give you 10,000 free search every months. This is good enough for small sized projects.
 
 ## Admin Account Setting
 

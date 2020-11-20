@@ -954,4 +954,18 @@ class Base {
     await updateUserToken();
     await onProfileUpdate();
   }
+
+  int countLikes(obj) {
+    if (obj == null || obj['likes'] == null) return 0;
+    return (obj['likes'] as Map<String, dynamic>)
+        .values
+        .fold(0, (count, element) => element ? count + 1 : count);
+  }
+
+  int countDislikes(obj) {
+    if (obj == null || obj['likes'] == null) return 0;
+    return (obj['likes'] as Map<String, dynamic>)
+        .values
+        .fold(0, (count, element) => element == false ? count + 1 : count);
+  }
 }
