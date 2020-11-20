@@ -1,13 +1,19 @@
+/// @file flutter_location
+///
+
 part of './fireflutter.dart';
 
 const String geoFieldName = 'location';
 
 class UserLocation {
-  UserLocation({@required FireFlutter inject}) : _ff = inject {
+  UserLocation({@required FireFlutter inject, double radius = 20.0})
+      : _ff = inject,
+        _radius = radius {
     _checkPermission();
     _initLocation();
   }
   FireFlutter _ff;
+  double _radius = 22.0;
 
   /// [change] event will be fired when user changes his location.
   // ignore: close_sinks
@@ -31,13 +37,9 @@ class UserLocation {
     return await _location.hasPermission() == PermissionStatus.granted;
   }
 
-  // ignore: unused_field
-  // bool locationPermission = false;
-  // bool locationService = false;
-
   /// Return true if the permission is granted
   Future<bool> _checkPermission() async {
-    print('_checkPermission');
+    // print('_checkPermission');
 
     /// Check if `Location service` is enabled by the device.
     bool locationService = await _location.serviceEnabled();
@@ -61,7 +63,7 @@ class UserLocation {
       }
     }
 
-    print('permission granted:');
+    // print('permission granted:');
     return true;
   }
 
@@ -71,29 +73,34 @@ class UserLocation {
   /// listen it here and when the location is enabled later, it will work
   /// alreday.
   _initLocation() async {
-    print('initUserLocation');
+    // print('initUserLocation');
 
     // Changes settings to whenever the `onChangeLocation` should emit new locations.
-    _location.changeSettings(accuracy: LocationAccuracy.high);
-
-    print('location on changed listen');
+    _location.changeSettings(
+      accuracy: LocationAccuracy.high,
+    );
 
     /// Listen to location change when the user is moving
+    ///
+    /// this will not emit new location if the device or user is not moving.
     _location.onLocationChanged.listen((LocationData newLocation) {
       if (_ff.notLoggedIn) return;
-      print('update user location on firestore');
+
+      /// TODO do not update user location unless the user move (by 1 meter).
 
       GeoFirePoint _new = geo.point(
         latitude: newLocation.latitude,
         longitude: newLocation.longitude,
       );
-
-      /// TODO do not update user location unless the user move (by 1 meter).
-      _ff.publicDoc.set({geoFieldName: _new.data}, SetOptions(merge: true));
       change.add(_new);
 
-      if (_new != _lastPoint) {
-        listenUsersNearMe(_new);
+      _ff.publicDoc.set({geoFieldName: _new.data}, SetOptions(merge: true));
+      // print('update user location on firestore');
+
+      /// When the user change his location, it needs to search other users
+      /// with his new geo point.
+      if (_new.hash != _lastPoint?.hash) {
+        _listenUsersNearMe(_new);
       }
       _lastPoint = _new;
     });
@@ -102,31 +109,51 @@ class UserLocation {
   // Other user's location near the current user's location.
   Map<String, dynamic> usersNearMe = {};
 
-  /// todo remove user from the [usersNearMe] when the user goes out of the radius.
-  listenUsersNearMe(GeoFirePoint point) {
-    print('getUsersNearMe');
+  /// Listen `/meta/user/public/{uid}` for geo point and search users who are
+  /// within the radius from my geo point.
+  ///
+  /// This method will be called
+  /// * immediately after the class is instantiated,
+  /// * and whenever the user changes his location.
+  ///
+  /// When the user is moving, it will search new other users within the radius
+  /// of his geo point. And when the other user comes in to the user's radius,
+  /// the other user will be inserted into the search result.
+  _listenUsersNearMe(GeoFirePoint point) {
+    // print('listenUsersNearMe');
 
     if (usersNearMeSubscription != null) usersNearMeSubscription.cancel();
     usersNearMeSubscription = geo
         .collection(collectionRef: _ff.publicCol)
         .within(
           center: point,
-          radius: 2000000, // 2 km
+          radius: _radius, // 2 km
           field: geoFieldName,
           strictMode: true,
         )
         .listen((List<DocumentSnapshot> documents) {
       /// No more users in within the radius
-      if (documents.isEmpty) usersNearMe = {};
+      ///
+      /// since it fetch again, then reset user list, also removing users outside the radius.
+      usersNearMe = {};
 
       documents.forEach((document) {
-        print("user location near me");
+        // print("user location near me");
 
         // if this is the current user's data. don't add it to the list.
         if (document.id == _ff.user.uid) return;
 
-        print(document.id);
-        usersNearMe[document.id] = document.data();
+        Map<String, dynamic> data = document.data();
+        GeoPoint _point = data[geoFieldName]['geopoint'];
+
+        // get distance from current user.
+        data['distance'] = point.distance(
+          lat: _point.latitude,
+          lng: _point.longitude,
+        );
+
+        // print(document.id);
+        usersNearMe[document.id] = data;
         users.add(usersNearMe);
       });
     });
