@@ -88,6 +88,7 @@ class UserLocation {
         longitude: newLocation.longitude,
       );
 
+      /// TODO do not update user location unless the user move (by 1 meter).
       _ff.publicDoc.set({geoFieldName: _new.data}, SetOptions(merge: true));
       change.add(_new);
 
