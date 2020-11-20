@@ -110,7 +110,7 @@ class UserLocation {
         .collection(collectionRef: _ff.publicCol)
         .within(
           center: point,
-          radius: 2, // 2 km
+          radius: 2000000, // 2 km
           field: geoFieldName,
           strictMode: true,
         )
@@ -120,11 +120,11 @@ class UserLocation {
 
       documents.forEach((document) {
         print("user location near me");
-        print(document.id);
 
         // if this is the current user's data. don't add it to the list.
         if (document.id == _ff.user.uid) return;
 
+        print(document.id);
         usersNearMe[document.id] = document.data();
         users.add(usersNearMe);
       });
