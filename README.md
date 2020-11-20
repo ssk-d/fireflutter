@@ -119,7 +119,8 @@ A free, open source, rapid development flutter package to build apps like shoppi
   - [Logic of chat](#logic-of-chat)
   - [Pitfalls of chat logic](#pitfalls-of-chat-logic)
   - [Code of chat](#code-of-chat)
-  - [Unit tests of Chat](#unit-tests-of-chat)
+  - [Scenario of extending chat functionality](#scenario-of-extending-chat-functionality)
+  - [Unit tests of chat](#unit-tests-of-chat)
 - [Tests](#tests)
   - [Unit Test](#unit-test)
   - [Integration Test](#integration-test)
@@ -1976,16 +1977,17 @@ Firestore structure and its data are secured by Firestore security rules.
 - User can enter chat room by selecting a chat room in his chat room list.
 - User can add other users by selecting add user button in the chat room.
 - User can create a chat room with the same user(s) over again. That means, A can begin chat with B by creating a room. And then, A can begin chat with B again by creating another room.
-- When a room is created, `Chat.roomCreated` message will devlivered to all users.
+- When a room is created, `ChatProtocol.roomCreated` message will devlivered to all users.
   - This protocol message can be useful to display that there is no more messages or this is the first message.
-- When a room is added, `Chat.enter` message (with user information) will devlivered to all users.
-- When a room left, `Chat.leave` message (with user information) will devlivered to all users.
-- When a user is blocked, `Chat.block` message will (with user information) devlivered to all users. Only moderator can blocks a user and the user's uid will be saved in `{ blockedUsers: [ ... ]}` array.
+- When a room is added, `ChatProtocol.enter` message (with user information) will devlivered to all users.
+- When a room left, `ChatProtocol.leave` message (with user information) will devlivered to all users.
+- When a user is blocked, `ChatProtocol.block` message will (with user information) devlivered to all users. Only moderator can blocks a user and the user's uid will be saved in `{ blockedUsers: [ ... ]}` array.
 - When a room is created or a user is added, protocol message will be delivered to newly added users. And the room list will be appears on their room list.
-- Blocked users will not be added to the room until moderator remove the user from blockedUsers array.
+- Blocked users will not be added to the room until moderator remove the user from `{ blockedUsers: [ ... ]}` array.
 - When a user(or a moderator) leaves the room and there is no user left in the room, then that's it.
 - When a user logs out or logs into another account while listening room list will causes permission error. Especially on testing, you would not open chat screen since testing uses several accounts at the same time.
 - Logically, a user can search himself and begin chat with himself. This is by design and it's not a bug. You may add some logic to prevent it if you want.
+- When a user is blocked by moderator, the user received no more messages except the `ChatProtocol.blocked` message.
 
 ## Pitfalls of chat logic
 
@@ -2012,7 +2014,14 @@ ff.init({
 
 This option updates user's profile name and photo under `/meta/user/public/{uid}` and users will be able to search other user's profile to chat with.
 
-## Unit tests of Chat
+## Scenario of extending chat functionality
+
+- If the app must inform new messages to the user when the user is not in room list screen,
+  - The app can listen `my-room-list` collection on app screen (or homescreen)
+  - And when a new message arrives, the app can show snackbar.
+  - For this case, the app must unsubscribe when user is logs out and subscribe again when user is logs in.
+
+## Unit tests of chat
 
 There are two kinds of unit tests of chat. One is Firestore security rules test and the other is unit test.
 

@@ -969,7 +969,6 @@ class FireFlutter extends Base {
       'title': title ?? '',
       'createdAt': FieldValue.serverTimestamp(),
       'moderators': [user.uid],
-      'newMessages': 0,
     };
 
     DocumentReference roomInfo = await chatRoomListCol.add(info);
