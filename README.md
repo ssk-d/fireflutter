@@ -180,6 +180,21 @@ A free, open source, rapid development flutter package to build apps like shoppi
   - User can enable/disable to get notification when other users creates comments under his posts/comments.
   - User can subscribe/unsubscribe for new posts or comments under a forum.
 
+- Chat
+
+  - A complete chat functionality which includes
+    - Group chat
+    - Inviting users
+    - Blocking users
+    - Kickout users
+    - Changing settings of chat room
+  - Expect more to come.
+
+- Location
+
+  - App can update login user's location
+  - App can search other users near the login user.
+
 - Settings in real time.
 
   - Admin can update app settings via Admin page and the change will apply to app immediately.
