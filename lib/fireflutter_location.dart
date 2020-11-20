@@ -81,8 +81,8 @@ class UserLocation {
     /// Listen to location change when the user is moving
     _location.onLocationChanged.listen((LocationData newLocation) {
       if (_ff.notLoggedIn) return;
-      print('update user location on firestore');
 
+      // print('update user location on firestore');
       GeoFirePoint _new = geo.point(
         latitude: newLocation.latitude,
         longitude: newLocation.longitude,
@@ -91,6 +91,7 @@ class UserLocation {
       _ff.publicDoc.set({geoFieldName: _new.data}, SetOptions(merge: true));
       change.add(_new);
 
+      // don't fetch user's near if position is not changed.
       if (_new != _lastPoint) {
         listenUsersNearMe(_new);
       }
@@ -103,29 +104,36 @@ class UserLocation {
 
   /// todo remove user from the [usersNearMe] when the user goes out of the radius.
   listenUsersNearMe(GeoFirePoint point) {
-    print('getUsersNearMe');
+    // print('getUsersNearMe');
 
     if (usersNearMeSubscription != null) usersNearMeSubscription.cancel();
     usersNearMeSubscription = geo
         .collection(collectionRef: _ff.publicCol)
         .within(
           center: point,
-          radius: 2000000, // 2 km
+          radius: 30, // 2 km
           field: geoFieldName,
           strictMode: true,
         )
         .listen((List<DocumentSnapshot> documents) {
       /// No more users in within the radius
-      if (documents.isEmpty) usersNearMe = {};
+      /// 
+      /// since it fetch again, then reset user list, also removing users outside the radius.
+      usersNearMe = {};
 
       documents.forEach((document) {
-        print("user location near me");
+        // print("user location near me");
 
         // if this is the current user's data. don't add it to the list.
         if (document.id == _ff.user.uid) return;
 
-        print(document.id);
-        usersNearMe[document.id] = document.data();
+        Map<String, dynamic> data = document.data();
+        GeoPoint _point = data[geoFieldName]['geopoint'];
+
+        // get distance from current user.
+        data['distance'] = point.distance(lat: _point.latitude, lng: _point.longitude);
+        // print(document.id);
+        usersNearMe[document.id] = data;
         users.add(usersNearMe);
       });
     });
