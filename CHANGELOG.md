@@ -1,3 +1,8 @@
+## [0.0.30] - chat
+
+- sort options for room list.
+- remove newMessage properties on room info.
+
 ## [0.0.29] - chat functionality
 
 - basic chat functionality has been added. It's already good enough to build a chat app.
