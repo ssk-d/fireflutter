@@ -131,9 +131,6 @@ class Base {
   /// For chat and other functionalities that do user search need this option.
   bool openProfile = false;
 
-  /// If [enableLocation] is set to true, then fireflutter will do the location logic.
-  bool enableLocation = false;
-
   initUser() {
     authStateChanges = FirebaseAuth.instance.authStateChanges();
 

@@ -9,21 +9,23 @@ class UserLocation {
   }
   FireFlutter _ff;
 
-  /// [change] event will be fired not only when user changes his location
-  /// but also when there is any event to notice like when the app has no
-  /// permission, or the `Location service` is not enabled by the device
-  /// settings, [change] event will be fired.
+  /// [change] event will be fired when user changes his location.
   // ignore: close_sinks
-  BehaviorSubject change = BehaviorSubject<dynamic>.seeded(null);
+  BehaviorSubject change = BehaviorSubject<GeoFirePoint>.seeded(null);
+  // ignore: close_sinks
+  BehaviorSubject users = BehaviorSubject<Map<String, dynamic>>.seeded({});
 
   final Location _location = new Location();
 
+  StreamSubscription usersNearMeSubscription;
+
   /// Expose `Location` instance.
   Location get instance => _location;
-  final Geoflutterfire _geo = Geoflutterfire();
 
-  /// Expose `geo` instance.
-  Geoflutterfire get geo => _geo;
+  final Geoflutterfire geo = Geoflutterfire();
+
+  /// Last(movement) geo point of the user.
+  GeoFirePoint _lastPoint;
 
   Future<bool> hasPermission() async {
     return await _location.hasPermission() == PermissionStatus.granted;
@@ -33,7 +35,8 @@ class UserLocation {
   // bool locationPermission = false;
   // bool locationService = false;
 
-  _checkPermission() async {
+  /// Return true if the permission is granted
+  Future<bool> _checkPermission() async {
     print('_checkPermission');
 
     /// Check if `Location service` is enabled by the device.
@@ -44,11 +47,9 @@ class UserLocation {
 
       /// And if the user really rejects to enable the `Location service`,
       if (locationService == false) {
-        change.add(null);
-        return;
+        return false;
       }
     }
-    change.add('locationServiceEnabled');
 
     /// Check if the user give permission to the app to use location service
     PermissionStatus permissionStatus = await _location.hasPermission();
@@ -56,16 +57,12 @@ class UserLocation {
       /// Request if permission is not granted.
       permissionStatus = await _location.requestPermission();
       if (permissionStatus != PermissionStatus.granted) {
-        change.add(null);
-        return;
+        return false;
       }
     }
 
-    /// Notify the app that permission has granted.
-    /// App knows it by checking `_locationPermission`.
-    change.add('permissionGranted');
-
     print('permission granted:');
+    return true;
   }
 
   /// Listing user location changes.
@@ -86,16 +83,51 @@ class UserLocation {
       if (_ff.notLoggedIn) return;
       print('update user location on firestore');
 
-      final GeoFirePoint point = _geo.point(
+      GeoFirePoint _new = geo.point(
         latitude: newLocation.latitude,
         longitude: newLocation.longitude,
       );
 
-      // _ff.publicDoc.set(
-      //   {geoFieldName: point.data},
-      //   SetOptions(merge: true),
-      // );
-      change.add(point.data);
+      _ff.publicDoc.set({geoFieldName: _new.data}, SetOptions(merge: true));
+      change.add(_new);
+
+      if (_new != _lastPoint) {
+        listenUsersNearMe(_new);
+      }
+      _lastPoint = _new;
+    });
+  }
+
+  // Other user's location near the current user's location.
+  Map<String, dynamic> usersNearMe = {};
+
+  /// todo remove user from the [usersNearMe] when the user goes out of the radius.
+  listenUsersNearMe(GeoFirePoint point) {
+    print('getUsersNearMe');
+
+    if (usersNearMeSubscription != null) usersNearMeSubscription.cancel();
+    usersNearMeSubscription = geo
+        .collection(collectionRef: _ff.publicCol)
+        .within(
+          center: point,
+          radius: 2, // 2 km
+          field: geoFieldName,
+          strictMode: true,
+        )
+        .listen((List<DocumentSnapshot> documents) {
+      /// No more users in within the radius
+      if (documents.isEmpty) usersNearMe = {};
+
+      documents.forEach((document) {
+        print("user location near me");
+        print(document.id);
+
+        // if this is the current user's data. don't add it to the list.
+        if (document.id == _ff.user.uid) return;
+
+        usersNearMe[document.id] = document.data();
+        users.add(usersNearMe);
+      });
     });
   }
 }

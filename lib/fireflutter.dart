@@ -50,7 +50,6 @@ class FireFlutter extends Base {
   /// then it will be escalated to 15.
   ///
   Future<void> init({
-    bool enableLocation = false,
     bool openProfile = false,
     bool enableNotification = false,
     String firebaseServerToken,
@@ -59,7 +58,6 @@ class FireFlutter extends Base {
     Map<String, Map<String, String>> translations,
   }) async {
     this.openProfile = openProfile;
-    this.enableLocation = enableLocation;
     this.enableNotification = enableNotification;
     this.firebaseServerToken = firebaseServerToken;
     this.pushNotificationSound = pushNotificationSound;

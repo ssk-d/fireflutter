@@ -120,6 +120,10 @@ A free, open source, rapid development flutter package to build apps like shoppi
   - [Pitfalls of chat logic](#pitfalls-of-chat-logic)
   - [Code of chat](#code-of-chat)
   - [Unit tests of Chat](#unit-tests-of-chat)
+- [Location](#location)
+  - [Firestore structure of Location](#firestore-structure-of-location)
+  - [Code of Location](#code-of-location)
+    - [Initialization of Location](#initialization-of-location)
 - [Tests](#tests)
   - [Unit Test](#unit-test)
   - [Integration Test](#integration-test)
@@ -2017,6 +2021,92 @@ This option updates user's profile name and photo under `/meta/user/public/{uid}
 There are two kinds of unit tests of chat. One is Firestore security rules test and the other is unit test.
 
 - See [Unit Test](#unit-test).
+
+# Location
+
+Location is one of the necessary functionality on all apps.
+
+Some of use case might be
+
+- Users want to search other users near to them.
+- You have an app of introducing your company and one to give navigation to users who want to visit your company.
+  - Or simply, you want to show a map(navigator).
+- The app wants to check locale(where the user is coming from) and do something based on it.
+  - Maybe checking user's location, country. So that the app can suggest language, phone code for the user.
+
+## Firestore structure of Location
+
+- It will save location information on user's public document (`/meta/user/public/{uid}`).
+  - Document property
+
+```text
+{
+  location: {
+    geohash: "8s8qquaz",          // string type
+    geopoint: {                   // geopoint type
+      Latitue: "38.334188",
+      Longitude: "-122.314313"
+    }
+  }
+}
+```
+
+## Code of Location
+
+- To use location, create an instance of `UserLocation` class by injecting fireflutter in it.
+
+```dart
+import 'package:fireflutter/fireflutter.dart';
+
+final FireFlutter ff = FireFlutter();
+final UserLocation location = UserLocation(inject: ff);
+```
+
+By instantiating an instance, it will check(and ask) the permission to the user. Then the app will begin to record the location on firestore.
+
+- To display if the user has proper permission,
+
+```dart
+class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
+  bool permission = false;
+  bool service = false;
+  void didChangeAppLifecycleState(AppLifecycleState state) async {
+    /// If the app resumed(from background), check the status again.
+    if (state == AppLifecycleState.resumed) {
+      permission = await location.hasPermission();
+      service = await location.instance.serviceEnabled();
+      setState(() {});
+    }
+  }
+  @override
+  void initState() {
+    super.initState();
+
+    WidgetsBinding.instance.addObserver(this);
+    () async {
+      permission = await location.hasPermission();
+      service = await location.instance.serviceEnabled();
+      setState(() {});
+    }();
+  }
+  @override
+  void dispose() {
+    super.dispose();
+    WidgetsBinding.instance.removeObserver(this);
+  }
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: Column(children: [
+        Text('Location Service: ' + (service ? 'ON' : 'OFF')),
+        Text('Location Permission: ' + (permission ? 'ON' : 'OFF')),
+      ]),
+    );
+  }
+}
+```
+
+### Initialization of Location
 
 # Tests
 
