@@ -2112,9 +2112,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
 
 ## Unit Test
 
-Since fireflutter depends on some packages that uses UI widgets, standard unit testing is not ideal.
-
-So, we made our own unit test code.
+Since fireflutter is a bit complicated and depends on many other packages, we found out that the standard unit testing is not an ideal option. So, we wrote our own simple unit test code.
 
 You can add the code below in Home screen. You need to fix the import path.
 
