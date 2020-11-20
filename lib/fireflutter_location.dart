@@ -1,13 +1,19 @@
+/// @file flutter_location
+///
+
 part of './fireflutter.dart';
 
 const String geoFieldName = 'location';
 
 class UserLocation {
-  UserLocation({@required FireFlutter inject}) : _ff = inject {
+  UserLocation({@required FireFlutter inject, double radius = 20.0})
+      : _ff = inject,
+        _radius = radius {
     _checkPermission();
     _initLocation();
   }
   FireFlutter _ff;
+  double _radius = 22.0;
 
   /// [change] event will be fired when user changes his location.
   // ignore: close_sinks
@@ -61,7 +67,6 @@ class UserLocation {
     return true;
   }
 
-
   /// Listing user location changes.
   ///
   /// It does not matter weather the location service is eanbled or not. Just
@@ -92,9 +97,10 @@ class UserLocation {
       _ff.publicDoc.set({geoFieldName: _new.data}, SetOptions(merge: true));
       // print('update user location on firestore');
 
-      // don't fetch user's near if position is not changed.
-      if (_new != _lastPoint) {
-        listenUsersNearMe(_new);
+      /// When the user change his location, it needs to search other users
+      /// with his new geo point.
+      if (_new.hash != _lastPoint?.hash) {
+        _listenUsersNearMe(_new);
       }
       _lastPoint = _new;
     });
@@ -103,8 +109,17 @@ class UserLocation {
   // Other user's location near the current user's location.
   Map<String, dynamic> usersNearMe = {};
 
-  /// todo remove user from the [usersNearMe] when the user goes out of the radius.
-  listenUsersNearMe(GeoFirePoint point) {
+  /// Listen `/meta/user/public/{uid}` for geo point and search users who are
+  /// within the radius from my geo point.
+  ///
+  /// This method will be called
+  /// * immediately after the class is instantiated,
+  /// * and whenever the user changes his location.
+  ///
+  /// When the user is moving, it will search new other users within the radius
+  /// of his geo point. And when the other user comes in to the user's radius,
+  /// the other user will be inserted into the search result.
+  _listenUsersNearMe(GeoFirePoint point) {
     // print('listenUsersNearMe');
 
     if (usersNearMeSubscription != null) usersNearMeSubscription.cancel();
@@ -112,7 +127,7 @@ class UserLocation {
         .collection(collectionRef: _ff.publicCol)
         .within(
           center: point,
-          radius: 2, // 2 km
+          radius: _radius, // 2 km
           field: geoFieldName,
           strictMode: true,
         )
