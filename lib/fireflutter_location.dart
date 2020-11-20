@@ -22,6 +22,9 @@ class FireFlutterLocation {
   Location get instance => _location;
   final Geoflutterfire _geo = Geoflutterfire();
 
+  /// Expose `geo` instance.
+  Geoflutterfire get geo => _geo;
+
   Future<bool> hasPermission() async {
     return await _location.hasPermission() == PermissionStatus.granted;
   }
@@ -88,10 +91,10 @@ class FireFlutterLocation {
         longitude: newLocation.longitude,
       );
 
-      _ff.publicDoc.set(
-        {geoFieldName: point.data},
-        SetOptions(merge: true),
-      );
+      // _ff.publicDoc.set(
+      //   {geoFieldName: point.data},
+      //   SetOptions(merge: true),
+      // );
       change.add(point.data);
     });
   }
