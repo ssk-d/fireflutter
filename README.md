@@ -22,14 +22,10 @@ A free, open source, rapid development flutter package to build apps like shoppi
 - [Requirements](#requirements)
 - [Installation](#installation)
   - [Create Firebase Project](#create-firebase-project)
-    - [Enable Firestore](#enable-firestore)
-    - [Enable Functions](#enable-functions)
-    - [Firebase tools installation](#firebase-tools-installation)
-    - [Download and Set FireFlutter Firebase Project](#download-and-set-fireflutter-firebase-project)
-  - [Firestore security rules](#firestore-security-rules)
-    - [Security Rules Testing](#security-rules-testing)
-  - [Cloud Functions Setup](#cloud-functions-setup)
-    - [Funtions Test](#funtions-test)
+  - [Enable Firestore](#enable-firestore)
+    - [Install Firestore Security Rules](#install-firestore-security-rules)
+      - [Security Rules Testing](#security-rules-testing)
+    - [Update Firestore Index](#update-firestore-index)
   - [Firebase Email/Password Login](#firebase-emailpassword-login)
   - [Create Flutter project](#create-flutter-project)
     - [Setup Flutter to connect to Firebase](#setup-flutter-to-connect-to-firebase)
@@ -70,6 +66,7 @@ A free, open source, rapid development flutter package to build apps like shoppi
     - [Forum Category Management](#forum-category-management)
 - [Developer Coding Guidelines](#developer-coding-guidelines)
   - [General Setup](#general-setup)
+  - [FireFlutter global variable](#fireflutter-global-variable)
     - [FireFlutter Initialization](#fireflutter-initialization)
       - [Blocking mode](#blocking-mode)
       - [Non-blocking mode](#non-blocking-mode)
@@ -131,6 +128,7 @@ A free, open source, rapid development flutter package to build apps like shoppi
 - [Developers Tips](#developers-tips)
   - [Extension method on fireflutter](#extension-method-on-fireflutter)
 - [Trouble Shotting](#trouble-shotting)
+  - [Add GoogleService-Info.plist](#add-googleservice-infoplist)
   - [Stuck in registration](#stuck-in-registration)
   - [MissingPluginException google_sign_in](#missingpluginexception-google_sign_in)
     - [By passing MissingPluginException google_sign_in error](#by-passing-missingpluginexception-google_sign_in-error)
@@ -221,44 +219,41 @@ A free, open source, rapid development flutter package to build apps like shoppi
 
 # Components
 
-- Firebase.
+- Firebase.\
   Firebase is a leading cloud system powered by Google. It has lots of goods to build web and app.
 
-  - We first built it with Firebase and LEMP(Linux + Nginx + MySQL + PHP). we realized maintaing two different systems would be a pressure for many of developers. So, We decided to remove LEMP and we built it again.
+  - We first built it with Firebase and LEMP(Linux + Nginx + MariaDB + PHP). It is a pressure to maintain two different systems. So, We decided to remove LEMP and we built it again only with Firebase.
 
-  - You may use Firebase as free plan for a test. But for production, you need `Pay as you go` plan since `Cloud Function` works only on `Pay as you go` plan.
-    - You may not use `Cloud Function` for testing.
+  - You may use Firebase as free plan for a test.
 
-- Algolia.
+- Algolia.\
   Firebase does not support full text search which means users cannot search posts and comments.
   Algolia does it.
 
+- And other open source Flutter & Dart packages.
+
 # Requirements
 
-- Basic understanding of Firebase.
 - Basic understanding of Flutter and Dart.
+- Basic understanding of Firebase.
 - OS: Windows or Mac.
-- Editor: VSCode, Xcode(for Mac OS). Our primary editor si VSCode and we use Xcode for Flutter settings. We found it more easy to do the settings with Xcode for iOS development.
+- Editor: VSCode, Xcode(for Mac OS).\
+  Our primary editor is VSCode and we use Xcode for Flutter settings. We found it more easy to do the settings with Xcode for iOS development.
 
 # Installation
 
 - If you are not familiar with Firebase and Flutter, you may have difficulties to install it.
 
   - FireFlutter is not a smple package that you just add it into pubspec.yaml and ready to go.
-  - Furthermore, the settings that are not directly from coming FireFlutter package like social login settings, Algolia setting, Android and iOS developer's accont settings are also hard to implement if you are not get used to them.
-  - And for release, you will need to have extra settgins.
-  - Most of developers are having troubles with settings. You are not the only one.
+  - Many of the settings are coming from the packages that fireflutter is using.
+  - And for release, it may need extra settgins.
+  - Most of developers are having troubles with settings. You are not the only one. Ask us on [Git issues](https://github.com/thruthesky/fireflutter/issues).
 
-- We cover all the settings and will try to put it as demonstrative as it can be.
+- We will cover all the settings and try to put it as demonstrative as it can be.
 
-  - We will begin with Firebase settings and contiue gradually with Flutter.
-
-- If you have any difficulties on installation, you may ask it on
-  [Git issues](https://github.com/thruthesky/fireflutter/issues).
+  - We will begin with Firebase settings and contiue gradual settings with Flutter.
 
 - And please let us know if there is any mistake on the installation.
-
-- We also have a premium paid servie to support installation and development.
 
 ## Create Firebase Project
 
@@ -276,72 +271,27 @@ A free, open source, rapid development flutter package to build apps like shoppi
 
 - Read [Understand Firebase projects](https://firebase.google.com/docs/projects/learn-more) for details.
 
-### Enable Firestore
+## Enable Firestore
 
 - Go to `Cloud Firestore` menu.
 - Click `Create Database`.
-- Choose `Start in test mode`. We will change it to `production mode` later.
+- Choose `Start in production mode`.
 - Click `Next`.
 - Choose nearest `Cloud Firestore location`.
+  - To know the right location, click `Learn more`.
 - Click `Enable`.
 
-### Enable Functions
+### Install Firestore Security Rules
 
-- Go to Firebase => Functions => Click `Get Started` => Click `Continue` => Click `Finish`
+Firestore needs security rules to secure its data.
 
-### Firebase tools installation
+- Copy the rules from [fireflutter firestore security rules](https://raw.githubusercontent.com/thruthesky/fireflutter-firebase/main/firestore.rules)
+- Go `Cloud Firestore => Rules => Edit rules` and delete all the rules there and paste the `fireflutter firestore security rules`.
+- Click `publish`.
 
-- Install Firebase tools with the following command. You may need root permission.
+#### Security Rules Testing
 
-```sh
-npm install -g firebase-tools
-```
-
-- Then, login to Firebase with the follow command.
-
-```sh
-firebase login
-```
-
-- Refer [Set up or update the CLI](https://firebase.google.com/docs/cli#mac-linux-npm) for details.
-
-### Download and Set FireFlutter Firebase Project
-
-- Install firebase tools as described at [Firebase tools installation](#firebase-tools-installation)
-
-- Git clone(or fork) https://github.com/thruthesky/fireflutter-firebase
-  - And enter the project folder
-  - `$ cd fireflutter-firebase`
-- Install node modules with the following command.
-  - `$ npm i`.
-- Update Firebase project ID in `.firebaserc ==> projects ==> default`.
-- Set `Firebase SDK Admin Service Key`
-  - Go to Project settings => Service accounts => Firebae Admin SDK
-  - Click `Node.js`
-  - Click `Generate new priate key`
-  - Click `Generate Key`
-  - Then, a file will be downloaded.
-  - Rename the file to `firebase-service-account-key.json`
-  - And move(or overwrite if it exists) it to the project folder(the same folder where `.firebaserc` is).
-- Create `functions/settings.js`
-  - Then, paste the following code and save.
-
-```js
-const settings = {};
-
-module.exports.settings = settings;
-```
-
-## Firestore security rules
-
-Firestore needs security rules to secure its data or it might loose all data by hackers.
-
-- Do [Download and Set FireFlutter Firebase Project](#download-and-set-fireflutter-firebase-project)
-- Run `firebase deploy --only firestore`.
-
-### Security Rules Testing
-
-- If you wish to test Firestore security rules, you may do so with the following;
+- If you wish to test Firestore security rules, you may do so with the following command.
 
 Run Firebase emualtor first.
 
@@ -361,42 +311,30 @@ $ npm run test:post
 $ npm run test:comment
 $ npm run test:vote
 $ npm run test:user.token
+$ npm run test:chat
 ```
 
-## Cloud Functions Setup
+### Update Firestore Index
 
-We tried to limit the usage of Cloud Functions as minimum as possible. But there are some functionalities we cannot achive without it.
+- Create a complex index with `category` and `createdAt` properties like below.
+  - Go `Cloud Firestore => Indexes => Composite => + Create Index`
 
-One of the reason why we use Cloud Funtions is to enable like and dislike functionality. It is a simple functionality but when it comes with Firestore security rule, it's not an easy work. And Cloud Functions does better with it.
+| Collection ID | Fields indexed                                  | Query scope | Status  |
+| ------------- | ----------------------------------------------- | ----------- | ------- |
+| posts         | category **Ascending** createdAt **Descending** | Collection  | Enabled |
 
-- Do [Download and Set FireFlutter Firebase Project](#download-and-set-fireflutter-firebase-project)
-- Install node modules under functions folder.
-  - `$ cd functions`
-  - `$ npm i`
-  - `$ cd ..`
-- Run `firebase deploy --only functions`. You will need Firebase `Pay as you go` plan to deploy it.
-  - If you meet `Error: HTTP Error: 403, Unknown Error` erro, then you may try again.
+![Firestore Index](wiki/firestore-index.jpg)
 
-### Funtions Test
-
-- If you wish to test Functions,
-  - Open `functions/test/index.test.js`
-  - And edit `databaseURL` and `projectId`
-  - And run the following commands
-
-```
-$ firebase emulators:start
-$ cd functions
-$ npm test
-```
+- Or you can deploy Firestore index using CLI.
+  - You can clone the [fireflutter firebase project](https://github.com/thruthesky/fireflutter-firebase) and deploy firestore index.
+  - See [Cloud Firestore Index Definition Reference](https://firebase.google.com/docs/reference/firestore/indexes) for details.
 
 ## Firebase Email/Password Login
 
-- Do [Create Firestore Database](#create-firestore-database)
-- Do [Firestore security rules](#firestore-security-rules)
-- Do [Cloud Functions Setup](#cloud-functions-setup)
+- [Create Firestore Database](#enable-firestore)
+- [Install firestore security rules](#install-firestore-security-rules)
 - Do [Android Setup](#android-setup) and [iOS Setup](#ios-setup)
-- Go to Authentication => Sign-in Method
+- Go to Authentication => (Click `Get started` menu if you see ) => Sign-in Method
 - Click `Enable/Password` (without Email link).
 - It is your choice weather you would let users to register by their email and password or not. But for installation test, just enable it.
 
@@ -416,23 +354,25 @@ $ flutter run
 
 #### iOS Setup
 
+What to do: Create iOS app in Firebase and add the GoogleService-Info.plist into Flutter project.
+
 - Click `iOS` icon on `Project Overview` page to add `iOS` app to Firebase.
 - Enter iOS Bundle ID. Ex) com.sonub.fireflutter
   - From now on, we assume that your iOS Bundle ID is `com.sonub.fireflutter`.
 - click `Register app`.
 - click `Download GoogleService-Info.plist`
-  - And save it under `fireflutter_sample_app/ios/Runner` folder.
+  - And save it under `[flutter_project]/ios/Runner` folder.
 - click `Next`.
 - click `Next` again.
 - click `Next` again.
 - click `Continue to console`.
 
-- open `fireflutter_sample_app/ios/Runner.xcworkspace` with Xcode.
+- open `[flutter_project]/ios/Runner.xcworkspace` with Xcode.
 - click `Runner` on the top of left pane.
 - click `Runner` on TARGETS.
 - edit `Bundle Identifier` to `com.sonub.fireflutter`.
 - set `iOS 11.0` under Deployment Info.
-- Darg `fireflutter_sample_app/ios/Runner/GoogleService-Info.plist` file under `Runner/Runner` on left pane of Xcode.
+- Darg `[flutter_project]/ios/Runner/GoogleService-Info.plist` file under `Runner/Runner` on left pane of Xcode.
 - Close Xcode.
 
 - You may want to test if the settings are alright.
@@ -481,6 +421,8 @@ dependencies {
   - Open VSCode and do [FireFlutter Initialization](#fireflutter-initialization) do some registration code. see [User Registration](#user-email-and-password-registration) for more details.
 
 ## Create a keystore
+
+This is for Android only.
 
 You will need to create a keystore file for Android platform. Keystore file is used to upload and to update app binary file to Playstore and is alos used to generate hash keys for interacting with 3rd party service like facebook login.
 
@@ -1103,6 +1045,16 @@ You can set a user to admin by updating user document of Firestore directly. Adm
     - All the code explained here is with GetX.
     - You may choose different packages and that's very fine.
 
+## FireFlutter global variable
+
+- The variable `ff` is an instace of `FireFlutter` and should be shared across all the screens.
+
+- Create a `global_variables.dart` on the same folder of main.dart.
+
+  - And move the `ff` variable into `global_variables.dart`.
+
+- The complete code is on [fireflutter sample app](https://github.com/thruthesky/fireflutter_sample_app/blob/main/lib/global_variables.dart) of sample app.
+
 ### FireFlutter Initialization
 
 There are two ways of initializing the fireflutter package. One is blocking and the other is non-blocking. This is deu to initializing Firebase inside fireflutter. We recommend non-blocking method since the app would boot faster.
@@ -1144,7 +1096,10 @@ class _MainAppState extends State<MainApp> {
   }
 ```
 
-- You might get error when you try to use Firebase since it might not have finished its initialization, yet. You can write the code like below in such case,
+- But be sure the app accesses any Firebase related function only after it is initialized.
+  - Or the app would get `[core/no-app] No Firebase App '[DEFAULT]' has been created - call Firebase.initializeApp()` error.
+  - To avoid this error(or to use Firebase after it is initialized), use `ff.firebaseInitialized.listen` stream.
+    Since it is a stream, you need to cancel listening after use.
 
 ```dart
 String gender = '';
@@ -1163,40 +1118,54 @@ ff.firebaseInitialized.listen((re) async {
 Text(gender)
 ```
 
-- You may have a customised Wiget to wait to until Firebase is ready. FirebaseReady will wait until Firebase firebase is initialized and then it will display the child widget.
+- To make it easy, you may create a custom wiget to wait to until Firebase is initialized.
 
 ```dart
-FirebaseReady(child: Text('firebase is ready')),
-///
+
+class _HomeScreenState extends State<HomeScreen> {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Home'),
+      ),
+      body: Center(
+        child: FirebaseReady( /// Use FirebaseReady.
+          builder: (BuildContext context, snapshot) {
+            if (snapshot.data == null || snapshot.data == false)
+              return Container();
+            else
+              return Text(
+                'Firbase Ready. User login: ${ff.loggedIn ? 'yes' : 'no'}',
+              );
+          },
+        ),
+      ),
+    );
+  }
+}
+
+/// Display [child] widget only after Firebase is initialized.
 class FirebaseReady extends StatelessWidget {
   const FirebaseReady({
     Key key,
-    this.child,
+    this.builder,
   }) : super(key: key);
 
-  final Widget child;
+  final Function builder;
   @override
   Widget build(BuildContext context) {
     return StreamBuilder(
       stream: ff.firebaseInitialized,
-      builder: (context, snapshot) {
-        if (snapshot.data == null || snapshot.data == false)
-          return Container();
-        else
-          return child;
-      },
+      builder: builder,
     );
   }
 }
 ```
 
-- The variable `ff` is an instace of `FireFlutter` and should be shared across all the screens.
+- `FirebaseReady` will wait until Firebase firebase is initialized and then it will display the child widget.
 
-- Create a `global_variables.dart` on the same folder of main.dart.
-
-  - And move the `ff` variable into `global_variables.dart`.
-
-- The complete code is on [fireflutter-initialization branch](https://github.com/thruthesky/fireflutter_sample_app/tree/fireflutter/lib) of sample app.
+- It is worth to know that check firebase is initialization with `ff.firebaseInitialized` or `FirebaseReady` widget may only be needed on home screen(or first screen) since Firebase will initialize itself quick enough and be ready by next screen.
 
 ### Add GetX
 
@@ -1206,7 +1175,7 @@ class FirebaseReady extends StatelessWidget {
   - and replace `MaterialApp` with `GetMaterialApp`.
   - add `initialRotue: 'home'`
   - add HomeScreen to route.
-  - To see the complete code, visit [getx branch of sample app](https://github.com/thruthesky/fireflutter_sample_app/tree/getx).
+  - To see the complete code, visit [getx branch of sample app](https://github.com/thruthesky/fireflutter_sample_app/tree/install-getx).
 
 ## Firestore Structure
 
@@ -2158,6 +2127,14 @@ print('uid: ' + ff.getUid());
 ```
 
 # Trouble Shotting
+
+## Add GoogleService-Info.plist
+
+Proceed the installation steps when you see error messages like below. It is complaining that you have not setup properly.
+
+```text
+FirebaseException ([core/not-initialized] Firebase has not been correctly initialized. Have you added the "GoogleService-Info.plist" file to the project?
+```
 
 ## Stuck in registration
 
