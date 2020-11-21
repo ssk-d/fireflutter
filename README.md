@@ -2017,7 +2017,7 @@ This option updates user's profile name and photo under `/meta/user/public/{uid}
 
 ## Unit tests of chat
 
-There are two kinds of unit tests of chat. One is Firestore security rules test and the other is unit test.
+There are two kinds of unit tests for chat. One is Firestore security rules test and the other is unit test.
 
 - See [Unit Test](#unit-test).
 

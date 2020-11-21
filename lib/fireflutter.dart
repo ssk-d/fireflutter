@@ -641,19 +641,16 @@ class FireFlutter extends Base {
   ///
   ///
   Future<User> signInWithFacebook() async {
-    // Trigger the sign-in flow
-    LoginResult result;
-
     await FacebookAuth.instance
         .logOut(); // Need to logout to avoid 'User logged in as different Facebook user'
-    result = await FacebookAuth.instance.login();
-    if (result == null || result.accessToken == null) {
+    final AccessToken result = await FacebookAuth.instance.login();
+    if (result == null || result.token == null) {
       throw ERROR_SIGNIN_ABORTED;
     }
 
     // Create a credential from the access token
     final FacebookAuthCredential facebookAuthCredential =
-        FacebookAuthProvider.credential(result.accessToken.token);
+        FacebookAuthProvider.credential(result.token);
 
     // Once signed in, return the UserCredential
     UserCredential userCredential = await FirebaseAuth.instance
