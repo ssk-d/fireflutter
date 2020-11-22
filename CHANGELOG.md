@@ -1,3 +1,7 @@
+## [0.0.33] - Phone authentication
+
+Users can now sign in with their phone numbers. Or user can also link their phone authentication to existing account. It's now optional.
+
 ## [0.0.31] - Remove Cloud Functions
 
 Cloud Functions has been removed from the project and security rules has been changed. Voting(like and dislike) works better now.
