@@ -1,5 +1,8 @@
 part of './fireflutter.dart';
 
+const String linkPhoneAuth = 'link';
+const String signInPhoneAuth = 'signIn';
+
 enum RenderType {
   postCreate,
   postUpdate,

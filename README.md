@@ -140,6 +140,9 @@ A free, open source, rapid development flutter package to build apps like shoppi
   - [After ff.editPost or ff.editComment, nothing happens?](#after-ffeditpost-or-ffeditcomment-nothing-happens)
   - [SDK version not match](#sdk-version-not-match)
   - [flutter_image_compress error](#flutter_image_compress-error)
+  - [Authentication setup error on iOS](#authentication-setup-error-on-ios)
+  - [Dex problem on Android](#dex-problem-on-android)
+  - [App is not authorized](#app-is-not-authorized)
 
 <!-- /TOC -->
 
@@ -166,7 +169,7 @@ A free, open source, rapid development flutter package to build apps like shoppi
   - Infinite scroll.
   - Real time.
     - If a user create a comment, it will appear on other user's phone. And this goes same to all edit/delete, likes/dislikes.
-  - A category of forum could be re-designed for online shopping mall purpose.
+  - A category of forum could be re-designed for any purpose like online shopping mall, blog, etc.
 
 - Search
 
@@ -380,25 +383,26 @@ What to do: Create iOS app in Firebase and add the GoogleService-Info.plist into
 
 #### Android Setup
 
+- Go to Firebase console.
 - Click `Android` icon on `Project Overview` page to add `Android` app to Firebase.
   - If you don't see `Android` icon, look for `+ Add app` button and click, then you would see `Android` icon.
 - Enter `iOS Bundle ID` into `Android package name`. `iOS Bundle ID` and `Android package name` should be kept in idendentical name for easy to maintain. In our case, it is `com.sonub.fireflutter`.
 - Click `Register app` button.
 - Click `Download google-services.json` file to downlaod
-- And save it under `fireflutter_sample_app/android/app` folder.
+- And save it under `[flutter_project_folder]/android/app` folder.
 - Click `Next`
 - Click `Next`
 - Click `Continue to console`.
-- Open VSCode with `fireflutter_sample_app` project.
-- Open `fireflutter_sample_app/android/app/build.gradle` file.
+- Open Flutter project using VSCode.
+- Open `[flutter_project_folder]/android/app/build.gradle` file.
 - Update `minSdkVersion 16` to `minSdkVersion 21`.
-- Add below to the end of `fireflutter_sample_app/android/app/build.gradle`. This is for Flutter to read `google-services.json`.
+- Add below to the end of `[flutter_project_folder]/android/app/build.gradle`. This is for Flutter to read `google-services.json`.
 
 ```gradle
 apply plugin: 'com.google.gms.google-services'
 ```
 
-- Open `fireflutter_sample_app/android/build.gradle`. Do not confuse with the other build.gradle.
+- Open `[flutter_project_folder]/android/build.gradle`. Do not confuse with the other build.gradle.
 - Add the dependency below in the buildscript tag.
 
 ```gradle
@@ -408,7 +412,7 @@ dependencies {
 }
 ```
 
-- Open the 5 files and update the package name to `com.sonub.fireflutter`.
+- Open the 5 files and update the package name to `com.sonub.fireflutter` (or with your app's package name).
 
   - android/app/src/main/AndroidManifest.xml
   - android/app/src/debug/AndroidManifest.xml
@@ -445,6 +449,8 @@ keytool -genkey -v -keystore keystore.key -keyalg RSA -keysize 2048 -validity 10
 ```sh
 keytool -list -v -alias androiddebugkey -keystore ~/.android/debug.keystore
 ```
+
+- And copy SHA1 key and paste it into `Project Settings => Android apps => SHA cetificate fingerprints`.
 
 #### Debug hash key base64
 
@@ -703,7 +709,7 @@ We add `Apple sign in` only on iOS platform.
 - Get REVERSED_CLIENT_ID from GoogleService-Info.plist
 - Go to Runner(Left pane) => Runner(TARGETS) => Info => URL Types => Click (+) to add one,
 
-  - And add REVERSED_CLIENT_ID into URL Schemes.
+  - And add the REVERSED_CLIENT_ID into URL Schemes.
 
 - See [FlutterFire Phone Authentication Setup](https://firebase.flutter.dev/docs/auth/phone#setup) for details.
 
@@ -2243,3 +2249,27 @@ clang: error: linker command failed with exit code 1 (use -v to see invocation)
 ```
 
 open `~/bin/flutter/.pub-cache/hosted/pub.dartlang.org/flutter_image_compress-0.7.0/ios/Classes/CompressHandler.m` file and comment out some code as described in [its Git issue](https://github.com/OpenFlutter/flutter_image_compress/issues/160).
+
+## Authentication setup error on iOS
+
+If you didn't set the Authentication settings property, you may meed this error.
+
+`Please register custom URL scheme 'com.googleusercontent.apps.229679080903-i8mfbm7ojqq87c169cvurajffg3hau70' in the app's Info.plist file`.
+
+To solve this problem, please do the setup.
+
+## Dex problem on Android
+
+If you meet this error, you need to set up properly on Android.
+
+`com.android.builder.dexing.DexArchiveMergerException: Error while merging dex archives: The number of method references in a .dex file cannot exceed 64K.`
+
+To solve this problem, please refer [Android Setup](#android-setup) in this document.
+
+## App is not authorized
+
+If you meet this error, you haven't set up properly on Adnroid.
+
+`This app is not authorized to use Firebase Authentication. Please verify that the correct package name and SHA-1 are configured in the Firebase Console. [ App validation failed ]`.
+
+To solve this problem, please refer [Create a keystore](#create-a-keystore) and [Debug has key](#debug-hash-key) to setup SHA-1 hash key into Firebase.

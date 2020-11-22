@@ -682,6 +682,10 @@ class FireFlutter extends Base {
   /// - [verifcationID] will be used later for verifying the verification code.
   /// - [codeResendToken] can be used later if the user wants to resend the verification code to the provided number.
   ///
+  /// [onVerificationCompleted] - This will only be called (on Android) after the automatic code retrieval is performed.
+  /// Some phone may have the automatic code retrieval. Some may not.
+  /// See https://firebase.flutter.dev/docs/auth/phone#verificationcompleted
+  ///
   /// [onError] will be invoked when an error happen. It contains the error.
   ///
   /// ```dart
@@ -706,6 +710,8 @@ class FireFlutter extends Base {
     int resendToken,
     @required onCodeSent(String verificationID, int codeResendToken),
     @required onError(dynamic error),
+    String linkOrSignIn = linkPhoneAuth,
+    Function onVerificationCompleted,
   }) {
     if (internationalNo == null || internationalNo == '') {
       onError('Input your number');
@@ -735,12 +741,22 @@ class FireFlutter extends Base {
       // will invoke after `timeout` duration has passed.
       codeAutoRetrievalTimeout: (String verID) {},
 
-      // this will only be called after the automatic code retrieval is performed.
-      // some phone may have the automatic code retrieval. some may not.
+      // This will only be called (on Android) after the automatic code retrieval is performed.
+      // Some phone may have the automatic code retrieval. Some may not.
+      // See https://firebase.flutter.dev/docs/auth/phone#verificationcompleted
       verificationCompleted: (PhoneAuthCredential credential) {
-        // we can handle linking here.
-        // the user doesn't need to be redirected to code verification page.
-        // TODO: handle automatic linking/updating of user phone number.
+        if (linkOrSignIn == linkPhoneAuth) {
+          user.linkWithCredential(credential).then((value) {
+            user.reload();
+            userChange.add(UserChangeType.phoneNumber);
+            onVerificationCompleted(value.user);
+          });
+        } else {
+          FirebaseAuth.instance.signInWithCredential(credential).then((value) {
+            userChange.add(UserChangeType.auth);
+            onVerificationCompleted(value.user);
+          });
+        }
       },
     );
   }
@@ -751,6 +767,9 @@ class FireFlutter extends Base {
   ///
   /// [verificationId] is used to verify the current session, which is associated with the user's mobile number.
   /// - this can be obtained from the return value of [onCodeSent] after calling the method [mobileAuthSendCode()].
+  ///
+  /// [linkOrSignIn] if is set to `linkPhoneAuth` (which is the default), it will link the Phone Authentication with currently logged account.
+  /// Or if it is set to `signInPhoneAuth`, then it wil signin with the phone number.
   ///
   /// After code is verified, this will link/update the current user's phone number.
   ///
@@ -763,19 +782,24 @@ class FireFlutter extends Base {
   Future mobileAuthVerifyCode({
     @required String code,
     @required String verificationId,
+    String linkOrSignIn = linkPhoneAuth,
   }) async {
     PhoneAuthCredential creds = PhoneAuthProvider.credential(
       verificationId: verificationId,
       smsCode: code,
     );
 
-    // will throw error when
+    // This will throw error when
     //   1: code is incorrect.
     //   2: the mobile number associated by the verificationId is already in linked with other user.
-    await user.linkWithCredential(creds);
+    if (linkOrSignIn == linkPhoneAuth) {
+      await user.linkWithCredential(creds);
+      // Inform the app when user phone number has changed
+      await user.reload();
+    } else {
+      await FirebaseAuth.instance.signInWithCredential(creds);
+    }
 
-    // Inform the app when user phone number has changed
-    await user.reload();
     userChange.add(UserChangeType.phoneNumber);
   }
 
