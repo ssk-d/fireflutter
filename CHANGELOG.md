@@ -1,6 +1,7 @@
-## [0.0.34] - Minor fixes.
+## [0.0.34] - Add user's public document data variable.
 
-- \_voteChange() has been removed.
+- `_voteChange()` has been removed.
+- Adding `ff.publicData` to hold user's public document data.
 
 ## [0.0.33] - Phone authentication
 
