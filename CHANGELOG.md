@@ -1,3 +1,7 @@
+## [0.0.34] - Minor fixes.
+
+- \_voteChange() has been removed.
+
 ## [0.0.33] - Phone authentication
 
 Users can now sign in with their phone numbers. Or user can also link their phone authentication to existing account. It's now optional.

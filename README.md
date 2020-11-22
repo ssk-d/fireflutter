@@ -143,6 +143,7 @@ A free, open source, rapid development flutter package to build apps like shoppi
   - [Authentication setup error on iOS](#authentication-setup-error-on-ios)
   - [Dex problem on Android](#dex-problem-on-android)
   - [App is not authorized](#app-is-not-authorized)
+  - [If app exists when picking photo](#if-app-exists-when-picking-photo)
 
 <!-- /TOC -->
 
@@ -2273,3 +2274,7 @@ If you meet this error, you haven't set up properly on Adnroid.
 `This app is not authorized to use Firebase Authentication. Please verify that the correct package name and SHA-1 are configured in the Firebase Console. [ App validation failed ]`.
 
 To solve this problem, please refer [Create a keystore](#create-a-keystore) and [Debug has key](#debug-hash-key) to setup SHA-1 hash key into Firebase.
+
+## If app exists when picking photo
+
+To solve this problem, please refer [Image Picker Setup for iOS](#image-picker-setup-for-ios).

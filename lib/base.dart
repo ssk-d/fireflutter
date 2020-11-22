@@ -18,7 +18,8 @@ class Base {
   String pushNotificationSound;
 
   /// User document realtime update.
-  StreamSubscription userSubscription;
+  StreamSubscription userDocSubscription;
+  StreamSubscription userPublicDocSubscription;
 
   CollectionReference postsCol;
   CollectionReference usersCol;
@@ -75,6 +76,9 @@ class Base {
 
   /// User document data.
   Map<String, dynamic> userData = {};
+
+  /// User public document data.
+  Map<String, dynamic> publicData = {};
 
   bool get loggedIn => user != null;
   bool get notLoggedIn => !loggedIn;
@@ -143,16 +147,27 @@ class Base {
       ///
       /// When user logs out, it needs to cancel the subscription, or
       /// `cloud_firestore/permission-denied` error will happen.
-      if (userSubscription != null) {
-        userSubscription.cancel();
+      if (userDocSubscription != null) {
+        userDocSubscription.cancel();
+      }
+      if (userPublicDocSubscription != null) {
+        userPublicDocSubscription.cancel();
       }
 
       if (user != null) {
         /// Note: listen handler will called twice if Firestore is working as offlien mode.
-        userSubscription = usersCol.doc(user.uid).snapshots().listen(
+        userDocSubscription = usersCol.doc(user.uid).snapshots().listen(
           (DocumentSnapshot snapshot) {
             if (snapshot.exists) {
               userData = snapshot.data();
+              userChange.add(UserChangeType.document);
+            }
+          },
+        );
+        userPublicDocSubscription = publicDoc.snapshots().listen(
+          (DocumentSnapshot snapshot) {
+            if (snapshot.exists) {
+              publicData = snapshot.data();
               userChange.add(UserChangeType.document);
             }
           },

@@ -807,15 +807,15 @@ class FireFlutter extends Base {
   ///
   /// If it's first time vote, returns null.
   /// Or it returns the value of `choice`.
-  Future<String> _voteChoice(DocumentReference doc) async {
-    final snap = await doc.get();
-    if (snap.exists) {
-      final data = snap.data();
-      return data['choice'];
-    } else {
-      return null;
-    }
-  }
+  // Future<String> _voteChoice(DocumentReference doc) async {
+  //   final snap = await doc.get();
+  //   if (snap.exists) {
+  //     final data = snap.data();
+  //     return data['choice'];
+  //   } else {
+  //     return null;
+  //   }
+  // }
 
   /// Returns vote document reference.
   ///
