@@ -88,14 +88,11 @@ class UserLocation {
 
       /// TODO do not update user location unless the user move (by 1 meter).
 
-      GeoFirePoint _new = geo.point(
-        latitude: newLocation.latitude,
-        longitude: newLocation.longitude,
-      );
-      change.add(_new);
-
-      _ff.publicDoc.set({geoFieldName: _new.data}, SetOptions(merge: true));
       // print('update user location on firestore');
+      GeoFirePoint _new = updateUserLocation(
+        newLocation.latitude,
+        newLocation.longitude,
+      );
 
       /// When the user change his location, it needs to search other users
       /// with his new geo point.
@@ -104,6 +101,16 @@ class UserLocation {
       }
       _lastPoint = _new;
     });
+  }
+
+  GeoFirePoint updateUserLocation(double latitude, double longitude) {
+    GeoFirePoint _new = geo.point(
+      latitude: latitude,
+      longitude: longitude,
+    );
+    change.add(_new);
+    _ff.publicDoc.set({geoFieldName: _new.data}, SetOptions(merge: true));
+    return _new;
   }
 
   // Other user's location near the current user's location.
