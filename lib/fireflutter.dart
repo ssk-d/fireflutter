@@ -961,7 +961,7 @@ class FireFlutter extends Base {
       @required String content}) async {
     String algoliaIndexName = appSetting('ALGOLIA_INDEX_NAME');
     if (algoliaIndexName == null || algoliaIndexName == "") {
-      throw 'ALGOLIA_INDEX_NAME is empty';
+      throw ALGOLIA_EMPTY_INDEX_NAME;
     }
 
     final added = await algolia.instance.index(algoliaIndexName).addObject({
