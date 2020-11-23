@@ -1,7 +1,8 @@
-## [0.0.34] - Add user's public document data variable.
+## [0.0.34] - Add user's public document data variable and minors.
 
 - `_voteChange()` has been removed.
 - Adding `ff.publicData` to hold user's public document data.
+- `editPost()` now returns post document id.
 
 ## [0.0.33] - Phone authentication
 

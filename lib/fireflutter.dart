@@ -272,6 +272,9 @@ class FireFlutter extends Base {
 
     // Prepare query
     Query postsQuery = postsCol.where('category', isEqualTo: forum.category);
+    if (forum.uid != null) {
+      postsQuery = postsQuery.where('uid', isEqualTo: forum.uid);
+    }
     postsQuery = postsQuery.orderBy('createdAt', descending: true);
 
     // Set default limit
@@ -307,8 +310,8 @@ class FireFlutter extends Base {
         final post = documentChange.doc.data();
         post['id'] = documentChange.doc.id;
 
-        print('post:');
-        print(post);
+        // print('post:');
+        // print(post);
 
         if (documentChange.type == DocumentChangeType.added) {
           // [createdAt] is null on author mobile (since FieldValue.serverTime make the event fire twice).
@@ -404,6 +407,8 @@ class FireFlutter extends Base {
           assert(false, 'This is error');
         }
       });
+
+      forum.render(RenderType.finishFetching);
     });
   }
 
@@ -411,12 +416,16 @@ class FireFlutter extends Base {
   ///
   /// [data] is a type of [Map<String, dynamic>] which will be save into firebase as a post document.
   ///
+  ///
   /// `data['id']` can either contain a value or null.
   /// - If it has value, it is considered as update a post document.
   /// - If it is null, it is considered as creating a post document.
   ///
   /// `data['title']` and `data['content']` values are required.
   /// - Those values are also used when sending a push notification.
+  ///
+  ///
+  /// This method returns document id of the post.
   ///
   /// ```dart
   /// ff.editPost({
@@ -426,7 +435,15 @@ class FireFlutter extends Base {
   ///     // Other information can be added ...
   /// });
   /// ```
-  Future editPost(Map<String, dynamic> data) async {
+  Future<String> editPost(Map<String, dynamic> data) async {
+    print('data: $data');
+    if (notLoggedIn) throw LOGIN_FIRST;
+
+    /// This code causes one document read and slow down the speed.
+    /// * But write is really rear compaing to read and it would not cause a big performance problem.
+    Map category = (await categoryDoc(data['category']).get()).data();
+    if (category == null) throw CATEGORY_NOT_EXISTS;
+
     // Create
     if (data['id'] == null) {
       data.remove('id');
@@ -449,6 +466,7 @@ class FireFlutter extends Base {
         id: doc.id,
         topic: NotificationOptions.post(data['category']),
       );
+      return doc.id;
     }
 
     // Update
@@ -463,6 +481,7 @@ class FireFlutter extends Base {
         title: data['title'],
         content: data['content'],
       );
+      return data['id'];
     }
   }
 

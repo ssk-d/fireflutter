@@ -13,6 +13,12 @@ class Base {
   /// Default topic that all users(devices) will subscribe to
   final String allTopic = 'allTopicqwerty';
 
+  /// Storage folder names
+  ///
+  /// * changed on 2020. 11. 23. This is not a breaking change.
+  final String forumFolder = 'forum-photos'; // for photos and anything.
+  final String profilePhotoFolder = 'user-profile-photos';
+
   /// To send push notification
   String firebaseServerToken;
   String pushNotificationSound;
@@ -616,6 +622,10 @@ class Base {
     // print(parts);
   }
 
+  DocumentReference categoryDoc(String id) {
+    return FirebaseFirestore.instance.collection('categories').doc(id);
+  }
+
   CollectionReference postsCollection() {
     return FirebaseFirestore.instance.collection('posts');
   }
@@ -815,8 +825,14 @@ class Base {
     if (permissionStatus.isUndetermined || permissionStatus.isDenied) {
       /// request permission if not granted, or user haven't chosen permission yet.
       // print('requesting permisssion again');
-      // does not request permission again. (BUG: iOS)
-      // await permission.request();
+
+      /// ? does not request permission again. (BUG: iOS) ??
+      ///
+
+      /// Ask permission.
+      if (Platform.isAndroid) {
+        await permission.request();
+      }
     }
 
     PickedFile pickedFile = await picker.getImage(
