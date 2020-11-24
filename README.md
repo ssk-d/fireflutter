@@ -132,6 +132,7 @@ A free, open source, rapid development flutter package to build apps like shoppi
   - [Extension method on fireflutter](#extension-method-on-fireflutter)
 - [Extending your app with Fireflutter](#extending-your-app-with-fireflutter)
   - [Social photo gallery](#social-photo-gallery)
+  - [Keeping deleted post when user delete post](#keeping-deleted-post-when-user-delete-post)
 - [Trouble Shotting](#trouble-shotting)
   - [Add GoogleService-Info.plist](#add-googleservice-infoplist)
   - [Stuck in registration](#stuck-in-registration)
@@ -2190,6 +2191,14 @@ User can see other users' photos and take actions like voting(like and dislike),
 - When user wants edit or delete photo, do so with fireflutter.
 
 This may cause lots of time and effort to accomplish without fireflutter.
+
+## Keeping deleted post when user delete post
+
+Sometimes you may want to keep the deleted post. Imagine that you are going to build a photo gallery and keeping history of uploaded photos are mandatory.
+
+- When user deletes a post which has the photo,
+- Don't delete the document. Instead delete the title and content, add a property `{deleted: FieldValue.serverTimestamp()}`
+- And when the app lists the posts, hide deleted posts.
 
 # Trouble Shotting
 
