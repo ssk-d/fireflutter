@@ -85,8 +85,8 @@ class FireFlutter extends Base {
         // print('settingsChange.listen() on fireflutter::init() $settings');
 
         // Initalize Algolia
-        String applicationId = appSetting('ALGOLIA_APP_ID');
-        String apiKey = appSetting('ALGOLIA_ADMIN_API_KEY');
+        String applicationId = appSetting(ALGOLIA_APP_ID);
+        String apiKey = appSetting(ALGOLIA_ADMIN_API_KEY);
         if (applicationId != '' && apiKey != '') {
           algolia = Algolia.init(
             applicationId: applicationId,
@@ -231,11 +231,18 @@ class FireFlutter extends Base {
   ///  'displayName': 'UserA'
   /// });
   /// ```
-  Future<User> loginOrRegister(
-    Map<String, dynamic> data, {
+  Future<User> loginOrRegister({
+    @required String email,
+    @required String password,
+    Map<String, dynamic> data,
     Map<String, dynamic> public,
   }) async {
     try {
+      if (data = null) data = {};
+
+      data['email'] = email;
+      data['password'] = password;
+
       return await login(
           email: data['email'], password: data['password'], public: public);
     } on FirebaseAuthException catch (e) {
@@ -260,6 +267,8 @@ class FireFlutter extends Base {
 
   /// Get more posts from Firestore
   ///
+  /// Posts will be live updated and `ForumData.render()` will be called once they are fected.
+  ///
   /// This does not fetch again while it is in progress of fetching.
   /// Todo bug check: does the last post in the list disappear when a new post added(created)?
   fetchPosts(ForumData forum) {
@@ -278,7 +287,8 @@ class FireFlutter extends Base {
     postsQuery = postsQuery.orderBy('createdAt', descending: true);
 
     // Set default limit
-    int limit = _settings['forum']['no-of-posts-per-fetch'] ?? 12;
+    int limit =
+        _settings['forum']['no-of-posts-per-fetch'] ?? forum.noOfPostsPerFetch;
 
     // If it has specific limit on settings set the corresponding settings.
     if (_settings[forum.category] != null &&
@@ -438,6 +448,9 @@ class FireFlutter extends Base {
   Future<String> editPost(Map<String, dynamic> data) async {
     print('data: $data');
     if (notLoggedIn) throw LOGIN_FIRST;
+    if (data['category'] == null || data['category'] == '') {
+      throw CATEGORY_EMPTY;
+    }
 
     /// This code causes one document read and slow down the speed.
     /// * But write is really rear compaing to read and it would not cause a big performance problem.
@@ -453,11 +466,15 @@ class FireFlutter extends Base {
       DocumentReference doc = await postsCol.add(data);
 
       /// Since push notification takes time, do indexing comes first.
-      addSearchIndex(
-        path: doc.path,
-        title: data['title'],
-        content: data['content'],
-      );
+
+      final String applicationId = appSetting(ALGOLIA_APP_ID);
+      if (applicationId != '') {
+        await addSearchIndex(
+          path: doc.path,
+          title: data['title'],
+          content: data['content'],
+        );
+      }
 
       sendNotification(
         data['title'],
@@ -476,11 +493,15 @@ class FireFlutter extends Base {
             data,
             SetOptions(merge: true),
           );
-      addSearchIndex(
-        path: postsCol.doc(data['id']).path,
-        title: data['title'],
-        content: data['content'],
-      );
+
+      final String applicationId = appSetting(ALGOLIA_APP_ID);
+      if (applicationId != '') {
+        await addSearchIndex(
+          path: postsCol.doc(data['id']).path,
+          title: data['title'],
+          content: data['content'],
+        );
+      }
       return data['id'];
     }
   }
@@ -914,9 +935,9 @@ class FireFlutter extends Base {
   /// Search algolia
   Future<List<Map<String, dynamic>>> search(String keyword,
       {int hitsPerPage = 10, int pageNo = 0}) async {
-    String algoliaIndexName = appSetting('ALGOLIA_INDEX_NAME');
+    String algoliaIndexName = appSetting(ALGOLIA_INDEX_NAME);
     if (algoliaIndexName == null || algoliaIndexName == "") {
-      throw 'ALGOLIA_INDEX_NAME is empty';
+      throw ALGOLIA_INDEX_NAME_IS_EMPTY;
     }
     AlgoliaQuery query = algolia.instance
         .index(algoliaIndexName)
@@ -959,9 +980,9 @@ class FireFlutter extends Base {
       {@required String path,
       @required String title,
       @required String content}) async {
-    String algoliaIndexName = appSetting('ALGOLIA_INDEX_NAME');
+    String algoliaIndexName = appSetting(ALGOLIA_INDEX_NAME);
     if (algoliaIndexName == null || algoliaIndexName == "") {
-      throw ALGOLIA_EMPTY_INDEX_NAME;
+      throw ALGOLIA_INDEX_NAME_IS_EMPTY;
     }
 
     final added = await algolia.instance.index(algoliaIndexName).addObject({

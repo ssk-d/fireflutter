@@ -3,6 +3,10 @@
 - `_voteChange()` has been removed.
 - Adding `ff.publicData` to hold user's public document data.
 - `editPost()` now returns post document id.
+- `CATEGORY_EMPTY` exception will be thrown when you are going to create/update a post.
+- Algolia related property names are set as constant.
+- Fixed on unexpected exception thrown when Algolia settings are not set.
+- Changes of parameters in `loginorRegister`.
 
 ## [0.0.33] - Phone authentication
 
