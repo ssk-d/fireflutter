@@ -227,16 +227,26 @@ class Base {
   /// If [value] is not null, then [name] is a property of the public document
   /// and it will update only one property.
   ///
+  /// [updatedAt] is always updatd.
+  ///
   /// ```dart
   /// await updateUserPublic(public); // merge a map
   /// await updateUserPublic('a', 'apple'); // merge a key/value
   /// ```
   Future<void> updateUserPublic(dynamic name, [dynamic value]) async {
     if (name == null) return;
+
     if (name is Map) {
-      return publicDoc.set(name, SetOptions(merge: true));
+      // name[updatedAt] = FieldValue.serverTimestamp();
+      return publicDoc.set({
+        ...name,
+        ...{updatedAt: FieldValue.serverTimestamp()}
+      }, SetOptions(merge: true));
     } else {
-      return publicDoc.set({name: value}, SetOptions(merge: true));
+      return publicDoc.set({
+        name: value,
+        updatedAt: FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true));
     }
   }
 

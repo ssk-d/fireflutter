@@ -1,7 +1,10 @@
 part of './fireflutter.dart';
 
+/// Constants
 const String linkPhoneAuth = 'link';
 const String signInPhoneAuth = 'signIn';
+const String createdAt = 'createdAt';
+const String updatedAt = 'updatedAt';
 
 enum RenderType {
   postCreate,
@@ -28,6 +31,7 @@ const String LOGIN_FIRST = 'LOGIN_FIRST';
 const String CATEGORY_EMPTY = 'CATEGORY_EMPTY';
 const String CATEGORY_NOT_EXISTS = 'CATEGORY_NOT_EXISTS';
 const String ALGOLIA_INDEX_NAME_IS_EMPTY = 'ALGOLIA_INDEX_NAME_IS_EMPTY';
+const String UPLOAD_CANCELLED = 'UPLOAD_CANCELLED';
 
 /// Algolia codes
 const String ALGOLIA_APP_ID = 'ALGOLIA_APP_ID';
@@ -97,7 +101,13 @@ class ForumData {
   /// [uid] could be the login user's uid or other user's uid.
   String uid;
 
-  // int pageNo = 0;
+  /// [fetched] becomes true if the app has fetched from Firestore.
+  ///
+  /// There might no no there even after it has fetched. So, [fetched] will be true
+  /// while [posts] is still empty array.
+  ///
+  bool fetched = false;
+
   /// No of posts per each fetch. This can be overwritten by Firestore settings.
   int noOfPostsPerFetch;
   List<Map<String, dynamic>> posts = [];

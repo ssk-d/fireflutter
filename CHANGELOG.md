@@ -1,5 +1,6 @@
 ## [0.0.34] - Add user's public document data variable and minors.
 
+- Some of error codes have been renamed.
 - `_voteChange()` has been removed.
 - Adding `ff.publicData` to hold user's public document data.
 - `editPost()` now returns post document id.

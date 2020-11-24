@@ -238,7 +238,7 @@ class FireFlutter extends Base {
     Map<String, dynamic> public,
   }) async {
     try {
-      if (data = null) data = {};
+      if (data == null) data = {};
 
       data['email'] = email;
       data['password'] = password;
@@ -276,8 +276,6 @@ class FireFlutter extends Base {
     // print('category: ${forum.category}');
     // print('should fetch?: ${forum.shouldFetch}');
     forum.updateScreen(RenderType.fetching);
-    // forum.pageNo++;
-    // print('pageNo: ${forum.pageNo}');
 
     // Prepare query
     Query postsQuery = postsCol.where('category', isEqualTo: forum.category);
@@ -304,6 +302,7 @@ class FireFlutter extends Base {
     // Listen to coming posts.
     forum.postQuerySubscription =
         postsQuery.snapshots().listen((QuerySnapshot snapshot) {
+      forum.fetched = true;
       // If snapshot size is 0, means no documents has been fetched.
       if (snapshot.size == 0) {
         if (forum.posts.isEmpty) {
@@ -618,7 +617,7 @@ class FireFlutter extends Base {
     );
 
     // if no file is selected then do nothing.
-    if (file == null) throw 'upload-cancelled';
+    if (file == null) throw UPLOAD_CANCELLED;
     // print('success: file picked: ${file.path}');
 
     final ref = FirebaseStorage.instance
