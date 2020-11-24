@@ -1,32 +1,13 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:fireflutter/fireflutter.dart';
 
 /// * A search users near himself for 100km radius and got B in the user-near-me screen.
-/// B in A screen
-///
 /// * C goes in(to the radius of search) and appears in the user-near-me screen of A.
-/// B in A screen
-/// * A in C screen
-///
 /// * C search users near himself for 5km radius and got D in his user-near-me screen.
-/// B in A screen
-/// A in C screen
-/// * D in C screen
-///
 /// * B goes out from A's search and goes into C's search.
-/// A in C screen
-/// D in C screen
-/// * B in C screen
-///
 /// * D moves and goes out from C's search and goes in A's search.
-/// A in C screen
-/// B in C screen
-/// * D in A screen
 ///
 /// * B moves and goes out from C's search and goes in A's search.
-/// A in C screen
-/// D in A screen
-/// * B in A screen
-///
 /// * C moves and goes into A's search.
 /// * C sees A, B, in his user-near-me screen.
 /// * A sees C, D in his user-near-me screen.
@@ -47,28 +28,29 @@ class LocationTest {
 
   Map<String, dynamic> locations = {
     'a': {
-      'location': {
-        'geohash': 'wdty0n7t1', // angeles, pampanga, (near arayat road)
-        'geopoint': {'Latitude': 15.1523928, 'Longitude': 120.5908085}
-      }
+      'geohash': '',
+      'latitude': 17.5804338,
+      'longitude': 129.2972281,
     },
     'b': {
-      'location': {
-        'geohash': 'wdty0p63r', // Angeles, pampanga (near robinsons)
-        'geopoint': {'Latitude': 15.1572565, 'Longitude': 120.5893648}
-      }
+      'geohash': '',
+      'latitude': 17.9672081,
+      'longitude': 129.838777,
     },
     'c': {
-      'location': {
-        'geohash': 'wdtusr7my', // calumpit, bulacan (near national highschool)
-        'geopoint': {'Latitude': 14.894354, 'Longitude': 120.777427}
-      }
+      'geohash': '',
+      'latitude': 18.8663689,
+      'longitude': 129.9290352,
+    },
+    'c2': {
+      'geohash': '',
+      'latitude': 18.2995873,
+      'longitude': 129.0490182,
     },
     'd': {
-      'location': {
-        'geohash': 'wdtvdnu1d', // san fernando, pampanga (near sky ranch)
-        'geopoint': {'Latitude': 15.0666456, 'Longitude': 120.6794162}
-      }
+      'geohash': '',
+      'latitude': 18.2994515,
+      'longitude': 129.088109,
     },
   };
 
@@ -109,10 +91,97 @@ class LocationTest {
     updateUserLocation('d');
   }
 
+  success(String message) {
+    print("[SUCCESS] $message");
+  }
+
+  failture(String message) {
+    print("------------------> [FAILURE] $message");
+  }
+
+  isTrue(bool re, [String message]) {
+    if (re)
+      success(message);
+    else
+      failture(message);
+  }
+
   updateUserLocation(String user) {
-    Map<String, dynamic> point = locations[user]['location']['geopoint'];
-    double lat = point['Latitude'];
-    double lng = point['Longitude'];
-    location.updateUserLocation(lat, lng);
+    dynamic point = locations[user];
+    double lat = point['latitude'];
+    double lng = point['longitude'];
+    dynamic data = location.updateUserLocation(lat, lng).data;
+    locations[user]['geohash'] = data['geohash'];
+    locations[user]['latitude'] = data['geopoint'].latitude;
+    locations[user]['longitude'] = data['geopoint'].longitude;
+  }
+
+  getUsersNearMe(data, {double radius = 100}) async {
+    dynamic point = location.geo.point(
+      latitude: data['latitude'],
+      longitude: data['longitude'],
+    );
+
+    return location.geo
+        .collection(collectionRef: ff.publicCol)
+        .within(
+          center: point,
+          radius: radius,
+          field: geoFieldName,
+          strictMode: true,
+        )
+        .firstWhere((element) => element != null);
+  }
+
+  bool checkIfUsersIsNearMe(
+    List<Map<String, dynamic>> users,
+    List<DocumentSnapshot> documents,
+  ) {
+    bool ret = true;
+    users.forEach((user) {
+      documents.contains((document) => ret = user['uid'] == document.id);
+    });
+    return ret;
+  }
+
+  runLocationTest() {
+    ff.firebaseInitialized.listen((v) async {
+      if (!v) return;
+      prepareUserABCD();
+
+      /// A search users near himself and got B in the user-near-me screen.
+      await ff.loginOrRegister(userA);
+      List<DocumentSnapshot> usersInLocation = await getUsersNearMe(
+        locations['a'],
+      );
+      isTrue(
+        checkIfUsersIsNearMe([userB], usersInLocation),
+        'User B is near User A [100km]',
+      );
+
+      /// C goes in(to the radius of search) and appears in the user-near-me screen of A.
+      await ff.loginOrRegister(userC);
+      updateUserLocation('c2');
+      await ff.loginOrRegister(userA);
+      usersInLocation = await getUsersNearMe(
+        locations['a'],
+      );
+      isTrue(
+        checkIfUsersIsNearMe([userC], usersInLocation),
+        'User C is near User A [100km]',
+      );
+
+      /// C search users near himself for 5km radius and got D in his user-near-me screen.
+      await ff.loginOrRegister(userC);
+      usersInLocation = await getUsersNearMe(
+        locations['c2'],
+      );
+      isTrue(
+        checkIfUsersIsNearMe([userD], usersInLocation),
+        'User D is near User C [5km]',
+      );
+
+      /// B goes out from A's search and goes into C's search.
+    });
   }
 }
