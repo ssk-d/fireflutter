@@ -48,7 +48,10 @@ A free, open source, rapid development flutter package to build apps like shoppi
     - [Phone Auth Setup](#phone-auth-setup)
       - [Additional Phone Auth Setup for Android](#additional-phone-auth-setup-for-android)
       - [Additional Phone Auth Setup for iOS](#additional-phone-auth-setup-for-ios)
+  - [Permission handler setup](#permission-handler-setup)
+  - [Permission handler setup for Android](#permission-handler-setup-for-android)
   - [Image Picker Setup](#image-picker-setup)
+    - [Image picker setup for Android](#image-picker-setup-for-android)
     - [Image Picker Setup for iOS](#image-picker-setup-for-ios)
   - [Location Setup](#location-setup)
     - [Location Setup For Android](#location-setup-for-android)
@@ -127,11 +130,13 @@ A free, open source, rapid development flutter package to build apps like shoppi
   - [Integration Test](#integration-test)
 - [Developers Tips](#developers-tips)
   - [Extension method on fireflutter](#extension-method-on-fireflutter)
+- [Extending your app with Fireflutter](#extending-your-app-with-fireflutter)
+  - [Social photo gallery](#social-photo-gallery)
 - [Trouble Shotting](#trouble-shotting)
   - [Add GoogleService-Info.plist](#add-googleservice-infoplist)
   - [Stuck in registration](#stuck-in-registration)
-  - [MissingPluginException google_sign_in](#missingpluginexception-google_sign_in)
-    - [By passing MissingPluginException google_sign_in error](#by-passing-missingpluginexception-google_sign_in-error)
+  - [MissingPluginException(No implementation found for method ...](#missingpluginexceptionno-implementation-found-for-method-)
+    - [By pass MissingPluginException error](#by-pass-missingpluginexception-error)
   - [com.apple.AuthenticationServices.AuthorizationError error 1001 or if the app hangs on Apple login](#comappleauthenticationservicesauthorizationerror-error-1001-or-if-the-app-hangs-on-apple-login)
   - [sign_in_failed](#sign_in_failed)
   - [operation-not-allowed](#operation-not-allowed)
@@ -320,13 +325,15 @@ $ npm run test:chat
 
 ### Update Firestore Index
 
-- Create a complex index with `category` and `createdAt` properties like below.
+- Create complex indexes ike below.
   - Go `Cloud Firestore => Indexes => Composite => + Create Index`
 
-| Collection ID | Fields indexed                                  | Query scope | Status  |
-| ------------- | ----------------------------------------------- | ----------- | ------- |
-| posts         | category **Ascending** createdAt **Descending** | Collection  | Enabled |
+| Collection ID | Fields indexed                                                    | Query scope | Status  |
+| ------------- | ----------------------------------------------------------------- | ----------- | ------- |
+| posts         | category **Ascending** createdAt **Descending**                   | Collection  | Enabled |
+| posts         | category **Ascending** uid **Ascending** createdAt **Descending** | Collection  | Enabled |
 
+Example of adding Firestore indexes)
 ![Firestore Index](wiki/firestore-index.jpg)
 
 - Or you can deploy Firestore index using CLI.
@@ -714,11 +721,33 @@ We add `Apple sign in` only on iOS platform.
 
 - See [FlutterFire Phone Authentication Setup](https://firebase.flutter.dev/docs/auth/phone#setup) for details.
 
+## Permission handler setup
+
+## Permission handler setup for Android
+
+```xml
+<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.sonub.dating">
+  <uses-permission android:name="android.permission.INTERNET" />
+  <uses-permission android:name="android.permission.CAMERA" />
+  <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" android:protectionLevel="dangerous" />
+  <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+  <application>
+    <!-- ... -->
+  </application>
+  </manifest>
+```
+
 ## Image Picker Setup
 
 To upload files(or photos), we will use [image_picker](https://pub.dev/packages/image_picker) package.
 
-Android platform(API 29+) does not need any settings. It works out of the box.
+### Image picker setup for Android
+
+API 29+
+No configuration required - the plugin should work out of the box.
+
+API < 29
+Add `android:requestLegacyExternalStorage="true"` as an attribute to the `<application>` tag in AndroidManifest.xml. The attribute is false by default on apps targeting Android Q.
 
 - See [image_picker](https://pub.dev/packages/image_picker) package page for detail.
 
@@ -1039,7 +1068,20 @@ You can set a user to admin by updating user document of Firestore directly. Adm
 
 ### Forum Category Management
 
-- You can create forum categories in admin screen.
+Forum category is a list(or a collection) of posts to differentiate from each kind. Category ID is a word(or words with dash separated) like `reminder`, `qna`, `discussion`, `public-photos` or whatever you want.
+
+- Post can be created only under an existing category.
+- You can create forum categories editing `categories` collection in Firestore
+  - Or if there is an admin screen, admin may do so in admin screen.
+
+To create a creategory,
+
+- Open `Cloud Firestore`
+- Create the `categories` collection if it is not present( by clicking `+ Start collection`)
+- Then click `add a document`.
+  - Put category id in `Document ID` and this should not be changed after.
+  - And put `id` in Field column and the same category id in Value column.
+  - You may optionally add more Field with `title` and `description`.
 
 # Developer Coding Guidelines
 
@@ -2133,6 +2175,22 @@ extension on FireFlutter {
 print('uid: ' + ff.getUid());
 ```
 
+# Extending your app with Fireflutter
+
+You can do so much things with Fireflutter. We will introduce some scenario how fireflutter could extend your app's functionality.
+
+## Social photo gallery
+
+Imagine that you are going to build a social app. User can upload his photos and manage it on his profile page while those photos are public.
+User can see other users' photos and take actions like voting(like and dislike), commeting, and even reporting for abusement.
+
+- You can create a forum named `gallary` and put `add photo` button in user's profile screen.
+- When user uploads a photo with firelfutter upload method, create a post under gallery forum with fireflutter method.
+- You can, then, get(listen) user's photo with fireflutter post fetch method and display it to screen.
+- When user wants edit or delete photo, do so with fireflutter.
+
+This may cause lots of time and effort to accomplish without fireflutter.
+
 # Trouble Shotting
 
 ## Add GoogleService-Info.plist
@@ -2147,13 +2205,29 @@ FirebaseException ([core/not-initialized] Firebase has not been correctly initia
 
 When `ff.register` is called, it sets data to Firestore and if Firestore is set created, then it would hang on `Firestore...doc('docId').set()`. To fix this, just enable Firestore with security rules and indexes as described in the setup section.
 
-## MissingPluginException google_sign_in
+## MissingPluginException(No implementation found for method ...
 
-`MissingPluginException(No implementation found for method init on channel plugins.flutter.io/google_sign_in)`
+If you meet errors like below,
 
-This error happens (at least in our case) when Flutter has google_sign_in package and facebook sign in package. If facebook sign in is depending on google_sign_in package, setting for facebok sign in is mandatory to use google_sign_in. In short, do the settings for both google sign in and facebook sign in.
+- `MissingPluginException(No implementation found for method init on channel plugins.flutter.io/google_sign_in)`
+- `MissingPluginException(No implementation found for method checkPermissionStatus on channel flutter.baseflow.com/permissions/methods)`
 
-### By passing MissingPluginException google_sign_in error
+Mostly you have
+
+- Misconfigured your packages
+- To stop running debugging session and restart
+  - Or delete some caches by doing
+    - `$ flutter clean`
+    - `$ flutter pub cache repair`
+- Set up packages properly.
+
+This error may happen when you try to login with `google_sign_in package` but you didn't setup `facebook sign in` package. Or when you try to take photos(on Android) without setting `facebook sign in` package.
+
+`MissingPluginException` often happens when developer didn't set up properly when they add a package that depends on(or related in) others.
+
+Try to do `By pass MissingPluginException error` and see if the error goes away.
+
+### By pass MissingPluginException error
 
 If really don't want to implement Facebook sign in or you want to skip Facebook sign in for the mean time while you are implementing Gogole sign in, then you may add the following settings. You can just put fake data on `strings.xml`.
 
@@ -2181,7 +2255,7 @@ Add the following uses-permission element after the application element (outside
   <uses-permission android:name="android.permission.INTERNET"/>
 ```
 
-Add the following meta-data element, an activity for Facebook, and an activity and intent filter for Chrome Custom Tabs inside your application element:
+And add the following meta-data element, an activity for Facebook, and an activity and intent filter for Chrome Custom Tabs inside your application element:
 
 ```xml
 <meta-data android:name="com.facebook.sdk.ApplicationId" android:value="@string/facebook_app_id"/>
@@ -2221,7 +2295,7 @@ This error may happens when you didn't enable the sign-in method on Firebase Aut
 
 ## App crashes on second file upload
 
-It's know to be a bug of Flutter and image_picker.
+It's not a bug of Flutter and image_picker.
 
 ## Firestore rules and indexes
 
