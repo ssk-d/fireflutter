@@ -1,42 +1,34 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:fireflutter/fireflutter.dart';
+import 'package:geoflutterfire/geoflutterfire.dart';
 
-/// * A search users near himself for 100km radius and got B in the user-near-me screen.
-/// B in A screen
+/// * There is user A, B, C, D.
+/// Log into A, B, C, D repectively and update fake geo information.
 ///
-/// * C goes in(to the radius of search) and appears in the user-near-me screen of A.
-/// B in A screen
-/// * A in C screen
+/// A search users near himself for 100km radius and got B in the user-near-me screen.
+/// C goes in(to the radius of search) and appears in the user-near-me screen of A.
+/// C search users near himself for 5km radius and got D in his user-near-me screen.
+/// B goes out from A's search and goes into C's search.
+/// B moves and goes out from C's search and goes in A's search.
+/// C moves and goes out from A's search.
 ///
-/// * C search users near himself for 5km radius and got D in his user-near-me screen.
-/// B in A screen
-/// A in C screen
-/// * D in C screen
 ///
-/// * B goes out from A's search and goes into C's search.
-/// A in C screen
-/// D in C screen
-/// * B in C screen
+///```dart
+/// /// sample code.
+/// /// how to use this test.
 ///
-/// * D moves and goes out from C's search and goes in A's search.
-/// A in C screen
-/// B in C screen
-/// * D in A screen
+/// /// imports
+/// import 'package:fireflutter/fireflutter.dart';
+/// import 'file:///<some_folders>/sms/flutter/v1/packages/fireflutter/test/location.test.dart';
 ///
-/// * B moves and goes out from C's search and goes in A's search.
-/// A in C screen
-/// D in A screen
-/// * B in A screen
-///
-/// * C moves and goes into A's search.
-/// * C sees A, B, in his user-near-me screen.
-/// * A sees C, D in his user-near-me screen.
-/// * B sees D in his user-near-me screen.
-
-/// -> Initially A and B are nearby each other.
-/// -> C will move inside A's search radius.
-///   -> C will see D in his search radius.
-/// -> B will move out of A's radius and into C's radius.
-///
+/// testLocation() {
+///   FireFlutter ff = FireFlutter();
+///   UserLocation location = UserLocation(inject: ff);
+///   ff.init();
+///   LocationTest lt = LocationTest(ff, location);
+///   lt.runLocationTest();
+/// }
+///```
 class LocationTest {
   LocationTest(FireFlutter ff, UserLocation location)
       : this.ff = ff,
@@ -46,73 +38,305 @@ class LocationTest {
   UserLocation location;
 
   Map<String, dynamic> locations = {
-    'a': {
-      'location': {
-        'geohash': 'wdty0n7t1', // angeles, pampanga, (near arayat road)
-        'geopoint': {'Latitude': 15.1523928, 'Longitude': 120.5908085}
-      }
-    },
-    'b': {
-      'location': {
-        'geohash': 'wdty0p63r', // Angeles, pampanga (near robinsons)
-        'geopoint': {'Latitude': 15.1572565, 'Longitude': 120.5893648}
-      }
-    },
-    'c': {
-      'location': {
-        'geohash': 'wdtusr7my', // calumpit, bulacan (near national highschool)
-        'geopoint': {'Latitude': 14.894354, 'Longitude': 120.777427}
-      }
-    },
-    'd': {
-      'location': {
-        'geohash': 'wdtvdnu1d', // san fernando, pampanga (near sky ranch)
-        'geopoint': {'Latitude': 15.0666456, 'Longitude': 120.6794162}
-      }
-    },
+    'a': {'geohash': '', 'latitude': 15.1410147, 'longitude': 120.5844096},
+    'b': {'geohash': '', 'latitude': 15.1246466, 'longitude': 119.9154129},
+    'b2': {'geohash': '', 'latitude': 15.1256682, 'longitude': 121.6562343},
+    'c': {'geohash': '', 'latitude': 15.1446401, 'longitude': 121.060072},
+    'c2': {'geohash': '', 'latitude': 15.1446401, 'longitude': 122.560072},
+    'd': {'geohash': '', 'latitude': 15.1442681, 'longitude': 121.0889745},
   };
 
   Map<String, String> userA = {
     'uid': 'LUF7KTkwiabjdPphjiJX5wbsyhF3',
     'email': 'apple@gmail.com',
     'password': '12345a',
-    'displayName': 'apple'
   };
   Map<String, String> userB = {
     'uid': 'gy0VSDAw8gNI11rXburZlqhkz0s2',
     'email': 'berry@gmail.com',
     'password': '12345a',
-    'displayName': 'berry'
   };
   Map<String, String> userC = {
     'uid': 'WkeLfnhshSNFdK11j8qDPpuCFrE3',
     'email': 'cherry@gmail.com',
     'password': '12345a',
-    'displayName': 'cherry'
   };
   Map<String, String> userD = {
     'uid': 'ayqVJr9UNLNGuFMR3t5pTIkpsyo2',
     'email': 'dragon@gmail.com',
     'password': '12345a',
-    'displayName': 'dragon'
   };
 
   /// reset locations
   prepareUserABCD() async {
-    await ff.loginOrRegister(userA);
-    updateUserLocation('a');
-    await ff.loginOrRegister(userB);
-    updateUserLocation('b');
-    await ff.loginOrRegister(userC);
-    updateUserLocation('c');
-    await ff.loginOrRegister(userD);
-    updateUserLocation('d');
+    await ff.loginOrRegister(
+      email: userA['email'],
+      password: userA['password'],
+    );
+    await updateUserLocation('a', 'User A initial location');
+    await ff.loginOrRegister(
+      email: userB['email'],
+      password: userB['password'],
+    );
+    await updateUserLocation('b', 'User B initial location');
+    await ff.loginOrRegister(
+      email: userC['email'],
+      password: userC['password'],
+    );
+    await updateUserLocation('c', 'User C initial location');
+    await ff.loginOrRegister(
+      email: userD['email'],
+      password: userD['password'],
+    );
+    await updateUserLocation('d', 'User D initial location');
   }
 
-  updateUserLocation(String user) {
-    Map<String, dynamic> point = locations[user]['location']['geopoint'];
-    double lat = point['Latitude'];
-    double lng = point['Longitude'];
-    location.updateUserLocation(lat, lng);
+  success(String message) {
+    print("[SUCCESS] $message");
+  }
+
+  failture(String message) {
+    print("------------------> [FAILURE] $message");
+  }
+
+  isTrue(bool re, [String message]) {
+    if (re)
+      success(message);
+    else
+      failture(message);
+  }
+
+  /// Update the user location on `FireStore`
+  Future<GeoFirePoint> updateUserLocation(String user,
+      [String message = '']) async {
+    print('[LOCATION UPDATE] $message');
+    dynamic point = locations[user];
+    double lat = point['latitude'];
+    double lng = point['longitude'];
+    return location.updateUserLocation(lat, lng);
+  }
+
+  /// Return list of user near the given coordinates
+  /// 
+  /// [data]'s `latitude` & `longitude` should not be null.
+  /// [radius] is in KM (Kilometers)
+  ///
+  /// Note: Instead of listening for changes, it will cast it as a `Future`
+  /// returning list of user inside the given [radius]
+  Future<List<DocumentSnapshot>> getUsersNearMe(
+    data, {
+    double radius = 100,
+  }) async {
+    dynamic point = location.geo.point(
+      latitude: data['latitude'],
+      longitude: data['longitude'],
+    );
+
+    return location.geo
+        .collection(collectionRef: ff.publicCol)
+        .within(
+          center: point,
+          radius: radius,
+          field: geoFieldName,
+          strictMode: true,
+        )
+        .firstWhere((element) => element != null);
+  }
+
+  /// Checks if [users] are existing on the list of documents [usersInLocation]
+  ///
+  bool usersIsNearMe(
+    List<Map<String, dynamic>> users,
+    List<DocumentSnapshot> usersInLocation, {
+    bool inRadius = true,
+  }) {
+    bool ret = true;
+    users.forEach((user) {
+      /// Check if the user is existing in the current collection of user inside the search readius
+      usersInLocation.contains((document) => ret = user['uid'] == document.id);
+    });
+    return ret;
+  }
+
+  /// Run test
+  ///
+  /// Comments are added so it is clear what steps are being executed.
+  runLocationTest() {
+    ff.firebaseInitialized.listen((v) async {
+      if (!v) return;
+      await prepareUserABCD();
+      List<DocumentSnapshot> usersInLocation;
+
+      /// User A search users near himself for 100km radius and got B in the user-near-me screen.
+      /// - login to A
+      /// - check user near A
+      ///
+      await ff.loginOrRegister(
+        email: userA['email'],
+        password: userA['password'],
+      );
+      usersInLocation = await getUsersNearMe(
+        locations['a'],
+      );
+      isTrue(
+        usersIsNearMe([userB], usersInLocation),
+        'User B is near User A [100km]',
+      );
+
+      /// C goes in (to the radius of search) and appears in the user-near-me screen of A.
+      /// - login to C
+      /// - update location near to A
+      /// - login to A
+      /// - check if C is near A
+      ///
+      await ff.loginOrRegister(
+        email: userC['email'],
+        password: userC['password'],
+      );
+      await updateUserLocation(
+        'c',
+        'User C Enters User A and D search radius',
+      );
+      await ff.loginOrRegister(
+        email: userA['email'],
+        password: userA['password'],
+      );
+      usersInLocation = await getUsersNearMe(
+        locations['a'],
+      );
+      isTrue(
+        usersIsNearMe([userC], usersInLocation),
+        'User C is near User A [100km search radius]',
+      );
+
+      /// C search users near himself for 5km radius and got D in his user-near-me screen. /
+      /// - login to C
+      /// - check if D is near within 5KM
+      ///
+      await ff.loginOrRegister(
+        email: userC['email'],
+        password: userC['password'],
+      );
+      usersInLocation = await getUsersNearMe(
+        locations['c'],
+        radius: 5,
+      );
+      isTrue(
+        usersIsNearMe([userD], usersInLocation),
+        'User D is near User C [5km search radius]',
+      );
+
+      /// B goes out from A's search and goes into C's search. /
+      /// - login to B
+      /// - move location near C and far from A.
+      /// - login A, check if B is not near.
+      /// - login C, check if B is near.
+      ///
+      await ff.loginOrRegister(
+        email: userB['email'],
+        password: userB['password'],
+      );
+      await updateUserLocation(
+        'b2',
+        'User B leaves User A and enters User C search radius',
+      );
+      await ff.loginOrRegister(
+        email: userA['email'],
+        password: userA['password'],
+      );
+      usersInLocation = await getUsersNearMe(
+        locations['a'],
+      );
+      isTrue(
+        usersIsNearMe([userB], usersInLocation) == true,
+        'User B is not near User A [100km search radius]',
+      );
+      await ff.loginOrRegister(
+        email: userC['email'],
+        password: userC['password'],
+      );
+      usersInLocation = await getUsersNearMe(
+        locations['c'],
+      );
+      isTrue(
+        usersIsNearMe([userB], usersInLocation),
+        'User B is near User C [100km search radius]',
+      );
+
+      /// B moves and goes out from C's search and goes in A's search.
+      /// - login to B
+      /// - move location near A and far from C.
+      /// - login C, check if B is not near.
+      /// - login A, check if B is near.
+      ///
+      await ff.loginOrRegister(
+        email: userB['email'],
+        password: userB['password'],
+      );
+      await updateUserLocation(
+          'b', 'User B leaves user C and enters user A search radius');
+      await ff.loginOrRegister(
+        email: userA['email'],
+        password: userA['password'],
+      );
+      usersInLocation = await getUsersNearMe(
+        locations['a'],
+      );
+      isTrue(
+        usersIsNearMe([userB], usersInLocation) == true,
+        'User B is near User A [100km search radius]',
+      );
+      await ff.loginOrRegister(
+        email: userC['email'],
+        password: userC['password'],
+      );
+      usersInLocation = await getUsersNearMe(
+        locations['c'],
+      );
+      isTrue(
+        usersIsNearMe([userB], usersInLocation),
+        'User B is not near User C [100km search radius]',
+      );
+
+      /// C is out from A's search.
+      /// - login to C.
+      /// - move location out of A's search radius.
+      /// - login to A, check if C is not near.
+      ///
+      await ff.loginOrRegister(
+        email: userC['email'],
+        password: userC['password'],
+      );
+      await updateUserLocation(
+        'c2',
+        'User C leaves user A and D search radius',
+      );
+      usersInLocation = await getUsersNearMe(
+        locations['c2'],
+      );
+      await ff.loginOrRegister(
+        email: userD['email'],
+        password: userD['password'],
+      );
+      usersInLocation = await getUsersNearMe(
+        locations['d'],
+        radius: 5,
+      );
+      isTrue(
+        usersIsNearMe([userB], usersInLocation),
+        'User C is not near User D [5km search radius]',
+      );
+      await ff.loginOrRegister(
+        email: userA['email'],
+        password: userA['password'],
+      );
+      usersInLocation = await getUsersNearMe(
+        locations['a'],
+      );
+      isTrue(
+        usersIsNearMe([userB], usersInLocation),
+        'User C is not near User A [100km search radius]',
+      );
+    });
   }
 }
