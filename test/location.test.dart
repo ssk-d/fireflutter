@@ -159,7 +159,7 @@ class LocationTest {
       );
       await updateUserLocation(
         'c',
-        'User C Enters User A search radius',
+        'User C Enters User A and D search radius',
       );
       await ff.loginOrRegister(
         email: userA['email'],
@@ -202,7 +202,7 @@ class LocationTest {
       );
       await updateUserLocation(
         'b2',
-        'User B leaves User A\'s and enters User C\'s search radius',
+        'User B leaves User A and enters User C search radius',
       );
       await ff.loginOrRegister(
         email: userA['email'],
@@ -238,7 +238,7 @@ class LocationTest {
         password: userB['password'],
       );
       await updateUserLocation(
-          'b', 'User B leaves user C\'s and enters user A\'s search radius');
+          'b', 'User B leaves user C and enters user A search radius');
       await ff.loginOrRegister(
         email: userA['email'],
         password: userA['password'],
@@ -273,7 +273,7 @@ class LocationTest {
       );
       await updateUserLocation(
         'c2',
-        'User C leaves user A\'s search radius',
+        'User C leaves user A and D search radius',
       );
       usersInLocation = await getUsersNearMe(
         locations['c2'],
