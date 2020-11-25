@@ -166,7 +166,7 @@ class LocationTest {
       );
       isTrue(
         usersIsNearMe([userC], usersInLocation),
-        'User C is near User A [100km]',
+        'User C is near User A [100km search radius]',
       );
 
       /// C search users near himself for 5km radius and got D in his user-near-me screen. /
@@ -183,7 +183,7 @@ class LocationTest {
       );
       isTrue(
         usersIsNearMe([userD], usersInLocation),
-        'User D is near User C [5km]',
+        'User D is near User C [5km search radius]',
       );
 
       /// B goes out from A's search and goes into C's search. /
@@ -205,7 +205,7 @@ class LocationTest {
       );
       isTrue(
         usersIsNearMe([userB], usersInLocation) == true,
-        'User B is not near User A [100km]',
+        'User B is not near User A [100km search radius]',
       );
       await ff.loginOrRegister(
         email: userC['email'],
@@ -216,7 +216,7 @@ class LocationTest {
       );
       isTrue(
         usersIsNearMe([userB], usersInLocation),
-        'User B is near User C [100km]',
+        'User B is near User C [100km search radius]',
       );
 
       /// B moves and goes out from C's search and goes in A's search.
@@ -239,7 +239,7 @@ class LocationTest {
       );
       isTrue(
         usersIsNearMe([userB], usersInLocation) == true,
-        'User B is near User A [100km]',
+        'User B is near User A [100km search radius]',
       );
       await ff.loginOrRegister(
         email: userC['email'],
@@ -250,7 +250,7 @@ class LocationTest {
       );
       isTrue(
         usersIsNearMe([userB], usersInLocation),
-        'User B is not near User C [100km]',
+        'User B is not near User C [100km search radius]',
       );
 
       /// C moves and goes out from A's search.
@@ -274,7 +274,7 @@ class LocationTest {
       );
       isTrue(
         usersIsNearMe([userB], usersInLocation),
-        'User C is not near User A [100km]',
+        'User C is not near User A [100km search radius]',
       );
     });
   }
