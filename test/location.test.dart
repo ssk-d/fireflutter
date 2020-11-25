@@ -20,7 +20,8 @@ import 'package:geoflutterfire/geoflutterfire.dart';
 /// /// imports
 /// import 'package:fireflutter/fireflutter.dart';
 /// import 'file:///<some_folders>/sms/flutter/v1/packages/fireflutter/test/location.test.dart';
-///
+/// 
+/// ...
 /// testLocation() {
 ///   FireFlutter ff = FireFlutter();
 ///   UserLocation location = UserLocation(inject: ff);
