@@ -796,11 +796,11 @@ See [location](https://pub.dev/packages/location) for more information.
 
 ```xml
   <key>NSLocationAlwaysUsageDescription</key>
-  <string>Reason to always having the need to access the location service</string>
+  <string>This app needs the location service enabled to provide locational information.</string>
   <key>NSLocationWhenInUseUsageDescription</key>
-  <string>Reason to having the need to access location service when app is in use</string>
+  <string>This app needs the location service enabled to provide locational information.</string>
   <key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
-  <string>Reason to having the need to always access location service or only when app is in use</string>
+  <string>This app needs the location service enabled to provide locational information.</string>
 ```
 
 ## I18N Setup
@@ -881,7 +881,11 @@ await ff.init(
 );
 ```
 
-- Add `Locale(ff.userLanguage)` to GetMaterialApp() like below. `ff.userLanguage` has the user language.
+- Add `Locale(ff.userLanguage)` and `AppTranslations()` to GetMaterialApp() like below. `ff.userLanguage` has the user language.
+  - If user set his own language, then it will follow the user language.
+  - If the language is set on Firestore settings, it will follow the Firestore setting.
+  - Or it follow the language that was set on device setting.
+  -
 
 ```dart
 GetMaterialApp(
@@ -2042,7 +2046,7 @@ There are two kinds of unit tests for chat. One is Firestore security rules test
 
 # Location
 
-Location is one of the necessary functionality on all apps.
+Location is one of the necessary functionality on all apps. Do the [location setup](#location-setup) first.
 
 Some of use case might be
 
@@ -2072,6 +2076,7 @@ Some of use case might be
 ## Code of Location
 
 - To use location, create an instance of `UserLocation` class by injecting fireflutter in it.
+  - When `UserLocation` has been instantiated, it will check the Location permission and listens the location, then update it on Firestore.
 
 ```dart
 import 'package:fireflutter/fireflutter.dart';
