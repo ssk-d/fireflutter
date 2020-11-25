@@ -20,7 +20,8 @@ import 'package:geoflutterfire/geoflutterfire.dart';
 /// /// imports
 /// import 'package:fireflutter/fireflutter.dart';
 /// import 'file:///<some_folders>/sms/flutter/v1/packages/fireflutter/test/location.test.dart';
-///
+/// 
+/// ...
 /// testLocation() {
 ///   FireFlutter ff = FireFlutter();
 ///   UserLocation location = UserLocation(inject: ff);
@@ -67,7 +68,7 @@ class LocationTest {
     'password': '12345a',
   };
 
-  /// reset locations
+  /// prepare / reset user locations
   prepareUserABCD() async {
     await ff.loginOrRegister(
       email: userA['email'],
@@ -107,9 +108,14 @@ class LocationTest {
   }
 
   /// Update the user location on `FireStore`
-  Future<GeoFirePoint> updateUserLocation(String user,
-      [String message = '']) async {
-    print('[LOCATION UPDATE] $message');
+  ///
+  /// [user] is the user letter (a/b/c/d).
+  /// [message] can be anything string which will be logged if not empty or null
+  Future<GeoFirePoint> updateUserLocation(
+    String user, [
+    String message = '',
+  ]) async {
+    if (message != '') print('[LOCATION UPDATE] $message');
     dynamic point = locations[user];
     double lat = point['latitude'];
     double lng = point['longitude'];
@@ -117,7 +123,7 @@ class LocationTest {
   }
 
   /// Return list of user near the given coordinates
-  /// 
+  ///
   /// [data]'s `latitude` & `longitude` should not be null.
   /// [radius] is in KM (Kilometers)
   ///
@@ -143,8 +149,11 @@ class LocationTest {
         .firstWhere((element) => element != null);
   }
 
-  /// Checks if [users] are existing on the list of documents [usersInLocation]
+  /// will return a boolean value if [users] are existing or not on the list of documents [usersInLocation]
   ///
+  /// [users] are the list of sample user.
+  /// [usersInLocation] are list of document from `Firestore`
+  /// 
   bool usersIsNearMe(
     List<Map<String, dynamic>> users,
     List<DocumentSnapshot> usersInLocation, {
@@ -169,7 +178,7 @@ class LocationTest {
 
       /// User A search users near himself for 100km radius and got B in the user-near-me screen.
       /// - login to A
-      /// - check user near A
+      /// - check user near A, B should be near.
       ///
       await ff.loginOrRegister(
         email: userA['email'],
