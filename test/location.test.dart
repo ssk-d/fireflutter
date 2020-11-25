@@ -55,22 +55,22 @@ class LocationTest {
       email: userA['email'],
       password: userA['password'],
     );
-    await updateUserLocation('a');
+    await updateUserLocation('a', 'User A initial location');
     await ff.loginOrRegister(
       email: userB['email'],
       password: userB['password'],
     );
-    await updateUserLocation('b');
+    await updateUserLocation('b', 'User B initial location');
     await ff.loginOrRegister(
       email: userC['email'],
       password: userC['password'],
     );
-    await updateUserLocation('c');
+    await updateUserLocation('c', 'User C initial location');
     await ff.loginOrRegister(
       email: userD['email'],
       password: userD['password'],
     );
-    await updateUserLocation('d');
+    await updateUserLocation('d', 'User D initial location');
   }
 
   success(String message) {
@@ -88,7 +88,8 @@ class LocationTest {
       failture(message);
   }
 
-  Future updateUserLocation(String user) async {
+  Future updateUserLocation(String user, [String message = '']) async {
+    print('[LOCATION UPDATE] $message');
     dynamic point = locations[user];
     double lat = point['latitude'];
     double lng = point['longitude'];
@@ -128,7 +129,7 @@ class LocationTest {
   runLocationTest() {
     ff.firebaseInitialized.listen((v) async {
       if (!v) return;
-      prepareUserABCD();
+      await prepareUserABCD();
       List<DocumentSnapshot> usersInLocation;
 
       /// User A search users near himself for 100km radius and got B in the user-near-me screen.
@@ -156,7 +157,10 @@ class LocationTest {
         email: userC['email'],
         password: userC['password'],
       );
-      await updateUserLocation('c');
+      await updateUserLocation(
+        'c',
+        'User C Enters User A search radius',
+      );
       await ff.loginOrRegister(
         email: userA['email'],
         password: userA['password'],
@@ -196,7 +200,10 @@ class LocationTest {
         email: userB['email'],
         password: userB['password'],
       );
-      await updateUserLocation('b2');
+      await updateUserLocation(
+        'b2',
+        'User B leaves User A\'s and enters User C\'s search radius',
+      );
       await ff.loginOrRegister(
         email: userA['email'],
         password: userA['password'],
@@ -230,7 +237,8 @@ class LocationTest {
         email: userB['email'],
         password: userB['password'],
       );
-      await updateUserLocation('b');
+      await updateUserLocation(
+          'b', 'User B leaves user C\'s and enters user A\'s search radius');
       await ff.loginOrRegister(
         email: userA['email'],
         password: userA['password'],
@@ -254,14 +262,18 @@ class LocationTest {
         'User B is not near User C [100km search radius]',
       );
 
-      /// C moves and goes out from A's search.
+      /// C is out from A's search.
       /// - login to C.
       /// - move location out of A's search radius.
       /// - login to A, check if C is not near.
-      /// 
+      ///
       await ff.loginOrRegister(
         email: userC['email'],
         password: userC['password'],
+      );
+      await updateUserLocation(
+        'c2',
+        'User C leaves user A\'s search radius',
       );
       usersInLocation = await getUsersNearMe(
         locations['c2'],
