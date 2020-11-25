@@ -131,7 +131,7 @@ class LocationTest {
       prepareUserABCD();
       List<DocumentSnapshot> usersInLocation;
 
-      /// * A search users near himself for 100km radius and got B in the user-near-me screen.
+      /// User A search users near himself for 100km radius and got B in the user-near-me screen.
       /// - login to A
       /// - check user near A
       await ff.loginOrRegister(
@@ -146,7 +146,7 @@ class LocationTest {
         'User B is near User A [100km]',
       );
 
-      /// C goes in(to the radius of search) and appears in the user-near-me screen of A.
+      /// C goes in (to the radius of search) and appears in the user-near-me screen of A.
       /// - login to C
       /// - update location near to A
       /// - login to A
@@ -191,6 +191,7 @@ class LocationTest {
       /// - move location near C and far from A.
       /// - login A, check if B is not near.
       /// - login C, check if B is near.
+      ///
       await ff.loginOrRegister(
         email: userB['email'],
         password: userB['password'],
@@ -264,6 +265,18 @@ class LocationTest {
       );
       usersInLocation = await getUsersNearMe(
         locations['c2'],
+      );
+      await ff.loginOrRegister(
+        email: userD['email'],
+        password: userD['password'],
+      );
+      usersInLocation = await getUsersNearMe(
+        locations['d'],
+        radius: 5,
+      );
+      isTrue(
+        usersIsNearMe([userB], usersInLocation),
+        'User C is not near User D [5km search radius]',
       );
       await ff.loginOrRegister(
         email: userA['email'],
