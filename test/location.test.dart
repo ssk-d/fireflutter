@@ -254,6 +254,10 @@ class LocationTest {
       );
 
       /// C moves and goes out from A's search.
+      /// - login to C.
+      /// - move location out of A's search radius.
+      /// - login to A, check if C is not near.
+      /// 
       await ff.loginOrRegister(
         email: userC['email'],
         password: userC['password'],
