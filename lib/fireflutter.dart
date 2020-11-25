@@ -238,7 +238,7 @@ class FireFlutter extends Base {
     Map<String, dynamic> public,
   }) async {
     try {
-      if (data = null) data = {};
+      if (data == null) data = {};
 
       data['email'] = email;
       data['password'] = password;

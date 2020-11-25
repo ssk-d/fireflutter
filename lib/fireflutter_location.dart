@@ -83,13 +83,13 @@ class UserLocation {
     /// Listen to location change when the user is moving
     ///
     /// this will not emit new location if the device or user is not moving.
-    _location.onLocationChanged.listen((LocationData newLocation) {
+    _location.onLocationChanged.listen((LocationData newLocation) async {
       if (_ff.notLoggedIn) return;
 
       /// TODO do not update user location unless the user move (by 1 meter).
 
       // print('update user location on firestore');
-      GeoFirePoint _new = updateUserLocation(
+      GeoFirePoint _new = await updateUserLocation(
         newLocation.latitude,
         newLocation.longitude,
       );
@@ -103,13 +103,13 @@ class UserLocation {
     });
   }
 
-  GeoFirePoint updateUserLocation(double latitude, double longitude) {
+  Future<GeoFirePoint> updateUserLocation(double latitude, double longitude) async {
     GeoFirePoint _new = geo.point(
       latitude: latitude,
       longitude: longitude,
     );
     change.add(_new);
-    _ff.publicDoc.set({geoFieldName: _new.data}, SetOptions(merge: true));
+    await _ff.publicDoc.set({geoFieldName: _new.data}, SetOptions(merge: true));
     return _new;
   }
 
