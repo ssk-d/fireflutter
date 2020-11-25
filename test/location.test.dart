@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:fireflutter/fireflutter.dart';
+import 'package:geoflutterfire/geoflutterfire.dart';
 
 /// * There is user A, B, C, D.
 /// Log into A, B, C, D repectively and update fake geo information.
@@ -11,6 +12,23 @@ import 'package:fireflutter/fireflutter.dart';
 /// B moves and goes out from C's search and goes in A's search.
 /// C moves and goes out from A's search.
 ///
+///
+///```dart
+/// /// sample code.
+/// /// how to use this test.
+///
+/// /// imports
+/// import 'package:fireflutter/fireflutter.dart';
+/// import 'file:///<some_folders>/sms/flutter/v1/packages/fireflutter/test/location.test.dart';
+///
+/// testLocation() {
+///   FireFlutter ff = FireFlutter();
+///   UserLocation location = UserLocation(inject: ff);
+///   ff.init();
+///   LocationTest lt = LocationTest(ff, location);
+///   lt.runLocationTest();
+/// }
+///```
 class LocationTest {
   LocationTest(FireFlutter ff, UserLocation location)
       : this.ff = ff,
@@ -88,7 +106,9 @@ class LocationTest {
       failture(message);
   }
 
-  Future updateUserLocation(String user, [String message = '']) async {
+  /// Update the user location on `FireStore`
+  Future<GeoFirePoint> updateUserLocation(String user,
+      [String message = '']) async {
     print('[LOCATION UPDATE] $message');
     dynamic point = locations[user];
     double lat = point['latitude'];
@@ -96,7 +116,17 @@ class LocationTest {
     return location.updateUserLocation(lat, lng);
   }
 
-  getUsersNearMe(data, {double radius = 100}) async {
+  /// Return list of user near the given coordinates
+  /// 
+  /// [data]'s `latitude` & `longitude` should not be null.
+  /// [radius] is in KM (Kilometers)
+  ///
+  /// Note: Instead of listening for changes, it will cast it as a `Future`
+  /// returning list of user inside the given [radius]
+  Future<List<DocumentSnapshot>> getUsersNearMe(
+    data, {
+    double radius = 100,
+  }) async {
     dynamic point = location.geo.point(
       latitude: data['latitude'],
       longitude: data['longitude'],
@@ -113,6 +143,8 @@ class LocationTest {
         .firstWhere((element) => element != null);
   }
 
+  /// Checks if [users] are existing on the list of documents [usersInLocation]
+  ///
   bool usersIsNearMe(
     List<Map<String, dynamic>> users,
     List<DocumentSnapshot> usersInLocation, {
@@ -126,6 +158,9 @@ class LocationTest {
     return ret;
   }
 
+  /// Run test
+  ///
+  /// Comments are added so it is clear what steps are being executed.
   runLocationTest() {
     ff.firebaseInitialized.listen((v) async {
       if (!v) return;
@@ -135,6 +170,7 @@ class LocationTest {
       /// User A search users near himself for 100km radius and got B in the user-near-me screen.
       /// - login to A
       /// - check user near A
+      ///
       await ff.loginOrRegister(
         email: userA['email'],
         password: userA['password'],
