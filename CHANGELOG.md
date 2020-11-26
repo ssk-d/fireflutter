@@ -1,3 +1,7 @@
+## [0.0.35] - appSetting() returns null by default
+
+- `appSettings()` now return null instead of an empty string.
+
 ## [0.0.34] - Add user's public document data variable and minors.
 
 - Some of error codes have been renamed.

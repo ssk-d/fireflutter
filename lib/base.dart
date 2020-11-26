@@ -233,28 +233,33 @@ class Base {
   /// await updateUserPublic(public); // merge a map
   /// await updateUserPublic('a', 'apple'); // merge a key/value
   /// ```
+  ///
+  /// * change: `return publicDoc.set` causes a problem when user quickly register and then, register again. It has to `await`.
   Future<void> updateUserPublic(dynamic name, [dynamic value]) async {
     if (name == null) return;
 
     if (name is Map) {
       // name[updatedAt] = FieldValue.serverTimestamp();
-      return publicDoc.set({
+      await publicDoc.set({
         ...name,
         ...{updatedAt: FieldValue.serverTimestamp()}
       }, SetOptions(merge: true));
     } else {
-      return publicDoc.set({
+      await publicDoc.set({
         name: value,
         updatedAt: FieldValue.serverTimestamp(),
       }, SetOptions(merge: true));
     }
   }
 
+  ///
+  ///
+  /// * changed at 2020. 11. 26. from `return tokenDoc` to `return await tokenDoc`.
   Future<dynamic> updateUserToken() async {
     if (notLoggedIn) return false;
     if (enableNotification == false) return false;
     if (firebaseMessagingToken == null) return false;
-    return tokenDoc
+    return await tokenDoc
         .set({firebaseMessagingToken: true}, SetOptions(merge: true));
   }
 
@@ -285,6 +290,7 @@ class Base {
     if (!docSnapshot.exists) return;
     Map<String, dynamic> tokensDoc = docSnapshot.data();
 
+    ///
     ///
     tokensDoc.forEach((key, value) async {
       if (key.indexOf(notifyPost) != -1 || key.indexOf(notifyComment) != -1) {
@@ -949,7 +955,7 @@ class Base {
   /// appSettigns(); // returns all app settings.
   /// print('GcpApiKey: ' + ff.appSetting('GcpApiKey'));
   /// ```
-  appSetting([String name, defaultValue = '']) {
+  appSetting([String name, defaultValue]) {
     Map settings = getSetting("app");
     if (name == null) return settings;
     if (settings == null) return defaultValue;

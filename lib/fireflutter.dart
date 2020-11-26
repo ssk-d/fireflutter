@@ -87,7 +87,7 @@ class FireFlutter extends Base {
         // Initalize Algolia
         String applicationId = appSetting(ALGOLIA_APP_ID);
         String apiKey = appSetting(ALGOLIA_ADMIN_API_KEY);
-        if (applicationId != '' && apiKey != '') {
+        if (applicationId != null && apiKey != null) {
           algolia = Algolia.init(
             applicationId: applicationId,
             apiKey: apiKey,
@@ -129,7 +129,7 @@ class FireFlutter extends Base {
     Map<String, dynamic> data, {
     Map<String, dynamic> public,
   }) async {
-    assert(data['photoUrl'] == null, 'Use photoURL');
+    assert(data['photoUrl'] == null, 'photoURL must no empty');
 
     if (data['email'] == null) throw 'email_is_empty';
     if (data['password'] == null) throw 'password_is_empty';
@@ -143,12 +143,7 @@ class FireFlutter extends Base {
     );
 
     // For registraion, it is okay that displayName or photoUrl is empty.
-    await userCredential.user.updateProfile(
-      displayName: data['displayName'],
-      photoURL: data['photoURL'],
-    );
-
-    await userCredential.user.reload();
+    await updateUserData(data);
 
     // Remove default data.
     // And if there is no more properties to save into document, then save
@@ -198,12 +193,16 @@ class FireFlutter extends Base {
 
   /// Logs into Firebase Auth.
   ///
+  /// It can update user displayName, photoURL or other public data while login.
+  ///
   /// TODO Leave last login timestamp.
   /// TODO Increment login count
   /// TODO Leave last login device & IP address.
+  ///
   Future<User> login({
     @required String email,
     @required String password,
+    Map<String, dynamic> data,
     Map<String, dynamic> public,
   }) async {
     // print('email: $email');
@@ -212,9 +211,28 @@ class FireFlutter extends Base {
       email: email,
       password: password,
     );
+    await updateUserData(data);
+
     await updateUserPublic(public);
     await onLogin(userCredential.user);
     return userCredential.user;
+  }
+
+  /// Update displayName or photoURL
+  ///
+  ///
+  Future<void> updateUserData(Map<String, dynamic> data) async {
+    if (data['displayName'] != null && data['photoURL'] != null) {
+      await user.updateProfile(
+        displayName: data['displayName'],
+        photoURL: data['photoURL'],
+      );
+    } else if (data['displayName'] != null) {
+      await user.updateProfile(displayName: data['displayName']);
+    } else if (data['photoURL'] != null) {
+      await user.updateProfile(photoURL: data['photoURL']);
+    }
+    await user.reload();
   }
 
   /// logs in or register.
@@ -223,6 +241,9 @@ class FireFlutter extends Base {
   /// really need it.
   ///
   /// The input arguments are the same as `register`
+  ///
+  /// [onLogin] will be called after login
+  /// [onRegister] will be called after registration
   ///
   /// ```dart
   /// dynamic user = await ff.loginOrRegister({
@@ -236,6 +257,8 @@ class FireFlutter extends Base {
     @required String password,
     Map<String, dynamic> data,
     Map<String, dynamic> public,
+    Function onRegister,
+    Function onLogin,
   }) async {
     try {
       if (data == null) data = {};
@@ -243,11 +266,18 @@ class FireFlutter extends Base {
       data['email'] = email;
       data['password'] = password;
 
-      return await login(
-          email: data['email'], password: data['password'], public: public);
+      final user = await login(
+          email: data['email'],
+          password: data['password'],
+          data: data,
+          public: public);
+      onLogin(user);
+      return user;
     } on FirebaseAuthException catch (e) {
       if (e.code == 'user-not-found') {
-        return await register(data, public: public);
+        final user = await register(data, public: public);
+        onRegister(user);
+        return user;
       }
       rethrow;
     } catch (e) {
@@ -330,6 +360,8 @@ class FireFlutter extends Base {
 
           // [createdAt] is not null on other user's mobile and have the
           // biggest value among other posts.
+          /// bug - `Unhandled Exception: NoSuchMethodError: The getter 'microsecondsSinceEpoch' was called on null.` appears
+          ///   when some complicated async work happens together quickly like login, registration, creating photosß
           else if (forum.posts.isNotEmpty &&
               post['createdAt'].microsecondsSinceEpoch >
                   forum.posts[0]['createdAt'].microsecondsSinceEpoch) {
@@ -467,7 +499,7 @@ class FireFlutter extends Base {
       /// Since push notification takes time, do indexing comes first.
 
       final String applicationId = appSetting(ALGOLIA_APP_ID);
-      if (applicationId != '') {
+      if (applicationId != null) {
         await addSearchIndex(
           path: doc.path,
           title: data['title'],
@@ -494,7 +526,7 @@ class FireFlutter extends Base {
           );
 
       final String applicationId = appSetting(ALGOLIA_APP_ID);
-      if (applicationId != '') {
+      if (applicationId != null) {
         await addSearchIndex(
           path: postsCol.doc(data['id']).path,
           title: data['title'],
