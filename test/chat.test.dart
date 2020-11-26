@@ -47,10 +47,14 @@ class ChatTest {
   /// You need to save the user UID and DisplayName into [users] variable.
   prepareUserABCD() async {
     if (users != null) return;
-    dynamic a = await ff.loginOrRegister(email: userA['emain'], password: userA['password']);
-    dynamic b = await ff.loginOrRegister(email: userB['emain'], password: userB['password']);
-    dynamic c = await ff.loginOrRegister(email: userC['emain'], password: userC['password']);
-    dynamic d = await ff.loginOrRegister(email: userD['emain'], password: userD['password']);
+    dynamic a = await ff.loginOrRegister(
+        email: userA['emain'], password: userA['password']);
+    dynamic b = await ff.loginOrRegister(
+        email: userB['emain'], password: userB['password']);
+    dynamic c = await ff.loginOrRegister(
+        email: userC['emain'], password: userC['password']);
+    dynamic d = await ff.loginOrRegister(
+        email: userD['emain'], password: userD['password']);
     print("{'uid': '${a.uid}', 'displayName': 'a.displayName'}");
     print("{'uid': '${b.uid}', 'displayName': 'b.displayName'}");
     print("{'uid': '${c.uid}', 'displayName': 'c.displayName'}");

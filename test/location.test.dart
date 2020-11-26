@@ -20,7 +20,7 @@ import 'package:geoflutterfire/geoflutterfire.dart';
 /// /// imports
 /// import 'package:fireflutter/fireflutter.dart';
 /// import 'file:///<some_folders>/sms/flutter/v1/packages/fireflutter/test/location.test.dart';
-/// 
+///
 /// ...
 /// testLocation() {
 ///   FireFlutter ff = FireFlutter();
@@ -153,7 +153,7 @@ class LocationTest {
   ///
   /// [users] are the list of sample user.
   /// [usersInLocation] are list of document from `Firestore`
-  /// 
+  ///
   bool usersIsNearMe(
     List<Map<String, dynamic>> users,
     List<DocumentSnapshot> usersInLocation, {

@@ -103,7 +103,8 @@ class UserLocation {
     });
   }
 
-  Future<GeoFirePoint> updateUserLocation(double latitude, double longitude) async {
+  Future<GeoFirePoint> updateUserLocation(
+      double latitude, double longitude) async {
     GeoFirePoint _new = geo.point(
       latitude: latitude,
       longitude: longitude,
