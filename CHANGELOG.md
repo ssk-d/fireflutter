@@ -1,6 +1,7 @@
 ## [0.0.35] - appSetting() returns null by default
 
-- `appSettings()` now return null instead of an empty string.
+- `appSettings()` now return null instead of an empty string. This is a breaking change.
+- `login()` can now update user's display name and photo url while login.
 
 ## [0.0.34] - Add user's public document data variable and minors.
 
