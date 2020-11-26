@@ -53,14 +53,12 @@ class FireFlutter extends Base {
     bool openProfile = false,
     bool enableNotification = false,
     String firebaseServerToken,
-    String pushNotificationSound,
     Map<String, Map<dynamic, dynamic>> settings,
     Map<String, Map<String, String>> translations,
   }) async {
     this.openProfile = openProfile;
     this.enableNotification = enableNotification;
     this.firebaseServerToken = firebaseServerToken;
-    this.pushNotificationSound = pushNotificationSound;
 
     /// Initialize settings.
     ///
