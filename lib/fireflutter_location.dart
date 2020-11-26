@@ -6,8 +6,10 @@ part of './fireflutter.dart';
 const String geoFieldName = 'location';
 
 class UserLocation {
-  UserLocation({@required FireFlutter inject, double radius = 20.0})
-      : _ff = inject,
+  UserLocation({
+    @required FireFlutter inject,
+    double radius = 20.0,
+  })  : _ff = inject,
         _radius = radius {
     _checkPermission();
     _initLocation();
