@@ -269,12 +269,12 @@ class FireFlutter extends Base {
           password: data['password'],
           data: data,
           public: public);
-      onLogin(user);
+      if (onLogin != null) onLogin(user);
       return user;
     } on FirebaseAuthException catch (e) {
       if (e.code == 'user-not-found') {
         final user = await register(data, public: public);
-        onRegister(user);
+        if (onRegister != null) onRegister(user);
         return user;
       }
       rethrow;

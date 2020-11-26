@@ -6,8 +6,10 @@ part of './fireflutter.dart';
 const String geoFieldName = 'location';
 
 class UserLocation {
-  UserLocation({@required FireFlutter inject, double radius = 20.0})
-      : _ff = inject,
+  UserLocation({
+    @required FireFlutter inject,
+    double radius = 20.0,
+  })  : _ff = inject,
         _radius = radius {
     _checkPermission();
     _initLocation();
@@ -103,7 +105,8 @@ class UserLocation {
     });
   }
 
-  Future<GeoFirePoint> updateUserLocation(double latitude, double longitude) async {
+  Future<GeoFirePoint> updateUserLocation(
+      double latitude, double longitude) async {
     GeoFirePoint _new = geo.point(
       latitude: latitude,
       longitude: longitude,
