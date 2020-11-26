@@ -21,7 +21,6 @@ class Base {
 
   /// To send push notification
   String firebaseServerToken;
-  String pushNotificationSound;
 
   /// User document realtime update.
   StreamSubscription userDocSubscription;
