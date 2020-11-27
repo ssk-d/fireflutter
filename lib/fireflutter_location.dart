@@ -43,14 +43,22 @@ class FireFlutterLocation {
   dynamic _birthday;
 
   init({@required double radius}) {
+    print('location:init');
+
     _radius = radius;
     _checkPermission();
     _updateUserLocation();
   }
 
   /// Reset the radius to search users.
-  reset({@required double radius, String gender, dynamic birthday}) {
-    _radius = radius;
+  /// 
+  /// If [gender] is null, users near me will be both Male and Female
+  reset({
+    double radius,
+    String gender,
+    dynamic birthday,
+  }) {
+    if (radius != null)_radius = radius;
     _gender = gender;
     _birthday = birthday;
     _listenUsersNearMe(_lastPoint);
@@ -129,7 +137,9 @@ class FireFlutterLocation {
   }
 
   Future<GeoFirePoint> updateUserLocation(
-      double latitude, double longitude) async {
+    double latitude,
+    double longitude,
+  ) async {
     GeoFirePoint _new = geo.point(
       latitude: latitude,
       longitude: longitude,
@@ -162,10 +172,9 @@ class FireFlutterLocation {
 
     if (usersNearMeSubscription != null) usersNearMeSubscription.cancel();
 
-    CollectionReference col = _ff.publicCol
-        // .where('birthday', isGreaterThan: ...),
-        // .where('gender', isEqualTo: _gender)
-        ;
+    Query col = _ff.publicCol.where('gender', isEqualTo: _gender);
+    // .where('birthday', isGreaterThan: ...),
+
     usersNearMeSubscription = geo
         .collection(collectionRef: col)
         .within(
