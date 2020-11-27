@@ -1,4 +1,3 @@
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:fireflutter/fireflutter.dart';
 import 'package:geoflutterfire/geoflutterfire.dart';
@@ -120,7 +119,12 @@ class LocationTest {
     dynamic point = locations[user];
     double lat = point['latitude'];
     double lng = point['longitude'];
-    return location.updateUserLocation(lat, lng);
+    final geo = Geoflutterfire();
+    GeoFirePoint _new = geo.point(
+      latitude: lat,
+      longitude: lng,
+    );
+    return location.updateUserLocation(_new);
   }
 
   /// Return list of user near the given coordinates

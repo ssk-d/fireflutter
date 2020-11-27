@@ -118,32 +118,26 @@ class FireFlutterLocation {
     _location.onLocationChanged.listen((LocationData newLocation) async {
       if (_ff.notLoggedIn) return;
 
-      // print('update user location on firestore');
-      GeoFirePoint _new = await updateUserLocation(
-        newLocation.latitude,
-        newLocation.longitude,
+      GeoFirePoint _new = geo.point(
+        latitude: newLocation.latitude,
+        longitude: newLocation.longitude,
       );
 
       /// When the user change his location, it needs to search other users base on his new location.
       /// TODO do not update user location unless the user move (by 1 meter) because it may update too often.
       /// * Do not update location when the user didn't move.
       if (_new.hash != _lastPoint?.hash) {
+        /// backup user's last location.
+        print('location changed: ');
+        _lastPoint = _new;
+
+        await updateUserLocation(_new);
         _listenUsersNearMe(_new);
       }
-
-      /// backup user's last location.
-      _lastPoint = _new;
     });
   }
 
-  Future<GeoFirePoint> updateUserLocation(
-    double latitude,
-    double longitude,
-  ) async {
-    GeoFirePoint _new = geo.point(
-      latitude: latitude,
-      longitude: longitude,
-    );
+  Future<GeoFirePoint> updateUserLocation(GeoFirePoint _new) async {
     change.add(_new);
     await _ff.publicDoc.set({geoFieldName: _new.data}, SetOptions(merge: true));
     return _new;
@@ -168,7 +162,7 @@ class FireFlutterLocation {
   /// ? This is a clear race condition. How are you going to handle this racing?
   ///
   _listenUsersNearMe(GeoFirePoint point) {
-
+    print('_listenUsersNearMe: $_radius km');
 
     /// filter [gender]
     if (_gender == null) {
@@ -189,12 +183,18 @@ class FireFlutterLocation {
           strictMode: true,
         )
         .listen((List<DocumentSnapshot> documents) {
-      print('changed');
+      print('Users near me: documents:');
+      print(documents);
 
       /// No more users in within the radius
       ///
       /// since it fetch again, then reset user list, also removing users outside the radius.
       usersNearMe = {};
+
+      if (documents.length == 0) {
+        users.add(usersNearMe);
+        return;
+      }
 
       documents.forEach((document) {
         // print("user location near me");
