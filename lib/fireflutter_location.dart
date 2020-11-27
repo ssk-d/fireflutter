@@ -5,15 +5,17 @@ part of './fireflutter.dart';
 
 const String geoFieldName = 'location';
 
-class UserLocation {
-  UserLocation({
+///
+///
+/// FireFlutterLocation can listen users who are comming in/out.
+/// You may want to call `init` method in main.dart to listen users in radius immediately when app start.
+/// To change the [radus], call `reset` method.
+/// When it is
+class FireFlutterLocation {
+  FireFlutterLocation({
     @required FireFlutter inject,
     double radius = 20.0,
-  })  : _ff = inject,
-        _radius = radius {
-    _checkPermission();
-    _initLocation();
-  }
+  }) : _ff = inject;
   FireFlutter _ff;
   double _radius = 22.0;
 
@@ -34,6 +36,23 @@ class UserLocation {
 
   /// Last(movement) geo point of the user.
   GeoFirePoint _lastPoint;
+
+  String _gender;
+  dynamic _birthday;
+
+  init({@required double radius}) {
+    _radius = radius;
+    _checkPermission();
+    _updateUserLocation();
+  }
+
+  /// Reset the radius to search users.
+  reset({@required double radius, String gender, birthday}) {
+    _radius = radius;
+    _gender = gender;
+    _birthday = birthday;
+    _listenUsersNearMe(_lastPoint);
+  }
 
   Future<bool> hasPermission() async {
     return await _location.hasPermission() == PermissionStatus.granted;
@@ -74,8 +93,8 @@ class UserLocation {
   /// It does not matter weather the location service is eanbled or not. Just
   /// listen it here and when the location is enabled later, it will work
   /// alreday.
-  _initLocation() async {
-    // print('initUserLocation');
+  _updateUserLocation() async {
+    // print('initFireFlutterLocation');
 
     // Changes settings to whenever the `onChangeLocation` should emit new locations.
     _location.changeSettings(
@@ -85,10 +104,9 @@ class UserLocation {
     /// Listen to location change when the user is moving
     ///
     /// this will not emit new location if the device or user is not moving.
+    /// * This is going to work after user login even if the user did logged in on start up
     _location.onLocationChanged.listen((LocationData newLocation) async {
       if (_ff.notLoggedIn) return;
-
-      /// TODO do not update user location unless the user move (by 1 meter).
 
       // print('update user location on firestore');
       GeoFirePoint _new = await updateUserLocation(
@@ -96,11 +114,14 @@ class UserLocation {
         newLocation.longitude,
       );
 
-      /// When the user change his location, it needs to search other users
-      /// with his new geo point.
+      /// When the user change his location, it needs to search other users base on his new location.
+      /// TODO do not update user location unless the user move (by 1 meter) because it may update too often.
+      /// * Do not update location when the user didn't move.
       if (_new.hash != _lastPoint?.hash) {
         _listenUsersNearMe(_new);
       }
+
+      /// backup user's last location.
       _lastPoint = _new;
     });
   }
@@ -129,15 +150,25 @@ class UserLocation {
   /// When the user is moving, it will search new other users within the radius
   /// of his geo point. And when the other user comes in to the user's radius,
   /// the other user will be inserted into the search result.
+  ///
+  /// todo when user move fast (in a car), this method may be call in every seconds.
+  /// And a second does not look enough to handle the stream listening(updating UI) of hundreds users within the radius.
+  /// ? This is a clear race condition. How are you going to handle this racing?
+  ///
   _listenUsersNearMe(GeoFirePoint point) {
     // print('listenUsersNearMe');
 
     if (usersNearMeSubscription != null) usersNearMeSubscription.cancel();
+
+    CollectionReference col = _ff.publicCol
+        // .where('birthday', isGreaterThan: ...),
+        // .where('gender', isEqualTo: _gender)
+        ;
     usersNearMeSubscription = geo
-        .collection(collectionRef: _ff.publicCol)
+        .collection(collectionRef: col)
         .within(
           center: point,
-          radius: _radius, // 2 km
+          radius: _radius, // km
           field: geoFieldName,
           strictMode: true,
         )

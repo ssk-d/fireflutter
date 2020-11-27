@@ -1,3 +1,5 @@
+import 'dart:html';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:fireflutter/fireflutter.dart';
 import 'package:geoflutterfire/geoflutterfire.dart';
@@ -31,12 +33,12 @@ import 'package:geoflutterfire/geoflutterfire.dart';
 /// }
 ///```
 class LocationTest {
-  LocationTest(FireFlutter ff, UserLocation location)
+  LocationTest(FireFlutter ff, FireFlutterLocation location)
       : this.ff = ff,
         this.location = location;
 
   FireFlutter ff;
-  UserLocation location;
+  FireFlutterLocation location;
 
   Map<String, dynamic> locations = {
     'a': {'geohash': '', 'latitude': 15.1410147, 'longitude': 120.5844096},
@@ -149,6 +151,8 @@ class LocationTest {
         .firstWhere((element) => element != null);
   }
 
+  /// Returns true if all [users] are included in [usersInLocation]
+  ///
   /// will return a boolean value if [users] are existing or not on the list of documents [usersInLocation]
   ///
   /// [users] are the list of sample user.
@@ -159,6 +163,14 @@ class LocationTest {
     List<DocumentSnapshot> usersInLocation, {
     bool inRadius = true,
   }) {
+    // usersInLocation.every((doc) => users.contains(element) )
+
+    // bool re = users.fold(
+    //     false,
+    //     (prev, user) => prev
+    //         ? prev
+    //         : usersInLocation.contains((doc) => doc.id == user['uid']));
+
     bool ret = true;
     users.forEach((user) {
       /// Check if the user is existing in the current collection of user inside the search readius
