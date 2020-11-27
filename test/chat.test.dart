@@ -6,7 +6,7 @@ import 'package:fireflutter/fireflutter.dart';
 /// ! Warning. When you test, don't open chat screen since the test uses serveral different accounts often
 /// ! and that causes permission-error on my room listening.
 class ChatTest {
-  ChatTest(FireFlutter ff) : this.ff = ff {}
+  ChatTest(FireFlutter ff) : this.ff = ff;
 
   FireFlutter ff;
   Map<String, Map<String, String>> users = {

@@ -1,7 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:fireflutter/fireflutter.dart';
-
 void main() {
   group('String', () {
     test('.split() splits the string on the delimiter', () {
