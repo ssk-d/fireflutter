@@ -40,27 +40,27 @@ class FireFlutterLocation {
   GeoFirePoint _lastPoint;
 
   String _gender;
-  dynamic _birthday;
+  DateTime _birthday;
 
   init({@required double radius}) {
     print('location:init');
-
     _radius = radius;
+    _gender = null;
     _checkPermission();
     _updateUserLocation();
   }
 
   /// Reset the radius to search users.
-  /// 
+  ///
   /// If [gender] is null, users near me will be both Male and Female
   reset({
     double radius,
     String gender,
-    dynamic birthday,
+    DateTime birthday,
   }) {
-    if (radius != null)_radius = radius;
-    _gender = gender;
-    _birthday = birthday;
+    _radius = radius ?? _radius;
+    _gender = gender ?? _gender;
+    _birthday = birthday ?? _birthday;
     _listenUsersNearMe(_lastPoint);
   }
 
@@ -159,7 +159,7 @@ class FireFlutterLocation {
   /// * immediately after the class is instantiated,
   /// * and whenever the user changes his location.
   ///
-  /// When the user is moving, it will search new other users within the radius
+  /// When the user is moving, it will search new other users within the radiusv
   /// of his geo point. And when the other user comes in to the user's radius,
   /// the other user will be inserted into the search result.
   ///
@@ -168,15 +168,20 @@ class FireFlutterLocation {
   /// ? This is a clear race condition. How are you going to handle this racing?
   ///
   _listenUsersNearMe(GeoFirePoint point) {
-    // print('listenUsersNearMe');
+
+
+    /// filter [gender]
+    if (_gender == null) {
+      _gender = _ff.publicData['gender'] == 'F' ? 'M' : 'F';
+    }
 
     if (usersNearMeSubscription != null) usersNearMeSubscription.cancel();
 
-    Query col = _ff.publicCol.where('gender', isEqualTo: _gender);
+    Query colRef = _ff.publicCol.where('gender', isEqualTo: _gender);
     // .where('birthday', isGreaterThan: ...),
 
     usersNearMeSubscription = geo
-        .collection(collectionRef: col)
+        .collection(collectionRef: colRef)
         .within(
           center: point,
           radius: _radius, // km
@@ -184,6 +189,8 @@ class FireFlutterLocation {
           strictMode: true,
         )
         .listen((List<DocumentSnapshot> documents) {
+      print('changed');
+
       /// No more users in within the radius
       ///
       /// since it fetch again, then reset user list, also removing users outside the radius.
