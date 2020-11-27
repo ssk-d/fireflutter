@@ -15,7 +15,9 @@ class FireFlutterLocation {
   FireFlutterLocation({
     @required FireFlutter inject,
     double radius = 20.0,
-  }) : _ff = inject;
+  }) : _ff = inject {
+    init(radius: radius);
+  }
   FireFlutter _ff;
   double _radius = 22.0;
 
@@ -47,7 +49,7 @@ class FireFlutterLocation {
   }
 
   /// Reset the radius to search users.
-  reset({@required double radius, String gender, birthday}) {
+  reset({@required double radius, String gender, dynamic birthday}) {
     _radius = radius;
     _gender = gender;
     _birthday = birthday;
