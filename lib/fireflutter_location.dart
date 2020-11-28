@@ -43,7 +43,7 @@ class FireFlutterLocation {
   DateTime _birthday;
 
   init({@required double radius}) {
-    print('location:init');
+    // print('location:init');
     _radius = radius;
     _gender = null;
     _checkPermission();
@@ -128,7 +128,7 @@ class FireFlutterLocation {
       /// * Do not update location when the user didn't move.
       if (_new.hash != _lastPoint?.hash) {
         /// backup user's last location.
-        print('location changed: ');
+        // print('location changed: ');
         _lastPoint = _new;
 
         await updateUserLocation(_new);
@@ -162,7 +162,7 @@ class FireFlutterLocation {
   /// ? This is a clear race condition. How are you going to handle this racing?
   ///
   _listenUsersNearMe(GeoFirePoint point) {
-    print('_listenUsersNearMe: $_radius km');
+    // print('_listenUsersNearMe: $_radius km');
 
     /// filter [gender]
     if (_gender == null) {
@@ -183,8 +183,8 @@ class FireFlutterLocation {
           strictMode: true,
         )
         .listen((List<DocumentSnapshot> documents) {
-      print('Users near me: documents:');
-      print(documents);
+      // print('Users near me: documents:');
+      // print(documents);
 
       /// No more users in within the radius
       ///
