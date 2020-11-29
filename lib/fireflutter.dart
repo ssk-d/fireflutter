@@ -49,6 +49,13 @@ class FireFlutter extends Base {
   /// But in release mode, it must not be less than 15. If it is less than 15,
   /// then it will be escalated to 15.
   ///
+  /// if [openProfile] is set, user's displayName and photoURL will be saved in
+  /// user's public folder.
+  ///
+  /// Fireflutter listens `/translations` collection and fire
+  /// `translationsChange` event on update. The [translations] will be used
+  /// as the initial translation data set.
+  ///
   Future<void> init({
     bool openProfile = false,
     bool enableNotification = false,
@@ -192,12 +199,13 @@ class FireFlutter extends Base {
   /// Returns user's public document data
   ///
   /// If the document does not exist, it returns null.
-  /// 
+  ///
   /// There is `publicData` map variable which has login user's public document
   /// data and it's live updated. It is better to use `publicData`, but only if
   /// you are unsure if `publicData` is available immediately right after login
   /// or registration, you may use this method.
   Future<Map<String, dynamic>> getPublicData() async {
+    if (notLoggedIn) return null;
     final snapshot = await publicDoc.get();
     if (snapshot.exists) {
       return snapshot.data();
@@ -205,7 +213,6 @@ class FireFlutter extends Base {
       return null;
     }
   }
-
 
   /// Logs into Firebase Auth.
   ///
