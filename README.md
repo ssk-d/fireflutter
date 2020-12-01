@@ -119,6 +119,7 @@ A free, open source, rapid development flutter package to build apps like shoppi
   - [Logic of chat](#logic-of-chat)
   - [Pitfalls of chat logic](#pitfalls-of-chat-logic)
   - [Code of chat](#code-of-chat)
+    - [Preparation for chat](#preparation-for-chat)
     - [Begin chat with a user](#begin-chat-with-a-user)
   - [Scenario of extending chat functionality](#scenario-of-extending-chat-functionality)
   - [Unit tests of chat](#unit-tests-of-chat)
@@ -2022,7 +2023,12 @@ Firestore structure and its data are secured by Firestore security rules.
 
 - The best code sample is in firefutter sample app.
 
-- To search users, fireflutter must have `openProfile` option.
+
+### Preparation for chat
+
+- By default, app can search users by name in `/meta/user/public/{uid}`. You may extend to search by gender and age.
+  - And it requires `openProfile` option to be set in `fireflutter` initialization like below.
+  - This option updates user's profile name and photo under `/meta/user/public/{uid}` and a user can search other users name and photo.
 
 ```dart
 ff.init({
@@ -2030,14 +2036,39 @@ ff.init({
 })
 ```
 
-
 ### Begin chat with a user
 
-- To begin with a user, call `info = chatCreateRoom(['uid', ...], 'title)` and enter with the room with `info['id']`
-  - When you begin to chat same user over again, many chat rooms with the same user will created. This is by design. You may code to block this.
+- To begin with a user, app needs to call `info = chatCreateRoom(['uid', ...], 'title)` and enter with the room with `info['id']`.
+  - As long as the `uid` is valid, it will create a chat room.
+  - One important thing to know is when a user begin to chat to the other user over again, new chat room with the other user will created over again. This is by design. You may code to block this.
+
+- See the code sample below.
+  - The login user enters a chat room (with the users in users array) by instantiating the `ChatRoom` class. Then the `ChatRoom` instance begins to listen to any messages(event) that happen in the room and it fires `render` callback function to notify the app. The app, then, re-render the screen with updated information.
+  - `ChatRoom.message` has all the messages of the chat room including `who enters`, `who leaves`, `who blocked`, `who becomes moderator` and much more.
+
+```dart
+Map<String, dynamic> info;
+if (args['uid'] != null) { // To begin chat a user, simply create a room.
+  info = await ff.chatCreateRoom(users: [args['uid']], title: '');
+} else if (args['info'] != null) { // If user enters a room.
+  info = args['info'];
+}
+// Enter chat room and begin to listen the chat room event.
+chat = ChatRoom(
+  inject: ff,
+  roomId: info['id'],
+  render: () {
+    setState(() {});
+    if (chat.messages.isNotEmpty) {
+      // ...
+    }
+  },
+);
+```
+
+- `ChatRoom.info` has the chat room information.
 
 
-This option updates user's profile name and photo under `/meta/user/public/{uid}` and users will be able to search other user's profile to chat with.
 
 ## Scenario of extending chat functionality
 
