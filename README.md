@@ -2141,14 +2141,14 @@ Some of use case might be
 
 ## Code of Location
 
-- To use location, create an instance of `UserLocation` class by injecting fireflutter in it.
-  - When `UserLocation` has been instantiated, it will check the Location permission and listens the location, then update it on Firestore.
+- To use location, create an instance of `FireFlutterLocation` class by injecting fireflutter in it.
+  - When `FireFlutterLocation` has been instantiated, it will check the Location permission and listens the location, then update it on Firestore.
 
 ```dart
 import 'package:fireflutter/fireflutter.dart';
 
 final FireFlutter ff = FireFlutter();
-final UserLocation location = UserLocation(inject: ff);
+final FireFlutterLocation location = FireFlutterLocation(inject: ff);
 ```
 
 By instantiating an instance, it will check(and ask) the permission to the user. Then the app will begin to record the location on firestore.
@@ -2193,6 +2193,16 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     );
   }
 }
+```
+
+- When the device cannot fetch location information(GEO point), all the app can get from `FireFlutterLocation` is null event on `FireFlutterLocation.change` event and empty map data on `FireFlutterLocation.users` event.
+  - This may happens when you run the app in Emulator for the first time.
+  - To display that the device cannot fetch GEO point, use the following code.
+
+```dart
+if (location.lastPoint == null)
+  Text(
+      "Warning: the device cannot fetch location information(GEO location)!"),
 ```
 
 ### Initialization of Location
