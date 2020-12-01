@@ -2043,15 +2043,23 @@ ff.init({
 - To create a chat room, you can create an instance of `ChatRoom`.
   - The code below creates a room without users but the login user himself. A will be alone in the room.
 ```dart
-CreateRoom(inject: ff);
+ChatRoom(inject: ff);
 ```
 
 - To create a chat room with user B,
 
 ```dart
-CreateRoom(inject: ff, users: ['A']);
+ChatRoom(inject: ff, users: ['A']);
 ```
 
+
+- Normally you would define a variable of `ChatRoom` to save the instance.
+
+```dart
+class A extends StatefullWidget {
+  ChatRoom chat;
+}
+```
 
 
 
