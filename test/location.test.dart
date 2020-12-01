@@ -541,11 +541,11 @@ class LocationTest {
     );
     usersInLocation = await getUsersNearMe(locations['southkorea']);
     isTrue(
-      userIsNearMe(userE, usersInLocation),
+      userIsNearMe(userC, usersInLocation),
       'User C is near User E',
     );
     isTrue(
-      userIsNearMe(userE, usersInLocation) == false,
+      userIsNearMe(userB, usersInLocation) == false,
       'User B is not near User E',
     );
   }
