@@ -2038,6 +2038,33 @@ ff.init({
 
 ### Begin chat with a user
 
+- Let's assume there are user A, B, C and whose UIDs are also A, B, C respectively.
+  - And the login user is A.
+- To create a chat room, you can create an instance of `ChatRoom`.
+  - The code below creates a room without users but the login user himself. A will be alone in the room.
+```dart
+ChatRoom(inject: ff);
+```
+
+- To create a chat room with user B,
+
+```dart
+ChatRoom(inject: ff, users: ['A']);
+```
+
+
+- Normally you would define a variable of `ChatRoom` to save the instance.
+
+```dart
+class A extends StatefullWidget {
+  ChatRoom chat;
+}
+```
+
+
+
+
+
 - To begin with a user, app needs to call `info = chatCreateRoom(['uid', ...], 'title)` and enter with the room with `info['id']`.
   - As long as the `uid` is valid, it will create a chat room.
   - One important thing to know is when a user begin to chat to the other user over again, new chat room with the other user will created over again. This is by design. You may code to block this.
