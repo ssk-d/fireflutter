@@ -205,6 +205,8 @@ class FireFlutterLocation {
         Map<String, dynamic> data = document.data();
         GeoPoint _point = data[geoFieldName]['geopoint'];
 
+        data['uid'] = document.id;
+
         // get distance from current user.
         data['distance'] = point.distance(
           lat: _point.latitude,
