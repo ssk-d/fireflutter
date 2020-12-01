@@ -85,56 +85,6 @@ class LocationTest {
     'password': '12345a',
   };
 
-  /// prepare / reset user locations
-  _prepareCloseRangeLocations() async {
-    User user;
-
-    /// A
-    user = await ff.loginOrRegister(
-      email: userA['email'],
-      password: userA['password'],
-    );
-    userA['uid'] = user.uid;
-    print(userA.toString());
-    await updateUserLocation('a', 'User A initial location');
-
-    /// B
-    user = await ff.loginOrRegister(
-      email: userB['email'],
-      password: userB['password'],
-    );
-    userB['uid'] = user.uid;
-    print(userB.toString());
-    await updateUserLocation('b', 'User B initial location');
-
-    /// C
-    user = await ff.loginOrRegister(
-      email: userC['email'],
-      password: userC['password'],
-    );
-    userC['uid'] = user.uid;
-    print(userC.toString());
-    await updateUserLocation('c', 'User C initial location');
-
-    /// D
-    user = await ff.loginOrRegister(
-      email: userD['email'],
-      password: userD['password'],
-    );
-    userD['uid'] = user.uid;
-    print(userD.toString());
-    await updateUserLocation('d', 'User D initial location');
-
-    /// E
-    user = await ff.loginOrRegister(
-      email: userE['email'],
-      password: userE['password'],
-    );
-    userE['uid'] = user.uid;
-    print(userE.toString());
-    await updateUserLocation('d', 'User E initial location');
-  }
-
   success(String message) {
     print("[SUCCESS] $message");
   }
@@ -232,9 +182,53 @@ class LocationTest {
   runLocationTest() {
     ff.firebaseInitialized.listen((v) async {
       if (!v) return;
-      // await _closeRangeTest();
+      await _closeRangeTest();
       await _otherCountryTest();
     });
+  }
+
+  /// prepare/reset user locations (close range)
+  _prepareCloseRangeLocations() async {
+    User user;
+
+    user = await ff.loginOrRegister(
+      email: userA['email'],
+      password: userA['password'],
+    );
+    userA['uid'] = user.uid;
+    print(userA.toString());
+    await updateUserLocation('a', 'User A initial location');
+
+    user = await ff.loginOrRegister(
+      email: userB['email'],
+      password: userB['password'],
+    );
+    userB['uid'] = user.uid;
+    print(userB.toString());
+    await updateUserLocation('b', 'User B initial location');
+
+    user = await ff.loginOrRegister(
+      email: userC['email'],
+      password: userC['password'],
+    );
+    userC['uid'] = user.uid;
+    print(userC.toString());
+    await updateUserLocation('c', 'User C initial location');
+
+    user = await ff.loginOrRegister(
+      email: userD['email'],
+      password: userD['password'],
+    );
+    userD['uid'] = user.uid;
+    print(userD.toString());
+    await updateUserLocation('d', 'User D initial location');
+
+    user = await ff.loginOrRegister(
+      email: userE['email'],
+      password: userE['password'],
+    );
+    userE['uid'] = user.uid;
+    await updateUserLocation('d', 'User E initial location');
   }
 
   /// Close range test (Philippines)
@@ -416,6 +410,7 @@ class LocationTest {
     );
   }
 
+  /// Prepare/reset users location (Other countries)
   _prepareOtherCountyLocations() async {
     User user;
 
@@ -442,7 +437,6 @@ class LocationTest {
       email: userC['email'],
       password: userC['password'],
     );
-
     userC['uid'] = user.uid;
     await updateUserLocation('southkorea', 'User C goes to South Korea');
 
@@ -451,7 +445,6 @@ class LocationTest {
       email: userD['email'],
       password: userD['password'],
     );
-
     userD['uid'] = user.uid;
     await updateUserLocation('mongolia', 'User D goes to Mongolia');
 
@@ -460,7 +453,6 @@ class LocationTest {
       email: userE['email'],
       password: userE['password'],
     );
-
     userE['uid'] = user.uid;
     await updateUserLocation('philippines', 'User E goes to Philippines');
   }
@@ -472,7 +464,7 @@ class LocationTest {
 
     /// Location test - [ Country ]
     ///
-    /// E should not be near A
+    /// Initially, User E must not appear in User A search.
     await ff.loginOrRegister(
       email: userA['email'],
       password: userA['password'],
@@ -483,19 +475,17 @@ class LocationTest {
       'User E is not near User A',
     );
 
-    /// E should be near A
+    /// Change user E location to Australia (A)
+    ///
+    /// User E must appear in User A search.
     await ff.loginOrRegister(
       email: userE['email'],
       password: userE['password'],
     );
-
-    /// Update user E location to Australia
     await updateUserLocation(
       'australia',
       "User E enters User A's search radius in Australia",
     );
-
-    /// Login user A and check if User E is nearby
     await ff.loginOrRegister(
       email: userA['email'],
       password: userA['password'],
@@ -506,9 +496,10 @@ class LocationTest {
       'User E is near User A',
     );
 
-    /// E should not be near A and should be near B
+    /// change user E location to china (B)
     ///
-    /// change user E location to china
+    /// User E must not appear in A search.
+    /// User E must appear in B search.
     await ff.loginOrRegister(
       email: userE['email'],
       password: userE['password'],
@@ -517,8 +508,6 @@ class LocationTest {
       'china',
       "User E enters User B's search radius in China",
     );
-
-    /// Get users near A
     await ff.loginOrRegister(
       email: userA['email'],
       password: userA['password'],
@@ -528,8 +517,6 @@ class LocationTest {
       userIsNearMe(userE, usersInLocation) == false,
       'User E is not near User A',
     );
-
-    /// Login B, check if C is not nearby
     await ff.loginOrRegister(
       email: userB['email'],
       password: userB['password'],
@@ -538,6 +525,28 @@ class LocationTest {
     isTrue(
       userIsNearMe(userE, usersInLocation),
       'User E is near User B',
+    );
+
+    /// change user E location to south korea (c)
+    ///
+    /// User C must appear on E search.
+    /// User B must not appear on E search.
+    await ff.loginOrRegister(
+      email: userE['email'],
+      password: userE['password'],
+    );
+    await updateUserLocation(
+      'southkorea',
+      "User E enters User B's search radius in China",
+    );
+    usersInLocation = await getUsersNearMe(locations['southkorea']);
+    isTrue(
+      userIsNearMe(userE, usersInLocation),
+      'User C is near User E',
+    );
+    isTrue(
+      userIsNearMe(userE, usersInLocation) == false,
+      'User B is not near User E',
     );
   }
 }
