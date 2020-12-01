@@ -245,6 +245,7 @@ class FireFlutter extends Base {
   ///
   ///
   Future<void> updateUserData(Map<String, dynamic> data) async {
+    if (data == null) return;
     if (data['displayName'] != null && data['photoURL'] != null) {
       await user.updateProfile(
         displayName: data['displayName'],
@@ -1086,6 +1087,8 @@ class FireFlutter extends Base {
     }
   }
 
+  @Deprecated('Use ChatRoom class')
+
   /// TODO move all the chat relative members to `ChatRoom` or `ChatRoomList`
   /// Returns the room collection reference
   ///
@@ -1094,6 +1097,8 @@ class FireFlutter extends Base {
   CollectionReference get chatRoomListCol {
     return db.collection('chat').doc('info').collection('room-list');
   }
+
+  @Deprecated('use ChatRoom')
 
   /// Returns `/chat/room/list/{roomId}` document reference
   ///
@@ -1105,12 +1110,16 @@ class FireFlutter extends Base {
     return chatRoomListCol.doc(roomId);
   }
 
+  @Deprecated('use ChatBox')
+
   /// Returns login user's room list collection `/chat/my-room-list/my-uid` reference.
   ///
   ///
   CollectionReference get chatMyRoomListCol {
     return chatUserRoomListCol(user.uid);
   }
+
+  @Deprecated('use ChatBox')
 
   /// Returns document reference of my room (that has last message of the room)
   ///
@@ -1119,16 +1128,22 @@ class FireFlutter extends Base {
     return chatMyRoomListCol.doc(roomId);
   }
 
+  @Deprecated('use ChatBox')
+
   /// Returns the document data of [roomId] room in my room list.
   Future<Map<String, dynamic>> chatLastMessage(String roomId) async {
     return (await chatMyRoom(roomId).get()).data();
   }
+
+  @Deprecated('Use ChatRoom')
 
   /// Returns my room list collection `/chat/my-room-list/{uid}` reference.
   ///
   CollectionReference chatUserRoomListCol(String uid) {
     return db.collection('chat').doc('my-room-list').collection(uid);
   }
+
+  @Deprecated('Use ChatRoom')
 
   /// Returns my room (that has last message of the room) document
   /// reference.
@@ -1137,6 +1152,7 @@ class FireFlutter extends Base {
   }
 
   /// Return the collection of messages of the room id.
+  @Deprecated('Use ChatRoom')
   CollectionReference chatMessagesCol(String roomId) {
     return db.collection('chat').doc('messages').collection(roomId);
   }
@@ -1152,6 +1168,7 @@ class FireFlutter extends Base {
   /// It returns the room information.
   ///
   /// Todo move this method to `ChatRoom`
+  @Deprecated('Use ChatRoom() constructor to create a chat room')
   Future<Map<String, dynamic>> chatCreateRoom({
     List<String> users,
     String title,
@@ -1184,6 +1201,8 @@ class FireFlutter extends Base {
     return info;
   }
 
+  @Deprecated('use ChatBox')
+
   /// Update room information
   ///
   /// ```dart
@@ -1196,6 +1215,8 @@ class FireFlutter extends Base {
     if (title != null) data['title'] = title;
     return chatRoomInfoDoc(roomId).update(data);
   }
+
+  @Deprecated('use ChatRoom')
 
   /// Returns the room list info `/chat/room/list/{roomId}` document.
   ///
@@ -1212,6 +1233,8 @@ class FireFlutter extends Base {
     return info;
   }
 
+  @Deprecated('use ChatBox')
+
   /// Add a moderator
   ///
   /// Only moderator can add a user to moderator.
@@ -1225,6 +1248,8 @@ class FireFlutter extends Base {
     await chatRoomInfoDoc(roomId).update({'moderators': moderators});
   }
 
+  @Deprecated('use ChatBox')
+
   /// Remove a moderator.
   ///
   /// Only moderator can remove a moderator.
@@ -1236,6 +1261,8 @@ class FireFlutter extends Base {
     moderators.remove(uid);
     await chatRoomInfoDoc(roomId).update({'moderators': moderators});
   }
+
+  @Deprecated('use ChatBox')
 
   /// Add users to chat room
   ///
@@ -1279,6 +1306,8 @@ class FireFlutter extends Base {
     });
   }
 
+  @Deprecated('use ChatRoom')
+
   /// User leaves a room.
   ///
   /// Once a user has left, the user will not be able to update last message of
@@ -1318,6 +1347,7 @@ class FireFlutter extends Base {
     await chatMyRoom(roomId).delete();
   }
 
+  @Deprecated('use ChatRoom')
   Future<void> chatKickoutUser(
       String roomId, String uid, String userName) async {
     Map<String, dynamic> info = await chatGetRoomInfo(roomId);
@@ -1330,6 +1360,8 @@ class FireFlutter extends Base {
     await chatSendMessage(
         info: info, text: ChatProtocol.kickout, extra: {'userName': userName});
   }
+
+  @Deprecated('use ChatRoom')
 
   /// Moderator removes a user
   ///
@@ -1360,6 +1392,7 @@ class FireFlutter extends Base {
   /// [extra] will be added to the message
   ///
   /// Todo move this method to `ChatRoom`
+  @Deprecated('User ChatRoom')
   Future<Map<String, dynamic>> chatSendMessage({
     @required Map<String, dynamic> info,
     @required String text,
