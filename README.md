@@ -119,6 +119,7 @@ A free, open source, rapid development flutter package to build apps like shoppi
   - [Logic of chat](#logic-of-chat)
   - [Pitfalls of chat logic](#pitfalls-of-chat-logic)
   - [Code of chat](#code-of-chat)
+    - [Begin chat with a user](#begin-chat-with-a-user)
   - [Scenario of extending chat functionality](#scenario-of-extending-chat-functionality)
   - [Unit tests of chat](#unit-tests-of-chat)
 - [Location](#location)
@@ -2028,6 +2029,13 @@ ff.init({
   'openProfile': true,
 })
 ```
+
+
+### Begin chat with a user
+
+- To begin with a user, call `info = chatCreateRoom(['uid', ...], 'title)` and enter with the room with `info['id']`
+  - When you begin to chat same user over again, many chat rooms with the same user will created. This is by design. You may code to block this.
+
 
 This option updates user's profile name and photo under `/meta/user/public/{uid}` and users will be able to search other user's profile to chat with.
 
