@@ -164,14 +164,17 @@ class FireFlutterLocation {
   _listenUsersNearMe(GeoFirePoint point) {
     // print('_listenUsersNearMe: $_radius km');
 
+    Query colRef = _ff.publicCol;
+
     /// filter [gender]
     if (_gender == null) {
+      if (_ff.publicData['gender'] == null) return;
       _gender = _ff.publicData['gender'] == 'F' ? 'M' : 'F';
+      colRef = colRef.where('gender', isEqualTo: _gender);
     }
 
     if (usersNearMeSubscription != null) usersNearMeSubscription.cancel();
 
-    Query colRef = _ff.publicCol.where('gender', isEqualTo: _gender);
     // .where('birthday', isGreaterThan: ...),
 
     usersNearMeSubscription = geo
