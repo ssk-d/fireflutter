@@ -2053,49 +2053,61 @@ ChatRoom(inject: ff, users: ['A']);
 ```
 
 
-- Normally you would define a variable of `ChatRoom` to save the instance.
+- You would code like below to enter a chat room.
+  - if `id` (as chat room id) is given, it will enter the chat room and listens all the event of the room.
+  - Or if `id` is null, then a room will be created with the `users` of UIDs list.
+  - If both of `id` and `users` are null(or empty), then a room will be created without any users except the login user himself. He will be alone in the room.
+  - If both of `id` and `users` have value, then, it enters the room if the room of the `ic` exists. Or it will create a room with the `id` and with the users.
+    - This will be a good option for 1:1 chat. If the app only allows 1:1 chat, or the user chats to admin for help, this will be a good option.
+    - The `id` can be an md5 string of the login user's uid(A) and other user's uid(B).
+      - When it creates the room, it will create a room for A and B, and next time A or B try to chat each other again, it will not create a new room. Instead, it will use previously created room.
 
 ```dart
 class A extends StatefullWidget {
   ChatRoom chat;
+  @override
+  initState() {
+    chat = ChatRoom(
+      inject: ff,
+      id: 'chat room id',
+      users: ['uid1', 'uid2', ...]
+      render: () {
+        setState(() {});
+      },
+    );
+  }
 }
 ```
 
+- One important thing to know is when A begins to chat with B, a new room will be create for A and B and later A begins to chat with B again, then another room for A and b will be created. This is by design. You may code to block this.
 
-
-
-
-- To begin with a user, app needs to call `info = chatCreateRoom(['uid', ...], 'title)` and enter with the room with `info['id']`.
-  - As long as the `uid` is valid, it will create a chat room.
-  - One important thing to know is when a user begin to chat to the other user over again, new chat room with the other user will created over again. This is by design. You may code to block this.
-
-- See the code sample below.
-  - The login user enters a chat room (with the users in users array) by instantiating the `ChatRoom` class. Then the `ChatRoom` instance begins to listen to any messages(event) that happen in the room and it fires `render` callback function to notify the app. The app, then, re-render the screen with updated information.
+- Once an instance of `ChatRoom` created, it begins to listen to any messages(event) that happen in the room and `render` function will be called. The app, then, re-render the screen with updated information.
   - `ChatRoom.message` has all the messages of the chat room including `who enters`, `who leaves`, `who blocked`, `who becomes moderator` and much more.
-
-```dart
-Map<String, dynamic> info;
-if (args['uid'] != null) { // To begin chat a user, simply create a room.
-  info = await ff.chatCreateRoom(users: [args['uid']], title: '');
-} else if (args['info'] != null) { // If user enters a room.
-  info = args['info'];
-}
-// Enter chat room and begin to listen the chat room event.
-chat = ChatRoom(
-  inject: ff,
-  roomId: info['id'],
-  render: () {
-    setState(() {});
-    if (chat.messages.isNotEmpty) {
-      // ...
-    }
-  },
-);
-```
 
 - `ChatRoom.info` has the chat room information.
 
 
+- It is important to put `leave()` method on my chat room list and chat room to release the listeners.
+
+For chat my room list leave,
+
+```dart
+@override
+void dispose() {
+  myRoomList.leave();
+  super.dispose();
+}
+```
+
+For chat room leave,
+
+```dart
+  @override
+  void dispose() {
+    chat.leave();
+    super.dispose();
+  }
+```
 
 ## Scenario of extending chat functionality
 

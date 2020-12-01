@@ -7,15 +7,22 @@ class ChatRoomInfo {
   List<String> moderators;
   List<String> blockedUsers;
   dynamic createdAt;
+  String text;
+  int newMessages;
   ChatRoomInfo({
     this.id,
     this.title,
     this.users,
     this.moderators,
     this.createdAt,
+    this.text,
+    this.newMessages,
   }) {
     blockedUsers = [];
   }
+
+  /// Returns true if the room is existing.
+  bool get exists => id != null;
 
   factory ChatRoomInfo.fromSnapshot(DocumentSnapshot snapshot) {
     if (snapshot.exists == false) return null;
@@ -28,9 +35,11 @@ class ChatRoomInfo {
     return ChatRoomInfo(
       id: id,
       title: info['title'],
-      users: List<String>.from(info['users']),
-      moderators: List<String>.from(info['moderators']),
+      users: List<String>.from(info['users'] ?? []),
+      moderators: List<String>.from(info['moderators'] ?? []),
       createdAt: info['createdAt'],
+      text: info['text'],
+      newMessages: info['newMessages'],
     );
   }
 
@@ -91,6 +100,7 @@ class ChatMyRoomList extends ChatBase {
   List<StreamSubscription> _roomSubscriptions = [];
 
   /// My room list including room id.
+  /// TODO convert it to List<ChatRoomInfo>
   List<Map<String, dynamic>> rooms = [];
   String _order = "";
   ChatMyRoomList(
@@ -235,14 +245,31 @@ class ChatRoom extends ChatBase {
   }
 
   init() async {
-    /// If chat id was not given on instantiating the ChatRoom class,
-    /// then it will create a room.
-    if (_id == null) {
-      if (_users == null) _users = [_ff.user.uid];
-      ChatRoomInfo _info = await create(users: _users, title: _title);
-      _id = _info.id;
+    if (_id != null) {
+      try {
+        ChatRoomInfo room = await getRoomInfo(_id);
+        if (room.exists) {
+          enterRoom();
+          return;
+        }
+      } catch (e) {
+        if (e.code == 'permission-denied') {
+          /// continue to create room
+        } else {
+          rethrow;
+        }
+      }
     }
 
+    /// If chat id was not given on instantiating the ChatRoom class,
+    /// then it will create a room.
+
+    if (_users == null) _users = [_ff.user.uid];
+    ChatRoomInfo _info = await create(users: _users, title: _title, id: _id);
+    _id = _info.id;
+  }
+
+  enterRoom() {
     /// Fetch when instance is created to fetch messages for the first time.
     fetchMessages();
 
@@ -354,8 +381,10 @@ class ChatRoom extends ChatBase {
 
   /// [users] is a list of users' uid to create chat room with.
   /// [title] is the title of the room.
+  /// [id] is the room id to create.
   /// The login user who creates the room becomes the moderator.
-  Future<ChatRoomInfo> create({List<String> users, String title}) async {
+  Future<ChatRoomInfo> create(
+      {List<String> users, String title, String id}) async {
     if (users == null) users = [];
 
     /// Add login user's uid.
@@ -373,15 +402,13 @@ class ChatRoom extends ChatBase {
       moderators: [_ff.user.uid],
       createdAt: FieldValue.serverTimestamp(),
     );
-    //  {
-    //   'users': users,
-    //   'title': title ?? '',
-    //   'createdAt': FieldValue.serverTimestamp(),
-    //   'moderators': [_ff.user.uid],
-    // };
-
-    DocumentReference doc = await roomListCol.add(info.data);
-    info.id = doc.id;
+    if (id == null) {
+      DocumentReference doc = await roomListCol.add(info.data);
+      info.id = doc.id;
+    } else {
+      await roomListCol.doc(id).set(info.data);
+      info.id = id;
+    }
 
     sendMessage(info: info, text: ChatProtocol.roomCreated);
     return info;
