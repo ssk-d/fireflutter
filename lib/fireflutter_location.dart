@@ -35,6 +35,10 @@ class FireFlutterLocation {
 
   final Location _location = new Location();
 
+  // Other user's location near the current user's location.
+  Map<String, dynamic> usersNearMe = {};
+  bool get noUsersNearMe => usersNearMe.isEmpty;
+
   StreamSubscription usersNearMeSubscription;
 
   /// Expose `Location` instance.
@@ -146,9 +150,6 @@ class FireFlutterLocation {
     return _new;
   }
 
-  // Other user's location near the current user's location.
-  Map<String, dynamic> usersNearMe = {};
-
   /// Listen `/meta/user/public/{uid}` for geo point and search users who are
   /// within the radius from my geo point.
   ///
@@ -190,8 +191,6 @@ class FireFlutterLocation {
       // print('Users near me: documents:');
       // print(documents);
 
-      /// No more users in within the radius
-      ///
       documents.forEach((document) {
         // print("user location near me");
 
