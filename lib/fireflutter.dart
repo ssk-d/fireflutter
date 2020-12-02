@@ -1439,4 +1439,14 @@ class FireFlutter extends Base {
   Future<bool> openAppSettings() {
     return permissionHander.openAppSettings();
   }
+
+  Future<Map<String, dynamic>> getUserTokens(String uid) async {
+    if (notLoggedIn) return null;
+    final snapshot = await getUserTokenDoc(uid).get();
+    if (snapshot.exists) {
+      return snapshot.data();
+    } else {
+      return null;
+    }
+  }
 }

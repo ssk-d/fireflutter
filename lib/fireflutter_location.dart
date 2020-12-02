@@ -19,11 +19,17 @@ class FireFlutterLocation {
     init(radius: radius);
   }
   FireFlutter _ff;
-  double _radius = 22.0;
+  double _radius;
 
   /// [change] event will be fired when user changes his location.
+  /// Since [change] is BehaviorSubject, it will be fired with null for the
+  /// first time. And when the device can't fetch location information, there
+  /// will be no more event after null.
   // ignore: close_sinks
   BehaviorSubject change = BehaviorSubject<GeoFirePoint>.seeded(null);
+
+  /// Since [users] is BehaviorSubject, an event may be fired with empty user
+  /// list for the first time.
   // ignore: close_sinks
   BehaviorSubject users = BehaviorSubject<Map<String, dynamic>>.seeded({});
 
@@ -38,9 +44,13 @@ class FireFlutterLocation {
 
   /// Last(movement) geo point of the user.
   GeoFirePoint _lastPoint;
+  GeoFirePoint get lastPoint => _lastPoint;
 
+  /// [radius] is the radius to search users. If it is not set(or set as null),
+  /// 22(km) will be set by default.
   init({@required double radius}) {
     // print('location:init');
+    if (radius == null) radius = 22;
     _radius = radius;
     _checkPermission();
     _updateUserLocation();
@@ -104,7 +114,9 @@ class FireFlutterLocation {
 
     /// Listen to location change when the user is moving
     ///
-    /// this will not emit new location if the device or user is not moving.
+    /// This will not emit new location if the device or user is not moving.
+    ///
+    /// If the device can't fetch location, this method will not be called.
     /// * This is going to work after user login even if the user did logged in on start up
     _location.onLocationChanged.listen((LocationData newLocation) async {
       if (_ff.notLoggedIn) return;
@@ -153,6 +165,10 @@ class FireFlutterLocation {
   /// ? This is a clear race condition. How are you going to handle this racing?
   ///
   _listenUsersNearMe(GeoFirePoint point) {
+    if (point == null) {
+      /// If the device can't fetch location information, then [point] will be null.
+      return;
+    }
     // print('_listenUsersNearMe: $_radius km');
 
     Query colRef = _ff.publicCol;

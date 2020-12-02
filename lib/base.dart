@@ -34,6 +34,8 @@ class Base {
   DocumentReference get tokenDoc =>
       db.collection('meta').doc('user').collection('token').doc(user.uid);
 
+  DocumentReference getUserTokenDoc(String uid) =>
+      db.collection('meta').doc('user').collection('token').doc(uid);
   CollectionReference get publicCol =>
       db.collection('meta').doc('user').collection('public');
 
@@ -385,7 +387,7 @@ class Base {
     /// - exited
     firebaseMessaging.configure(
       onMessage: (Map<String, dynamic> message) async {
-        // print('onMessage');
+        print('onMessage');
         _notifyApp(message, NotificationType.onMessage);
       },
       onLaunch: (Map<String, dynamic> message) async {
