@@ -1737,8 +1737,14 @@ If you want to enable the forum subscription, then add option button on each for
 
 - When a user subscribed a topic with his three devices A, B, C.
   - The user unsubscribes the topic from device A,
-  - But the user will still get push notifications from devices B, C.
-  - To solve the issues, the app use send push notifications based on tokens.
+  - But the user will still get push notifications from devices B, C. until the user restart the app on B, C.
+- Another cavits is, When user A have two phones P1 and P2.
+  - A logins both P1 and P2.
+  - A subscribe to a new topic in P1, 
+  - then P2 will not subscribe the new topic until A restarts the app in P2 again.
+
+- To solve this issue, the P2 needs to subscribe to the topic automatically when P1 subscribe to a new topic.
+  - You can sync the phone in many ways. message, chat, socket, or something else. This is what lacks on fireflutter right now.
 
 ## Social Login
 
