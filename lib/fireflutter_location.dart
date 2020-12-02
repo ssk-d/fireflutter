@@ -39,28 +39,19 @@ class FireFlutterLocation {
   /// Last(movement) geo point of the user.
   GeoFirePoint _lastPoint;
 
-  String _gender;
-  DateTime _birthday;
-
   init({@required double radius}) {
     // print('location:init');
     _radius = radius;
-    _gender = null;
     _checkPermission();
     _updateUserLocation();
   }
 
   /// Reset the radius to search users.
   ///
-  /// If [gender] is null, users near me will be both Male and Female
   reset({
     double radius,
-    String gender,
-    DateTime birthday,
   }) {
     _radius = radius ?? _radius;
-    _gender = gender ?? _gender;
-    _birthday = birthday ?? _birthday;
     _listenUsersNearMe(_lastPoint);
   }
 
@@ -165,17 +156,11 @@ class FireFlutterLocation {
     // print('_listenUsersNearMe: $_radius km');
 
     Query colRef = _ff.publicCol;
-
-    /// filter [gender]
-    if (_gender == null) {
-      if (_ff.publicData['gender'] == null) return;
-      _gender = _ff.publicData['gender'] == 'F' ? 'M' : 'F';
-      colRef = colRef.where('gender', isEqualTo: _gender);
-    }
-
     if (usersNearMeSubscription != null) usersNearMeSubscription.cancel();
-
     // .where('birthday', isGreaterThan: ...),
+
+    usersNearMe = {};
+    users.add(usersNearMe);
 
     usersNearMeSubscription = geo
         .collection(collectionRef: colRef)
@@ -192,7 +177,6 @@ class FireFlutterLocation {
       /// No more users in within the radius
       ///
       /// since it fetch again, then reset user list, also removing users outside the radius.
-      usersNearMe = {};
 
       if (documents.length == 0) {
         users.add(usersNearMe);
