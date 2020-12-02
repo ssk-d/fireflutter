@@ -169,12 +169,12 @@ class FireFlutterLocation {
       /// If the device can't fetch location information, then [point] will be null.
       return;
     }
-    // print('_listenUsersNearMe: $_radius km');
 
     Query colRef = _ff.publicCol;
     if (usersNearMeSubscription != null) usersNearMeSubscription.cancel();
     // .where('birthday', isGreaterThan: ...),
 
+    /// since it fetch again, then reset user list, also removing users outside the radius.
     usersNearMe = {};
     users.add(usersNearMe);
 
@@ -192,13 +192,6 @@ class FireFlutterLocation {
 
       /// No more users in within the radius
       ///
-      /// since it fetch again, then reset user list, also removing users outside the radius.
-
-      if (documents.length == 0) {
-        users.add(usersNearMe);
-        return;
-      }
-
       documents.forEach((document) {
         // print("user location near me");
 
