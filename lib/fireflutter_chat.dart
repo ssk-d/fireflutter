@@ -127,6 +127,7 @@ class ChatMyRoomList extends ChatBase {
     listenRoomList();
   }
 
+  ///
   listenRoomList() {
     _myRoomListSubscription = _ff.chatMyRoomListCol
         .orderBy(_order, descending: true)
@@ -240,16 +241,12 @@ class ChatRoom extends ChatBase {
     init();
   }
 
-  _notify() {
-    if (__render != null) __render();
-  }
-
   init() async {
     if (_id != null) {
       try {
         ChatRoomInfo room = await getRoomInfo(_id);
         if (room.exists) {
-          enterRoom();
+          _enterChatRoom();
           return;
         }
       } catch (e) {
@@ -267,9 +264,17 @@ class ChatRoom extends ChatBase {
     if (_users == null) _users = [_ff.user.uid];
     ChatRoomInfo _info = await create(users: _users, title: _title, id: _id);
     _id = _info.id;
+
+    _enterChatRoom();
   }
 
-  enterRoom() {
+  _notify() {
+    if (__render != null) __render();
+  }
+
+  /// Fetch chat messages (of the first page or last messages), then listen to
+  /// changes of room information.
+  _enterChatRoom() {
     /// Fetch when instance is created to fetch messages for the first time.
     fetchMessages();
 
@@ -294,7 +299,7 @@ class ChatRoom extends ChatBase {
 
     /// 처음에 가져 올 때에는 startAfter 가 없으므로, 나중에 새로 추가되는 채팅(도큐먼트)도 가져온다.
     /// 즉, 채팅을 새로 할 때 마다, 새로운 채팅은 맨 밑에 표시가 되고, 스크롤을 위로 할 때 마다
-    /// 이전 글을 가져온다.
+    /// 이 함수를 호출 해, 이전 글을 가져온다.
     /// 그리고, 채팅을 삭제하거나, 수정하면 실시간으로 화면에 보여준다.
     Query q = messagesCol(_id)
         .orderBy('createdAt', descending: true)

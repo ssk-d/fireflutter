@@ -1591,9 +1591,9 @@ If you are following the path of how to create a post, list posts, and edit post
 
 - When the app boots the device will record its `push notification token` to Firestore and subscribe to `allTopic`.
 
-  - This means, when you released your app without push notification enabled at first,
-  - Then, you enabled push notification setting and republished, the app, then, will only begin to save `push notification token` to Firebase and subscribe to `allTopic` after re-install with the setting.
-  - But, all users had subscribed to `notify new comment unber my post` and `notify new comment under my comment` already. So, users no need to do anything to receive messages of new comment.
+  - This means, when you released your app without push notification enabled, the device will not save tokens to Firestore and does not subscribe to `allTopic`.
+    - So, it is important to enable from the first publish.
+  - Whether `push notification` is enabled or not, all devices(users) is going to subscribe to `notify new comment unber my post` and `notify new comment under my comment` by default.
 
 - Do [Push Notification Setup](#push-notification-setup)
 - To enable push notification you must set `enableNotification: true` on main in `FireFlutter init()`.
@@ -1661,9 +1661,9 @@ void initState() {
 ```
 
 - Sending push notification
-  - Providing `topic` as string will send notification to that topic.
+  - Providing `topic` as string will send notification to that topic. This is the recommended way of sending push notification.
   - Providing `token` as string will send to specific Device.
-  - Providing `tokens` as list of string will send to list of Device provided.
+  - Providing `tokens` as list of string will send to list of Device provided. Sending multiple tokens has limitation. See the comment of the code.
 
 ```dart
 RaisedButton(
@@ -1732,6 +1732,10 @@ If you want to enable the forum subscription, then add option button on each for
 - See [forum-subscription branch](https://github.com/thruthesky/fireflutter_sample_app/tree/forum-subscription) for the code.
 
 ### Logic of Push Notification
+
+
+
+
 
 #### Cavits of push notification login
 
