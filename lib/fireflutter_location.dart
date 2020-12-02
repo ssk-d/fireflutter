@@ -122,13 +122,16 @@ class FireFlutterLocation {
     ///
     /// If the device can't fetch location, this method will not be called.
     /// * This is going to work after user login even if the user did logged in on start up
-    _location.onLocationChanged.listen((LocationData newLocation) async {
-      if (_ff.notLoggedIn) return;
-
+    _location.onLocationChanged.listen((
+      LocationData newLocation,
+    ) async {
       GeoFirePoint _new = geo.point(
         latitude: newLocation.latitude,
         longitude: newLocation.longitude,
       );
+
+      if (_lastPoint == null) _lastPoint = _new;
+      if (_ff.notLoggedIn) return;
 
       /// When the user change his location, it needs to search other users base on his new location.
       /// TODO do not update user location unless the user move (by 1 meter) because it may update too often.
@@ -141,10 +144,13 @@ class FireFlutterLocation {
         await updateUserLocation(_new);
         _listenUsersNearMe(_new);
       }
+    }).onError((e) {
+      print(e.toString());
     });
   }
 
   Future<GeoFirePoint> updateUserLocation(GeoFirePoint _new) async {
+    print('new $_new');
     change.add(_new);
     await _ff.publicDoc.set({geoFieldName: _new.data}, SetOptions(merge: true));
     return _new;
@@ -177,7 +183,6 @@ class FireFlutterLocation {
 
     /// since it fetch again, then reset user list, also removing users outside the radius.
     usersNearMe = {};
-    users.add(usersNearMe);
 
     usersNearMeSubscription = geo
         .collection(collectionRef: colRef)
