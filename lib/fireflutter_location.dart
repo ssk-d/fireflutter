@@ -196,8 +196,12 @@ class FireFlutterLocation {
       // print('Users near me: documents:');
       // print(documents);
 
-      print(documents.isEmpty.toString());
-      if (documents.isEmpty) users.add(usersNearMe);
+      if (documents.isEmpty) {
+        // print('users is empty');
+        // print(documents.isEmpty.toString());
+        users.add(usersNearMe);
+        return;
+      }
 
       documents.forEach((document) {
         // print("user location near me");
