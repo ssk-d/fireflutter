@@ -161,6 +161,7 @@ class Base {
         userPublicDocSubscription.cancel();
       }
 
+      /// user state changed(user logged in already)
       if (user != null) {
         /// Note: listen handler will called twice if Firestore is working as offlien mode.
         userDocSubscription = usersCol.doc(user.uid).snapshots().listen(
@@ -179,6 +180,8 @@ class Base {
             }
           },
         );
+
+        updateUserSubscription(user);
       }
     });
   }
@@ -264,7 +267,18 @@ class Base {
         .set({firebaseMessagingToken: true}, SetOptions(merge: true));
   }
 
-  /// Update push notification token to Firestore
+  /// Update push notification tokens when userAuthStateChange.
+  ///
+  /// This re-subscribes all the topic when user restart the app. (The user does
+  /// not need to re-login). This method works for Forums, Chats, or any other
+  /// functionalities that has topic subscription.
+  ///
+  /// This method first looks for /meta/user/public/{uid} and get any fields
+  /// that starts with `notify...` (which are considered as topics), then it
+  /// will re-subscribe all the topic again.
+  /// For instance, `notifyPost-qna`, `notifyComment-qna`, `notifyChat-room-id`,
+  /// or anything that begins with `notify...` will be automatically subscirbed.
+  ///
   ///
   /// [user] is needed because when this method may be called immediately
   ///   after login but before `Firebase.AuthStateChange()` and when it happens,
@@ -278,9 +292,12 @@ class Base {
   //       .doc(user.uid)
   //       .collection('meta')
   //       .doc('tokens')
-  //       .set({firebaseMessagingToken: true}, SetOptions(merge: true));
-  // }
+  //       .set({firebaseMessagingToken: true}, S'etOptions(merge: true));
+  // }'
   //
+  //
+  // TODO: What if atuhStateChange happens too often. Usually when app
+  // (re)starts, authStateChange happens twice. You may use debounce in such case.
   Future<void> updateUserSubscription(User user) async {
     if (enableNotification == false) return;
     if (firebaseMessagingToken == null) return;
@@ -294,6 +311,13 @@ class Base {
     ///
     ///
     tokensDoc.forEach((key, value) async {
+      // if ( key.indexOf('notify') == 0 ) {
+      //   if (value == true) {
+      //     await subscribeTopic(key);
+      //   } else {
+      //     await unsubscribeTopic(key);
+      //   }
+      // }
       if (key.indexOf(notifyPost) != -1 || key.indexOf(notifyComment) != -1) {
         if (value == true) {
           await subscribeTopic(key);
@@ -403,7 +427,20 @@ class Base {
 
   /// Send push notifications.
   ///
+  ///
+  ///
   /// Prevent its return type is `FutureOr` by returns right boolean value.
+  ///
+  /// ! Warning - this method does not chunks the [tokens] list. Meaning, it can
+  /// only have few tokens to send. And sending many tokens with this method is
+  /// very bad. First, it has performance problem. For instance, there are 1,000
+  /// users to send messages to. then the app needs to read 1,000 user docuemnts
+  /// to read tokens, and 1,000 users may have 2,000 tokens in total. Second,
+  /// It does not chunks, meaning it can only send messages less than 1,000.
+  /// The other 1,000 tokens are simply ignored. This is a ciritical bug.
+  /// Third, it's expendsive since it has to read document over again.
+  /// So, do not use [tokens] when you are not sure. Use topic instead.
+  ///
   Future<bool> sendNotification(
     String title,
     String body, {
@@ -764,7 +801,6 @@ class Base {
       });
     }
     await updateUserToken();
-    await updateUserSubscription(user);
   }
 
   /// Profile update handler
