@@ -214,7 +214,7 @@ class ChatRoom extends ChatBase {
   /// 500ms is recommended.
   int _loadingTimeout = 500;
 
-  /// Chat room info
+  /// Chat room info (of current room)
   /// Use this to dipplay title or other information about the room.
   /// When `/chat/info/room-list/{roomId}` changes, it will be updated and calls render handler.
   ChatRoomInfo info;
@@ -401,7 +401,7 @@ class ChatRoom extends ChatBase {
     // String roomId = chatRoomId();
     // print('roomId: $roomId');
 
-    ChatRoomInfo info = ChatRoomInfo(
+    info = ChatRoomInfo(
       users: users,
       title: title,
       moderators: [_ff.user.uid],
@@ -415,7 +415,7 @@ class ChatRoom extends ChatBase {
       info.id = id;
     }
 
-    sendMessage(info: info, text: ChatProtocol.roomCreated);
+    await sendMessage(text: ChatProtocol.roomCreated);
     return info;
   }
 
@@ -445,7 +445,6 @@ class ChatRoom extends ChatBase {
   }
 
   Future<Map<String, dynamic>> sendMessage({
-    @required ChatRoomInfo info,
     @required String text,
     Map<String, dynamic> extra,
   }) async {
@@ -544,7 +543,7 @@ class ChatRoom extends ChatBase {
     /// Update last message of room users.
     // print('newUserNames:');
     // print(users.values.toList());
-    await sendMessage(info: info, text: ChatProtocol.enter, extra: {
+    await sendMessage(text: ChatProtocol.enter, extra: {
       'newUsers': users.values.toList(),
     });
   }
@@ -569,8 +568,7 @@ class ChatRoom extends ChatBase {
     await roomInfoDoc(info.id)
         .update({'users': info.users, 'blockedUsers': info.blockedUsers});
 
-    await sendMessage(
-        info: info, text: ChatProtocol.block, extra: {'userName': userName});
+    await sendMessage(text: ChatProtocol.block, extra: {'userName': userName});
   }
 
   /// Add a moderator
@@ -624,9 +622,7 @@ class ChatRoom extends ChatBase {
 
     /// Update last message of room users that the user is leaving.
     await sendMessage(
-        info: info,
-        text: ChatProtocol.leave,
-        extra: {'userName': _ff.user.displayName});
+        text: ChatProtocol.leave, extra: {'userName': _ff.user.displayName});
 
     /// Update users and blockedUsers first and if there is error return before sending messages to all users.
     await roomInfoDoc(info.id).update({'users': info.users});
@@ -648,6 +644,18 @@ class ChatRoom extends ChatBase {
   ///
   CollectionReference get myRoomListCol {
     return userRoomListCol(_ff.user.uid);
+  }
+
+  ///
+  Future<Map<String, dynamic>> getMyRoom(String uid, String id) async {
+    DocumentSnapshot snapshot = await userRoomDoc(uid, id).get();
+    if (snapshot.exists) {
+      return snapshot.data();
+    } else {
+      throw 'CHAT ROOM DOES NOT EXISTS';
+    }
+    // Map<String, dynamic> room = ().data();
+    // return room;
   }
 
   /// User leaves a room.
@@ -678,9 +686,7 @@ class ChatRoom extends ChatBase {
 
     /// Update last message of room users that the user is leaving.
     await sendMessage(
-        info: info,
-        text: ChatProtocol.leave,
-        extra: {'userName': _ff.user.displayName});
+        text: ChatProtocol.leave, extra: {'userName': _ff.user.displayName});
 
     /// Update users and blockedUsers first and if there is error return before sending messages to all users.
     await roomInfoDoc(info.id).update({'users': info.users});
