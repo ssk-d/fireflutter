@@ -182,7 +182,10 @@ class FireFlutterLocation {
     // .where('birthday', isGreaterThan: ...),
 
     /// since it fetch again, then reset user list, also removing users outside the radius.
+    ///
+    /// TODO: Remove users from [usersNearMe] if it is not existing in firestore search.
     usersNearMe = {};
+    users.add(usersNearMe);
 
     usersNearMeSubscription = geo
         .collection(collectionRef: colRef)
@@ -193,19 +196,26 @@ class FireFlutterLocation {
           strictMode: true,
         )
         .listen((List<DocumentSnapshot> documents) {
-      // print('Users near me: documents:');
-      // print(documents);
-
+      /// Clear users if documents is empty
       if (documents.isEmpty) {
         // print('users is empty');
         // print(documents.isEmpty.toString());
-        users.add(usersNearMe);
+        users.add({});
         return;
-      }
+      } 
+      // else {
+      //   /// Remove user in [usersNearMe] if not existing in documents.
+      //   ///
+      //   Map<String, dynamic> _users = usersNearMe;
+      //   _users.forEach((key, value) {
+      //     bool found = documents.contains((doc) => key == doc.id);
+      //     print("Found $found");
+      //     if (!found) usersNearMe.remove(key);
+      //     users.add(usersNearMe);
+      //   }); 
+      // }
 
       documents.forEach((document) {
-        // print("user location near me");
-
         // if this is the current user's data. don't add it to the list.
         if (document.id == _ff.user.uid) return;
 
@@ -220,7 +230,6 @@ class FireFlutterLocation {
           lng: _point.longitude,
         );
 
-        // print(document.id);
         usersNearMe[document.id] = data;
         users.add(usersNearMe);
       });
