@@ -36,8 +36,8 @@ class FireFlutterLocation {
   final Location _location = new Location();
 
   // Other user's location near the current user's location.
-  Map<String, dynamic> usersNearMe = {};
-  bool get noUsersNearMe => usersNearMe.isEmpty;
+  // Map<String, dynamic> usersNearMe = {};
+  // bool get noUsersNearMe => usersNearMe.isEmpty;
 
   StreamSubscription usersNearMeSubscription;
 
@@ -150,7 +150,6 @@ class FireFlutterLocation {
   }
 
   Future<GeoFirePoint> updateUserLocation(GeoFirePoint _new) async {
-    print('new $_new');
     change.add(_new);
     await _ff.publicDoc.set({geoFieldName: _new.data}, SetOptions(merge: true));
     return _new;
@@ -179,10 +178,6 @@ class FireFlutterLocation {
 
     Query colRef = _ff.publicCol;
     if (usersNearMeSubscription != null) usersNearMeSubscription.cancel();
-    // .where('birthday', isGreaterThan: ...),
-
-    /// since it fetch again, then reset user list, also removing users outside the radius.
-    usersNearMe = {};
 
     usersNearMeSubscription = geo
         .collection(collectionRef: colRef)
@@ -193,19 +188,17 @@ class FireFlutterLocation {
           strictMode: true,
         )
         .listen((List<DocumentSnapshot> documents) {
-      // print('Users near me: documents:');
-      // print(documents);
+      Map<String, dynamic> _users = {};
 
-      if (documents.isEmpty) {
-        // print('users is empty');
-        // print(documents.isEmpty.toString());
-        users.add(usersNearMe);
+      /// Clear users if documents is empty
+      /// documents might have 1 document containing the current user's location.
+      if (documents.isEmpty || documents.length == 1) {
+        users.add({});
         return;
       }
 
+      /// TODO: Remove users from [usersNearMe] if it is not existing in firestore search.
       documents.forEach((document) {
-        // print("user location near me");
-
         // if this is the current user's data. don't add it to the list.
         if (document.id == _ff.user.uid) return;
 
@@ -213,16 +206,14 @@ class FireFlutterLocation {
         GeoPoint _point = data[geoFieldName]['geopoint'];
 
         data['uid'] = document.id;
-
         // get distance from current user.
         data['distance'] = point.distance(
           lat: _point.latitude,
           lng: _point.longitude,
         );
 
-        // print(document.id);
-        usersNearMe[document.id] = data;
-        users.add(usersNearMe);
+        _users[document.id] = data;
+        users.add(_users);
       });
     });
   }
