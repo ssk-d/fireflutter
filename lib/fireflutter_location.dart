@@ -150,7 +150,6 @@ class FireFlutterLocation {
   }
 
   Future<GeoFirePoint> updateUserLocation(GeoFirePoint _new) async {
-    print('new $_new');
     change.add(_new);
     await _ff.publicDoc.set({geoFieldName: _new.data}, SetOptions(merge: true));
     return _new;
