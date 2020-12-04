@@ -221,8 +221,6 @@ class FireFlutterLocation {
 
     usersNearMeSubscription = geo
         .collection(collectionRef: colRef)
-        // .where('birthday', graterThan, ....),
-        // .where('birthday', lessThan, ....),
         .within(
           center: point,
           // radius: _radius, // km
