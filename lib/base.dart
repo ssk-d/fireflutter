@@ -103,6 +103,7 @@ class Base {
 
   /// [notification] will be fired whenever there is a push notification.
   /// the return data will the following and can be use when user receive notifications.
+  ///
   /// ```
   /// {
   ///   "notification": {"body": body, "title": title},
@@ -145,7 +146,7 @@ class Base {
   initUser() {
     authStateChanges = FirebaseAuth.instance.authStateChanges();
 
-    /// Note: listen handler will called twice if Firestore is working as offlien mode.
+    /// Note: listen handler will called twice if Firestore is working as offline mode.
     authStateChanges.listen((User user) {
       /// [userChange] event fires when user is logs in or logs out.
       userChange.add(UserChangeType.auth);
@@ -277,7 +278,7 @@ class Base {
   /// that starts with `notify...` (which are considered as topics), then it
   /// will re-subscribe all the topic again.
   /// For instance, `notifyPost-qna`, `notifyComment-qna`, `notifyChat-room-id`,
-  /// or anything that begins with `notify...` will be automatically subscirbed.
+  /// or anything that begins with `notify...` will be automatically subscribed.
   ///
   ///
   /// [user] is needed because when this method may be called immediately
@@ -296,7 +297,7 @@ class Base {
   // }'
   //
   //
-  // TODO: What if atuhStateChange happens too often. Usually when app
+  // TODO: What if authStateChange happens too often. Usually when app
   // (re)starts, authStateChange happens twice. You may use debounce in such case.
   Future<void> updateUserSubscription(User user) async {
     if (enableNotification == false) return;
@@ -308,17 +309,9 @@ class Base {
     if (!docSnapshot.exists) return;
     Map<String, dynamic> tokensDoc = docSnapshot.data();
 
-    ///
-    ///
+    /// any uid starting with `notify` keyword will treat as a topic under the publicDoc
     tokensDoc.forEach((key, value) async {
-      // if ( key.indexOf('notify') == 0 ) {
-      //   if (value == true) {
-      //     await subscribeTopic(key);
-      //   } else {
-      //     await unsubscribeTopic(key);
-      //   }
-      // }
-      if (key.indexOf(notifyPost) != -1 || key.indexOf(notifyComment) != -1) {
+      if (key.indexOf('notify') == 0) {
         if (value == true) {
           await subscribeTopic(key);
         } else {
@@ -401,9 +394,7 @@ class Base {
     });
   }
 
-  /// TODO This is a package that handles only backend works.
-  /// TODO This must not have any UI works like showing snackbar, modal dialogs. Do event handler.
-  ///
+  /// Firebase callback handlers for `onMessage`, `onLaunch` and `onResume`
   _firebaseMessagingCallbackHandlers() {
     /// Configure callback handlers for
     /// - foreground
@@ -426,6 +417,15 @@ class Base {
   }
 
   /// Send push notifications.
+  ///
+  /// [title] is the title of the Push Notification.
+  /// [body] is the body of the Push Notification
+  /// [token] is used to send Push Notification to a single token/device.
+  /// [tokens] can be use to send push notification to multiple tokens/device.
+  /// [topic] to send to specific topic.
+  /// [test] default is false. If set to true it will show the message as well to the sender.
+  /// [id] can be use as a params like postID, UserID, RoomID, or any ID you need to pass thru pushnotification.
+  /// [screen] can be use as a route after the app is open you can use screen as a param to move to specific page.
   ///
   ///
   ///
@@ -492,7 +492,6 @@ class Base {
         },
       };
 
-      // print(data);
       data[el['key']] = el['value'];
       final String encodeData = jsonEncode(data);
       Dio dio = Dio();
@@ -765,18 +764,6 @@ class Base {
   }
 
   onSocialLogin(User user) async {
-    // final userRef =
-    //     await usersCol.doc(user.uid).collection('meta').doc('public').get();
-
-    // if (!userRef.exists) {
-    //   updateUserMeta({
-    //     'public': {
-    //       "notification_post": true,
-    //       "notification_comment": true,
-    //     },
-    //   });
-    // }
-
     final Map<String, dynamic> doc = await profile();
     if (doc == null) {
       /// first time registration

@@ -196,6 +196,8 @@ class FireFlutterLocation {
   /// And a second does not look enough to handle the stream listening(updating UI) of hundreds users within the radius.
   /// ? This is a clear race condition. How are you going to handle this racing?
   ///
+
+  Map<String, dynamic> usersNearMe = {};
   _listenUsersNearMe(GeoFirePoint point) {
     if (point == null) {
       /// If the device can't fetch location information, then [point] will be null.
@@ -219,6 +221,8 @@ class FireFlutterLocation {
 
     usersNearMeSubscription = geo
         .collection(collectionRef: colRef)
+        // .where('birthday', graterThan, ....),
+        // .where('birthday', lessThan, ....),
         .within(
           center: point,
           // radius: _radius, // km
@@ -259,9 +263,9 @@ class FireFlutterLocation {
           lng: _point.longitude,
         );
 
-        _users[document.id] = data;
-        users.add(_users);
+        usersNearMe[document.id] = data;
       });
+      users.add(usersNearMe);
     });
   }
 }
