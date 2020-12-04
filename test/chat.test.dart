@@ -84,6 +84,58 @@ class ChatTest {
       failture(message);
   }
 
+  runTests() async {
+    await _roomCreateTest();
+    // await _userInviteTest();
+    // await _sendMessageTest();
+    // await _blockTest();
+    // await _kickoutTest();
+    // await _addModeratorTest();
+    // await _removeModeratorTest();
+  }
+
+  _roomCreateTest() {
+    /// create room only.
+    ///
+    ///
+
+    /// Login A
+    ///
+    ///
+    ///
+    /// TODO: md5 is not enough. when there are many users, uid(s) must be sorted(ordered) or md5 string would have different results.
+    /// TODO: give opion on ChatRoom(hatch: true). If hatch is true, then it will always create new room. By default it is false and it does md5 of uids. meaning, it will not create new room if the uids are same.
+    /// so, developers does not need to do md5 by themselves.
+    ///
+    /// if the app can add other users into existing room, hatch should be true. If it is 1:1 chat only, hatch should be false.
+    ///
+
+    /// Create room without users.
+    /// - ChatRoom() without id and users and hatch: true
+    /// - ChatRoom() over again without room id and users, and hatch: true => new room will be created over again
+    /// - ChatRoom() with id => no room will be created.
+    /// - ChatRoom() should not create new room again if room id is given.
+    /// - ChatRoom(hatch: false) should create room for the first time.
+    /// - ChatRoom(hatch: false) should not create room again intead, it will enter previous room.
+
+    /// ChatRoom(hatch: true, users: ['B']) => Create new room
+    /// ChatRoom(hatch: true, users: ['B']) => Create new room again because it's hatching.
+    /// ChatRoom(hatch: false, users: ['B']) => Create new room since this is the first to create a room for not hatching. (due to the new room id of md5 string)
+    /// ChatRoom(hatch: false, users: ['B']) => will not create room again.
+    ///
+    /// Test with different arranged(shuffled) order of uids. It must not affect to find room id.
+    /// ChatRoom(hatch: false, users: ['B', 'C', 'H', 'E']) => create a new room. id: ABCEH
+    /// ChatRoom(hatch: false, users: ['H', 'E','B', 'C']) => will not create new room. Instead, it will enter the previous room. ABCEH
+    ///
+    ///
+    ///
+    ///
+
+    /// Login B
+    /// ChatRoom(hatch: false, users: ['B', 'C', 'H', 'E']) => show not create new room. instead enter room: ABCEH
+    ///
+  }
+
   runChatTest() {
     _ff.firebaseInitialized.listen((value) async {
       if (!value) return;

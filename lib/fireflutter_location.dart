@@ -170,17 +170,23 @@ class FireFlutterLocation {
   /// And a second does not look enough to handle the stream listening(updating UI) of hundreds users within the radius.
   /// ? This is a clear race condition. How are you going to handle this racing?
   ///
+
+  Map<String, dynamic> usersNearMe = {};
   _listenUsersNearMe(GeoFirePoint point) {
     if (point == null) {
       /// If the device can't fetch location information, then [point] will be null.
       return;
     }
 
-    Query colRef = _ff.publicCol;
+    Query colRef = _ff.publicCol
+        // .where('', ...)
+        ;
     if (usersNearMeSubscription != null) usersNearMeSubscription.cancel();
 
     usersNearMeSubscription = geo
         .collection(collectionRef: colRef)
+        // .where('birthday', graterThan, ....),
+        // .where('birthday', lessThan, ....),
         .within(
           center: point,
           radius: _radius, // km
@@ -188,8 +194,6 @@ class FireFlutterLocation {
           strictMode: true,
         )
         .listen((List<DocumentSnapshot> documents) {
-      Map<String, dynamic> _users = {};
-
       /// Clear users if documents is empty
       /// documents might have 1 document containing the current user's location.
       if (documents.isEmpty || documents.length == 1) {
@@ -197,7 +201,10 @@ class FireFlutterLocation {
         return;
       }
 
+      usersNearMe = {};
+
       /// TODO: Remove users from [usersNearMe] if it is not existing in firestore search.
+      ///
       documents.forEach((document) {
         // if this is the current user's data. don't add it to the list.
         if (document.id == _ff.user.uid) return;
@@ -212,9 +219,9 @@ class FireFlutterLocation {
           lng: _point.longitude,
         );
 
-        _users[document.id] = data;
-        users.add(_users);
+        usersNearMe[document.id] = data;
       });
+      users.add(usersNearMe);
     });
   }
 }
