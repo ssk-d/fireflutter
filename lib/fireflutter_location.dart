@@ -14,12 +14,15 @@ const String geoFieldName = 'location';
 class FireFlutterLocation {
   FireFlutterLocation({
     @required FireFlutter inject,
-    double radius = 20.0,
+    double radius = 200.0,
   }) : _ff = inject {
     init(radius: radius);
   }
   FireFlutter _ff;
   double _radius;
+
+  Timestamp _minTimeStamp;
+  Timestamp _maxTimeStamp;
 
   /// [change] event will be fired when user changes his location.
   /// Since [change] is BehaviorSubject, it will be fired with null for the
@@ -64,9 +67,32 @@ class FireFlutterLocation {
   ///
   reset({
     double radius,
+    int minAge,
+    int maxAge,
   }) {
     _radius = radius ?? _radius;
+
+    /// set age limit/filter
+    _setAgeFilter(minAge, maxAge);
+
+    /// TODO: calculate date from min and max Age, convert to timestamp
+
     _listenUsersNearMe(_lastPoint);
+  }
+
+  _setAgeFilter(int startAge, int endAge) {
+    if (startAge == null && endAge == null) return;
+    print('Age range $startAge - $endAge');
+
+    DateTime now = DateTime.now();
+    int minYear = now.year - endAge;
+    int maxYear = now.year - startAge;
+    print('minYear $minYear : maxYear $maxYear');
+
+    _minTimeStamp = Timestamp.fromMillisecondsSinceEpoch(
+        DateTime(minYear).millisecondsSinceEpoch);
+    _maxTimeStamp = Timestamp.fromMillisecondsSinceEpoch(
+        DateTime(maxYear).millisecondsSinceEpoch);
   }
 
   Future<bool> hasPermission() async {
@@ -177,33 +203,54 @@ class FireFlutterLocation {
     }
 
     Query colRef = _ff.publicCol;
+
+    /// TODO: add age filter
+    if (_minTimeStamp != null && _maxTimeStamp != null) {
+      print('_min $_minTimeStamp');
+      print('_max $_maxTimeStamp');
+
+      colRef = colRef
+          .orderBy('birthday')
+          .where('birthday', isGreaterThanOrEqualTo: _minTimeStamp)
+          .where('birthday', isLessThanOrEqualTo: _maxTimeStamp);
+    }
+
     if (usersNearMeSubscription != null) usersNearMeSubscription.cancel();
 
     usersNearMeSubscription = geo
         .collection(collectionRef: colRef)
         .within(
           center: point,
-          radius: _radius, // km
+          // radius: _radius, // km
+          radius: 10000000, // km
           field: geoFieldName,
           strictMode: true,
         )
         .listen((List<DocumentSnapshot> documents) {
       Map<String, dynamic> _users = {};
 
+      print('document length');
+      print(documents.length.toString());
+
       /// Clear users if documents is empty
       /// documents might have 1 document containing the current user's location.
       if (documents.isEmpty || documents.length == 1) {
-        users.add({});
+        print('document empty');
+        users.add(_users);
         return;
       }
 
-      /// TODO: Remove users from [usersNearMe] if it is not existing in firestore search.
       documents.forEach((document) {
         // if this is the current user's data. don't add it to the list.
         if (document.id == _ff.user.uid) return;
 
         Map<String, dynamic> data = document.data();
         GeoPoint _point = data[geoFieldName]['geopoint'];
+
+        /// TODO: add age information
+
+        print('bday');
+        print(data['birthday'].toString());
 
         data['uid'] = document.id;
         // get distance from current user.
