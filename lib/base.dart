@@ -103,6 +103,7 @@ class Base {
 
   /// [notification] will be fired whenever there is a push notification.
   /// the return data will the following and can be use when user receive notifications.
+  ///
   /// ```
   /// {
   ///   "notification": {"body": body, "title": title},
@@ -417,6 +418,15 @@ class Base {
 
   /// Send push notifications.
   ///
+  /// [title] is the title of the Push Notification.
+  /// [body] is the body of the Push Notification
+  /// [token] is used to send Push Notification to a single token/device.
+  /// [tokens] can be use to send push notification to multiple tokens/device.
+  /// [topic] to send to specific topic.
+  /// [test] default is false. If set to true it will show the message as well to the sender.
+  /// [id] can be use as a params like postID, UserID, RoomID, or any ID you need to pass thru pushnotification.
+  /// [screen] can be use as a route after the app is open you can use screen as a param to move to specific page.
+  ///
   ///
   ///
   /// Prevent its return type is `FutureOr` by returns right boolean value.
@@ -482,7 +492,6 @@ class Base {
         },
       };
 
-      // print(data);
       data[el['key']] = el['value'];
       final String encodeData = jsonEncode(data);
       Dio dio = Dio();
