@@ -1,43 +1,50 @@
 import 'package:fireflutter/functions.dart';
 import 'package:fireflutter/fireflutter.dart';
+import 'package:flutter/material.dart';
+
+const String password = '12345a,*,';
+const String aEmail = 'AAA@gmail.com';
+const String bEmail = 'BBB@gmail.com';
+const String cEmail = 'CCC@gmail.com';
+const String dEmail = 'DDD@gmail.com';
 
 /// Chat Test
 ///
 /// ! Warning. When you test, don't open chat screen since the test uses serveral di_fferent accounts often
 /// ! and that causes permission-error on my room listening.
 class ChatTest {
-  ChatTest({FireFlutter inject}) : this._ff = inject;
+  ChatTest({@required FireFlutter inject}) : this._ff = inject;
 
   FireFlutter _ff;
   Map<String, Map<String, String>> users = {
-    'a': {'uid': 'xbTphnD5QBejlDuBgDK2hXmUxp62', 'displayName': 'UserA'},
-    'b': {'uid': 'g3bJ3C3BiZYe9AhLPbtjJASB9622', 'displayName': 'UserB'},
-    'c': {'uid': 'QlymWR6GSYOWzHKq92S4ErNSMzH3', 'displayName': 'UserC'},
-    'd': {'uid': '9tRhNodWtpRuDI9isvi4DCbc7xC2', 'displayName': 'UserD'},
-    'xbTphnD5QBejlDuBgDK2hXmUxp62': {'email': 'aaaa@gmail.com'},
-    'g3bJ3C3BiZYe9AhLPbtjJASB9622': {'email': 'bbbb@gmail.com'},
-    'QlymWR6GSYOWzHKq92S4ErNSMzH3': {'email': 'cccc@gmail.com'},
-    '9tRhNodWtpRuDI9isvi4DCbc7xC2': {'email': 'dddd@gmail.com'},
+    'a': {'uid': 'iiVOFXhlVcPBvhC7BtBsyF1AfH52', 'displayName': 'UserA'},
+    'b': {'uid': 'vm7F4mdex9TrY1wmVrPgYWANkYH2', 'displayName': 'UserB'},
+    'c': {'uid': 'f5xZJYNjL6UuLpjRn7g9OJCoGqH3', 'displayName': 'UserC'},
+    'd': {'uid': 'GYfxU2FQzgMobRBxt9er99i1fah1', 'displayName': 'UserD'},
+    'iiVOFXhlVcPBvhC7BtBsyF1AfH52': {'email': aEmail},
+    'vm7F4mdex9TrY1wmVrPgYWANkYH2': {'email': bEmail},
+    'f5xZJYNjL6UuLpjRn7g9OJCoGqH3': {'email': cEmail},
+    'GYfxU2FQzgMobRBxt9er99i1fah1': {'email': dEmail},
   };
 
   Map<String, String> userA = {
-    'email': 'aaaa@gmail.com',
-    'password': '12345a,*',
+    'email': aEmail,
+    'password': password,
     'displayName': 'UserA'
   };
   Map<String, String> userB = {
-    'email': 'bbbb@gmail.com',
-    'password': '12345a,*',
+    'email': bEmail,
+    'password': password,
     'displayName': 'UserB'
   };
   Map<String, String> userC = {
-    'email': 'cccc@gmail.com',
-    'password': '12345a,*',
+    'email': cEmail,
+    'password': password,
     'displayName': 'UserC'
   };
   Map<String, String> userD = {
-    'email': 'dddd@gmail.com',
-    'password': '12345a,*',
+    'email': dEmail,
+    'password': password,
     'displayName': 'UserD'
   };
 
@@ -47,14 +54,15 @@ class ChatTest {
   /// You need to save the user UID and DisplayName into [users] variable.
   prepareUserABCD() async {
     if (users != null) return;
+    print(userA);
     dynamic a = await _ff.loginOrRegister(
-        email: userA['emain'], password: userA['password']);
+        email: userA['email'], password: userA['password']);
     dynamic b = await _ff.loginOrRegister(
-        email: userB['emain'], password: userB['password']);
+        email: userB['email'], password: userB['password']);
     dynamic c = await _ff.loginOrRegister(
-        email: userC['emain'], password: userC['password']);
+        email: userC['email'], password: userC['password']);
     dynamic d = await _ff.loginOrRegister(
-        email: userD['emain'], password: userD['password']);
+        email: userD['email'], password: userD['password']);
     print("{'uid': '${a.uid}', 'displayName': 'a.displayName'}");
     print("{'uid': '${b.uid}', 'displayName': 'b.displayName'}");
     print("{'uid': '${c.uid}', 'displayName': 'c.displayName'}");
@@ -194,17 +202,19 @@ class ChatTest {
       /// Send chat message
       ///
       String text = "Yo! " + getRandomString();
-      await chat.sendMessage(info: info, text: text);
 
-      for (String uid in info.users) {
+      await chat.sendMessage(text: text);
+
+      for (String uid in chat.info.users) {
         print(
             'get: uid:$uid, ${chat.userRoomDoc(uid, info.id).path}, email: ${users[uid]['email']}');
 
-        await _ff.login(email: users[uid]['email'], password: '12345a,*');
+        await _ff.login(email: users[uid]['email'], password: password);
 
-        Map<String, dynamic> room =
-            (await chat.userRoomDoc(uid, info.id).get()).data();
-
+        /// TODO error here. room is null.
+        Map<String, dynamic> room = await chat.getMyRoom(uid, chat.info.id);
+        // (await chat.userRoomDoc(uid, chat.info.id).get()).data();
+        print(room);
         isTrue(room['text'] == text, 'Chat text comparison: $text');
       }
 

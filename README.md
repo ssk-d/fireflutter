@@ -99,9 +99,9 @@ A free, open source, rapid development flutter package to build apps like shoppi
   - [Search](#search)
   - [Push Notification](#push-notification)
     - [Notification Settings for the Reactions](#notification-settings-for-the-reactions)
-    - [Notification Settings for Forum Subscription](#notification-settings-for-forum-subscription)
+    - [Notification Settings for Topic Subscription](#notification-settings-for-topic-subscription)
     - [Logic of Push Notification](#logic-of-push-notification)
-      - [Cavits of push notification login](#cavits-of-push-notification-login)
+      - [Cavits of push notification](#cavits-of-push-notification)
   - [Social Login](#social-login)
     - [Google Sign-in](#google-sign-in)
     - [Facebook Sign In](#facebook-sign-in)
@@ -1723,11 +1723,19 @@ Push notification is one kind of basic functionality that all apps should have. 
   - Now, user A creates a comment under the comment of User B.
   - Then, user B will get a push notificaiton.
 
-### Notification Settings for Forum Subscription
+### Notification Settings for Topic Subscription
 
-A user can subscribe a forum for new post or comment.
+A user can subscribe
+- Forum for new post or comment.
+- Chat room for new chats.
+- And much more.
 
-If you want to enable the forum subscription, then add option button on each forum list.
+- To enable the subscription, you need to put on/off swich some where(forum list or chat room). When it is swtiched on, then it need to subscribe to the topic name.
+  - All topic must begin with `notify`. For instance `notify-post-qna`, `notify-comment-disucssion`, `notify-chatroom-roomId`, and so on.
+    - You can name topic anything you want as long as that starts with `notify`.
+  - And save the topic as a boolean property in `/meta/user/public/{uid}` and when the user's auth state changes, it will re-subscribe all the topics. Therefore all devices of the user will be synced to subscribe same topics.
+  - See `Cavists of push notification`
+
 
 - See [forum-subscription branch](https://github.com/thruthesky/fireflutter_sample_app/tree/forum-subscription) for the code.
 
@@ -1737,18 +1745,18 @@ If you want to enable the forum subscription, then add option button on each for
 
 
 
-#### Cavits of push notification login
+#### Cavits of push notification
 
-- When a user subscribed a topic with his three devices A, B, C.
-  - The user unsubscribes the topic from device A,
-  - But the user will still get push notifications from devices B, C. until the user restart the app on B, C.
-- Another cavits is, When user A have two phones P1 and P2.
-  - A logins both P1 and P2.
-  - A subscribe to a new topic in P1, 
-  - then P2 will not subscribe the new topic until A restarts the app in P2 again.
+- When a user A subscribed a topic with his three devices D1, D2.
+  - And A unsubscribes a topic from device D1,
+  - But A will still get push notifications from devices D2 until A restarts(or auth state changes) the app on B, C.
+- Another cavits is,
+  - A logs in both D1 and D2.
+  - A subscribes to a new topic in D1, 
+  - Then D2 will not get message from that device until A restarts(or auth state chnages) the app in P2 again.
 
-- To solve this issue, the P2 needs to subscribe to the topic automatically when P1 subscribe to a new topic.
-  - You can sync the phone in many ways. message, chat, socket, or something else. This is what lacks on fireflutter right now.
+- This is the limitation of `Flutter Firebase SDK - Cloud Messaging` package. Other SDKs like Nodejs Admin SDK, PHP Admin SDK have a method to subscribe to a topic by specifying tokens.
+  - If `Flutter Firebase SDK - Cloud Messaging` allows this, then when D1 subscribes(or unsubscribes) to a topic, the app can get all the tokens of the user and subscribes(or unsubscribes) to the topic with all the tokens. But since this is not supported, we will just wait until the SDK changes.
 
 ## Social Login
 
@@ -2049,7 +2057,7 @@ ff.init({
 ### Begin chat with a user
 
 - Let's assume there are user A, B, C and whose UIDs are also A, B, C respectively.
-  - And the login user is A.
+  - And A is the logged in user(of current device).
 - To create a chat room, you can create an instance of `ChatRoom`.
   - The code below creates a room without users but the login user himself. A will be alone in the room.
 ```dart
@@ -2067,10 +2075,21 @@ ChatRoom(inject: ff, users: ['A']);
   - if `id` (as chat room id) is given, it will enter the chat room and listens all the event of the room.
   - Or if `id` is null, then a room will be created with the `users` of UIDs list.
   - If both of `id` and `users` are null(or empty), then a room will be created without any users except the login user himself. He will be alone in the room.
-  - If both of `id` and `users` have value, then, it enters the room if the room of the `ic` exists. Or it will create a room with the `id` and with the users.
+  - If both of `id` and `users` have value, then, it enters the room if the room of the `id` exists. Or it will create a room with the `id` and with the users.
     - This will be a good option for 1:1 chat. If the app only allows 1:1 chat, or the user chats to admin for help, this will be a good option.
     - The `id` can be an md5 string of the login user's uid(A) and other user's uid(B).
       - When it creates the room, it will create a room for A and B, and next time A or B try to chat each other again, it will not create a new room. Instead, it will use previously created room.
+
+- One important thing to know is when A begins to chat with B, a new room will be create for A and B.
+  - And later A begins to chat with B again, then another room for A and b will be created.
+  - This is by design to create new room over and over again with same user. 
+  - You may code to block this.
+
+
+- Below is a sample code to enter a chat room. If it has an incoming room id, then it will enter that room. Or it will create a room with uid1.
+  - If the user is entering from chat room list, then there will be room id.
+  - Or if the user is entering by searching user, then it will create a room.
+  - In this way, it will create rooms over again with same user.
 
 ```dart
 class A extends StatefullWidget {
@@ -2079,8 +2098,8 @@ class A extends StatefullWidget {
   initState() {
     chat = ChatRoom(
       inject: ff,
-      id: 'chat room id',
-      users: ['uid1', 'uid2', ...]
+      id: argument['id'],
+      users: ['uid1']
       render: () {
         setState(() {});
       },
@@ -2089,7 +2108,28 @@ class A extends StatefullWidget {
 }
 ```
 
-- One important thing to know is when A begins to chat with B, a new room will be create for A and B and later A begins to chat with B again, then another room for A and b will be created. This is by design. You may code to block this.
+- Below is a sample code to show to block creating rooms again with same user.
+  - When A creates a room for the first time, it sets the room id of MD5 string based on uid. So, next time when the user begins to chat with same user again, it will not create a new room id, instead, it will use the same room id of MD5 string. So, it will not create a new room any more. the user continues to chat in previous chat room.
+
+```dart
+String id;
+if (args['id'] == null) {
+  var digest = md5.convert(utf8.encode(ff.user.uid + args['uid']));
+  id = digest.toString();
+} else {
+  id = args['id'];
+}
+
+chat = ChatRoom(
+  inject: ff,
+  id: id,
+  users: args['uid'] == null ? null : [args['uid']],
+  render: () {
+    setState(() {});
+  },
+);
+```
+
 
 - Once an instance of `ChatRoom` created, it begins to listen to any messages(event) that happen in the room and `render` function will be called. The app, then, re-render the screen with updated information.
   - `ChatRoom.message` has all the messages of the chat room including `who enters`, `who leaves`, `who blocked`, `who becomes moderator` and much more.
@@ -2118,6 +2158,13 @@ For chat room leave,
     super.dispose();
   }
 ```
+
+- How to send a chat message
+
+```dart
+
+```
+
 
 ## Scenario of extending chat functionality
 
