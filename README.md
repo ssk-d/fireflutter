@@ -119,6 +119,7 @@ A free, open source, rapid development flutter package to build apps like shoppi
   - [Logic of chat](#logic-of-chat)
   - [Pitfalls of chat logic](#pitfalls-of-chat-logic)
   - [Code of chat](#code-of-chat)
+    - [Chat room](#chat-room)
     - [Preparation for chat](#preparation-for-chat)
     - [Begin chat with a user](#begin-chat-with-a-user)
   - [Scenario of extending chat functionality](#scenario-of-extending-chat-functionality)
@@ -1966,7 +1967,7 @@ If you are looking for a package that support a complete chat functionality, fir
 
 Before we begin, let's put an assumption.
 
-- There are 3 users. User `A`, user `B`, user `C`, and user `D`. User A is the moderator which means he is the one who created the room.
+- There are 4 users. User `A`, user `B`, user `C`, and user `D`. User A is the moderator which means he is the one who created the room.
 - The room that moderator A created is `RoomA` and there are two users in the room. User A, B.
 - The UIDs of user A, B, C, D is A, B, C, D respectively.
 - The room id of RoomA is RoomA.
@@ -2039,7 +2040,69 @@ Firestore structure and its data are secured by Firestore security rules.
 
 ## Code of chat
 
-- The best code sample is in firefutter sample app.
+### Chat room
+
+- First create an instance of chat room.
+
+```dart
+final chat = ChatRoom(inject: _ff, render: null);
+```
+
+- Then, enter chat room like below.
+
+```dart
+await chat.enter();
+```
+
+The code above will create a chat room and enters into that room. In the chat room, there will be only one user that is the login user and one moderator that is also the login user.
+
+If the app is entering again like below, then another room will be created with one user and one moderator that is the login user.
+
+```dart
+final newChatRoom = ChatRoom(inject: _ff, render: null);
+await newChatRoom.enter();
+```
+
+- Creating a room with a user.
+
+```dart
+final ab = ChatRoom(inject: _ff);
+await ab.enter(users: [b]);
+```
+
+The above code will create a room with user b. And if the same code run again, then another room will be created.
+
+```dart
+final ab1 = ChatRoom(inject: _ff);
+await ab1.enter(users: [b]);
+final ab2 = ChatRoom(inject: _ff);
+await ab2.enter(users: [b]);
+print( ab1.id != ab2.id );
+```
+
+- Entering existing room for the same users. If `hatch` option is set, then it will not create another room (if the room is already exising), instead it will enter that room.
+  - This is good for 1:1 chatting
+  - Or customer chatting service between user and admin.
+  - This could be used as a notes(or memo) between two users.
+
+```dart
+final ab1 = ChatRoom(inject: _ff);
+await ab1.enter(users: [b], hatch: false);
+final ab2 = ChatRoom(inject: _ff);
+await ab2.enter(users: [b], hatch: false);
+print( ab1.id == ab2.id );
+```
+
+
+- When change the screen, the app should not listen to the room anymore by unsubscibing.
+
+```dart
+@override
+void dispose() {
+  chat.unsubscribe();
+  super.dispose();
+}
+```
 
 
 ### Preparation for chat
