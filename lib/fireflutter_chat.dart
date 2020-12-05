@@ -1,5 +1,11 @@
 part of './fireflutter.dart';
 
+const String ROOM_NOT_EXISTS = 'ROOM_NOT_EXISTS';
+const String MODERATOR_NOT_EXISTS_IN_USERS = 'MODERATOR_NOT_EXISTS_IN_USERS';
+const String YOU_ARE_NOT_MODERATOR = 'YOU_ARE_NOT_MODERATOR';
+const String ONE_OF_USERS_ARE_BLOCKED = 'ONE_OF_USERS_ARE_BLOCKED';
+const String USER_NOT_EXIST_IN_ROOM = 'USER_NOT_EXIST_IN_ROOM';
+
 /// ChatRoomInfo for global rooms and private room.
 class ChatRoomInfo {
   String id;
@@ -7,6 +13,7 @@ class ChatRoomInfo {
   List<String> users;
   List<String> moderators;
   List<String> blockedUsers;
+  List<String> newUsers;
 
   /// For global room info, [createdAt] is the timestamp of when the room was
   /// created. For, private room, it is when the message was sent.
@@ -18,11 +25,14 @@ class ChatRoomInfo {
     this.title,
     this.users,
     this.moderators,
+    this.blockedUsers,
+    this.newUsers,
     this.createdAt,
     this.text,
     this.newMessages,
   }) {
-    blockedUsers = [];
+    // ?
+    // blockedUsers = [];
   }
 
   /// Returns true if the room is existing.
@@ -41,6 +51,8 @@ class ChatRoomInfo {
       title: info['title'],
       users: List<String>.from(info['users'] ?? []),
       moderators: List<String>.from(info['moderators'] ?? []),
+      blockedUsers: List<String>.from(info['blockedUsers'] ?? []),
+      newUsers: List<String>.from(info['newUsers'] ?? []),
       createdAt: info['createdAt'],
       text: info['text'],
       newMessages: info['newMessages'],
@@ -53,6 +65,9 @@ class ChatRoomInfo {
       'title': this.title,
       'users': this.users,
       'moderators': this.moderators,
+      'blockedUsers': this.blockedUsers,
+      'newUsers': this.newUsers,
+      'text': this.text,
       'createdAt': this.createdAt,
     };
   }
@@ -66,6 +81,7 @@ class ChatRoomInfo {
 /// todo put chat protocol into { protocol: ... }, not in { text: ... }
 class ChatProtocol {
   static String enter = 'ChatProtocol.enter';
+  static String add = 'ChatProtocol.add';
   static String leave = 'ChatProtocol.leave';
   static String kickout = 'ChatProtocol.kickout';
   static String block = 'ChatProtocol.block';
@@ -85,7 +101,7 @@ class ChatBase {
   /// Do not confused with [myRoomListCol] which has the list of user's
   /// rooms while [globalRoomListCol] holds the whole existing chat rooms.
   CollectionReference get globalRoomListCol {
-    return f.db.collection('chat').doc('info').collection('room-list');
+    return f.db.collection('chat').doc('global').collection('room-list');
   }
 
   /// Returns login user's room list collection `/chat/my-room-list/my-uid` reference.
@@ -114,7 +130,7 @@ class ChatBase {
 
   /// Returns `/chat/info/room-list/{roomId}` document reference
   ///
-  DocumentReference globalRoomInfoDoc(String roomId) {
+  DocumentReference globalRoomDoc(String roomId) {
     return globalRoomListCol.doc(roomId);
   }
 
@@ -200,7 +216,7 @@ class ChatMyRoomList extends ChatBase {
 
           /// Listen and merge room settings into room info.
           _roomSubscriptions.add(
-            globalRoomInfoDoc(roomInfo['id']).snapshots().listen(
+            globalRoomDoc(roomInfo['id']).snapshots().listen(
               (DocumentSnapshot snapshot) {
                 roomInfo.addAll(snapshot.data());
                 _notify();
@@ -277,6 +293,8 @@ class ChatRoom extends ChatBase {
   Function __render;
 
   StreamSubscription _subscription;
+
+  /// Loaded the chat messages of current chat room.
   List<Map<String, dynamic>> messages = [];
 
   /// [loading] becomes true while the app is fetching more messages.
@@ -328,7 +346,9 @@ class ChatRoom extends ChatBase {
       // If permission-denied error happens here,
       // 1. Probably the room does not exists.
       // 2. Or, the login user is not a user of the room.
-      _info = await getGlobalRoomInfo(_id);
+      // print(f.user.uid);
+      // print(_id);
+      _info = await getGlobalRoom(_id);
     } else {
       if (users == null) users = [];
       // Add login user(uid) into room users.
@@ -344,7 +364,7 @@ class ChatRoom extends ChatBase {
         String uids = users.join('');
         _id = md5.convert(utf8.encode(uids)).toString();
         try {
-          _info = await getGlobalRoomInfo(_id);
+          _info = await getGlobalRoom(_id);
         } catch (e) {
           // If room does not exist(or it cannot read), then create.
           if (e.code == 'permission-denied') {
@@ -361,7 +381,7 @@ class ChatRoom extends ChatBase {
     fetchMessages();
 
     // Listen to changes of room info
-    globalRoomInfoDoc(id).snapshots().listen((event) {
+    globalRoomDoc(id).snapshots().listen((event) {
       _info = ChatRoomInfo.fromSnapshot(event);
       _notify();
     });
@@ -507,28 +527,34 @@ class ChatRoom extends ChatBase {
       'senderPhotoURL': f.user.photoURL,
       'text': text,
 
-      /// Time that this message(or last message) was created.
+      // Time that this message(or last message) was created.
       'createdAt': FieldValue.serverTimestamp(),
 
-      /// Make [newUsers] empty string for re-setting previous information.
+      // Make [newUsers] empty string for re-setting(removing) from previous
+      // message.
       'newUsers': [],
 
       if (extra != null) ...extra,
     };
 
-    // print('my uid: ${user.uid}');
-    // print('users: ${info['users']}');
-    // print(chatMessagesCol(info['id']).path);
+    // message = mergeMap([message, extra]);
+
+    // print('my uid: ${f.user.uid}');
+    // print('users: ${this.users}');
+    // print('extra: $extra');
+    // print(message);
+    // print(messagesCol(id).path);
     await messagesCol(_info.id).add(message);
+    // print(message);
     message['newMessages'] =
         FieldValue.increment(1); // To increase, it must be an udpate.
     List<Future<void>> messages = [];
 
     /// Just incase there are duplicated UIDs.
-    List<String> users = [..._info.users.toSet()];
+    List<String> newUsers = [..._info.users.toSet()];
 
     /// Send a message to all users in the room.
-    for (String uid in users) {
+    for (String uid in newUsers) {
       // print(chatUserRoomDoc(uid, info['id']).path);
       messages.add(
           userRoomDoc(uid, _info.id).set(message, SetOptions(merge: true)));
@@ -544,36 +570,42 @@ class ChatRoom extends ChatBase {
   /// The return value has `id` as its room id.
   ///
   /// Todo move this method to `ChatRoom`
-  Future<ChatRoomInfo> getGlobalRoomInfo(String roomId) async {
-    DocumentSnapshot snapshot = await globalRoomInfoDoc(roomId).get();
+  Future<ChatRoomInfo> getGlobalRoom(String roomId) async {
+    DocumentSnapshot snapshot = await globalRoomDoc(roomId).get();
     return ChatRoomInfo.fromSnapshot(snapshot);
   }
 
   /// Add users to chat room
   ///
-  /// Once a user has entered, `who added who` messages will be updated to all of
-  /// room users.
+  /// Once user(s) has added, `who added who` messages will be delivered to all
+  /// of room users. `newUsers` array will have the names of newly added users.
   ///
-  /// [users] is a Map of user uid and user name.
+  /// [users] is a Map of user uid and user name. like `{uidA: 'nameA', ...}`
   ///
   /// See readme
   ///
   /// todo before adding user, check if the user is in `blockedUsers` property and if yes, throw a special error code.
   /// Todo move this method to `ChatRoom`
   /// todo use arrayUnion on Firestore
-  Future<void> addUser(String roomId, Map<String, String> users) async {
-    /// Get new info from server.
-    /// There might be mistake that somehow `info['users']` is not upto date.
+  Future<void> addUser(Map<String, String> users) async {
+    /// Get latest info from server.
+    /// There might be a chance that somehow `info['users']` is not upto date.
     /// So, it is safe to get room info from server.
-    ChatRoomInfo info = await getGlobalRoomInfo(roomId);
+    ChatRoomInfo _info = await getGlobalRoom(id);
+
+    if (_info.blockedUsers != null && _info.blockedUsers.length > 0) {
+      for (String blockedUid in _info.blockedUsers) {
+        if (users.keys.contains(blockedUid)) {
+          throw ONE_OF_USERS_ARE_BLOCKED;
+        }
+      }
+    }
 
     List<String> newUsers = [
-      ...List<String>.from(info.users),
+      ...List<String>.from(_info.users),
       ...users.keys.toList()
     ];
-    newUsers = [
-      ...{...newUsers}
-    ];
+    newUsers = newUsers.toSet().toList();
 
     /// Update users first and then send chat messages to all users.
     /// In this way, newly entered/added user(s) will have the room in the my-room-list
@@ -581,18 +613,22 @@ class ChatRoom extends ChatBase {
     /// Update users array with added user.
     // print('users:');
     // print(newUsers);
-    await globalRoomInfoDoc(info.id).update({'users': newUsers});
-    info.users = newUsers;
+    final doc = globalRoomDoc(_info.id);
+    // print(doc.path);
+    // print('my uid: ${f.user.uid}');
+    // print(newUsers);
+    // print((await doc.get()).data());
+    await doc.update({'users': newUsers});
 
     /// Update last message of room users.
     // print('newUserNames:');
     // print(users.values.toList());
-    await sendMessage(text: ChatProtocol.enter, extra: {
+    await sendMessage(text: ChatProtocol.add, extra: {
       'newUsers': users.values.toList(),
     });
   }
 
-  /// Returns my room (that has last message of the room) document
+  /// Returns a user's room (that has last message of the room) document
   /// reference.
   DocumentReference userRoomDoc(String uid, String roomId) {
     return userRoomListCol(uid).doc(roomId);
@@ -602,14 +638,14 @@ class ChatRoom extends ChatBase {
   ///
   /// TODO [roomId] should be omitted.
   Future<void> blockUser(String uid, String userName) async {
-    ChatRoomInfo info = await getGlobalRoomInfo(id);
+    ChatRoomInfo info = await getGlobalRoom(id);
     info.users.remove(uid);
 
     // List<String> blocked = info.blocked ?? [];
     info.blockedUsers.add(uid);
 
     /// Update users and blockedUsers first to inform by sending a message.
-    await globalRoomInfoDoc(id)
+    await globalRoomDoc(id)
         .update({'users': info.users, 'blockedUsers': info.blockedUsers});
 
     /// Inform all users.
@@ -623,10 +659,12 @@ class ChatRoom extends ChatBase {
   ///
   /// Todo move this method to `ChatRoom`
   Future<void> addModerator(String uid) async {
-    ChatRoomInfo info = await getGlobalRoomInfo(id);
+    ChatRoomInfo info = await getGlobalRoom(id);
     List<String> moderators = info.moderators;
+    if (moderators.contains(f.user.uid) == false) throw YOU_ARE_NOT_MODERATOR;
+    if (info.users.contains(uid) == false) throw MODERATOR_NOT_EXISTS_IN_USERS;
     moderators.add(uid);
-    await globalRoomInfoDoc(id).update({'moderators': moderators});
+    await globalRoomDoc(id).update({'moderators': moderators});
   }
 
   /// Remove a moderator.
@@ -635,10 +673,10 @@ class ChatRoom extends ChatBase {
   ///
   /// Todo move this method to `ChatRoom`
   Future<void> removeModerator(String uid) async {
-    ChatRoomInfo info = await getGlobalRoomInfo(id);
+    ChatRoomInfo info = await getGlobalRoom(id);
     List<String> moderators = info.moderators;
     moderators.remove(uid);
-    await globalRoomInfoDoc(id).update({'moderators': moderators});
+    await globalRoomDoc(id).update({'moderators': moderators});
 
     // TODO inform it to all users by sending message
   }
@@ -664,19 +702,40 @@ class ChatRoom extends ChatBase {
   /// TODO When a user(or a moderator) leaves the room and there is no user left in the room,
   /// then move the room information from /chat/info/room-list to /chat/info/deleted-room-list.
   Future<void> leave() async {
-    ChatRoomInfo info = await getGlobalRoomInfo(id);
+    ChatRoomInfo info = await getGlobalRoom(id);
     info.users.remove(f.user.uid);
 
-    /// Update last message of room users that the user is leaving.
+    // Update last message of room users that the user is leaving.
     await sendMessage(
         text: ChatProtocol.leave, extra: {'userName': f.user.displayName});
 
-    /// Update users after removing himself.
-    await globalRoomInfoDoc(info.id).update({'users': info.users});
+    // Update users after removing himself.
+    await globalRoomDoc(info.id).update({'users': info.users});
 
-    /// If I am the one who is willingly leave the room, then remove the room in my-room-list.
+    // If I am the one who is willingly leave the room, then remove the
+    // room in my-room-list.
     // print(chatMyRoom(roomId).path);
     await myRoom(id).delete();
+  }
+
+  /// Kicks a user out of the room.
+  ///
+  /// The user who was kicked can enter room again by himself. Somebody must add
+  /// him.
+  /// Only moderator can kick a user out.
+  Future<void> kickout(String uid, String userName) async {
+    ChatRoomInfo info = await getGlobalRoom(id);
+
+    if (info.moderators.contains(f.user.uid) == false)
+      throw YOU_ARE_NOT_MODERATOR;
+    if (info.users.contains(uid) == false) throw USER_NOT_EXIST_IN_ROOM;
+    info.users.remove(uid);
+
+    // Update users after removing himself.
+    await globalRoomDoc(info.id).update({'users': info.users});
+
+    await sendMessage(
+        text: ChatProtocol.leave, extra: {'userName': f.user.displayName});
   }
 
   /// Returns a room of a user.
@@ -685,13 +744,16 @@ class ChatRoom extends ChatBase {
     if (snapshot.exists) {
       return ChatRoomInfo.fromSnapshot(snapshot);
     } else {
-      throw 'CHAT ROOM DOES NOT EXISTS';
+      throw ROOM_NOT_EXISTS;
     }
   }
 
   /// Returns the last message of current room.
   ///
   /// User's private room has all the information of last chat.
+  ///
+  /// Note that `getMyRoomInfo()` returns `ChatRoomInfo` while `myRoom()`
+  /// returns document reference.
   Future<ChatRoomInfo> get lastMessage => getMyRoomInfo(f.user.uid, id);
 
   //////////////////////////////////////////////////////////////////////////////
@@ -710,7 +772,7 @@ class ChatRoom extends ChatBase {
   init() async {
     if (_id != null) {
       try {
-        ChatRoomInfo room = await getGlobalRoomInfo(_id);
+        ChatRoomInfo room = await getGlobalRoom(_id);
         if (room.exists) {
           _enterChatRoom();
           return;
@@ -742,7 +804,7 @@ class ChatRoom extends ChatBase {
     /// Fetch when instance is created to fetch messages for the first time.
     fetchMessages();
 
-    globalRoomInfoDoc(_id).snapshots().listen((event) {
+    globalRoomDoc(_id).snapshots().listen((event) {
       info = ChatRoomInfo.fromSnapshot(event);
       _notify();
     });

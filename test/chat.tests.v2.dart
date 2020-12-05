@@ -26,10 +26,10 @@ class ChatTest {
       await _roomCreateTest();
       await _enterRoomTest();
       await _sendMessageTest();
+      await _leaveTest();
       await _userInvitationTest();
       await _addModeratorTest();
       await _removeModeratorTest();
-      await _leaveTest();
       await _blockTest();
       await _kickoutTest();
 
@@ -42,55 +42,224 @@ class ChatTest {
     final chat = ChatRoom(inject: _ff);
     await chat.enter(users: [b, c]);
     ChatRoomInfo _info = await chat.lastMessage;
-    print('_info: $_info');
+    isTrue(_info.text == ChatProtocol.roomCreated, 'roomCreated a');
+
+    await _ff.loginOrRegister(email: bEmail, password: password);
+    _info = await chat.lastMessage;
+    isTrue(_info.text == ChatProtocol.roomCreated, 'roomCreated b');
+
+    await _ff.loginOrRegister(email: cEmail, password: password);
+    _info = await chat.lastMessage;
+    isTrue(_info.text == ChatProtocol.roomCreated, 'roomCreated c');
+
+    await _ff.loginOrRegister(email: dEmail, password: password);
+    try {
+      _info = await chat.lastMessage;
+      isTrue(false, 'Expect failure for d');
+    } catch (e) {
+      isTrue(e == ROOM_NOT_EXISTS, 'Chat room not exist for d.');
+    }
   }
 
   _sendMessageTest() async {
     await _ff.loginOrRegister(email: aEmail, password: password);
     final chat = ChatRoom(inject: _ff);
     await chat.enter(users: [b, c]);
+    final ChatRoomInfo _info = await chat.lastMessage;
+    isTrue(_info.text == ChatProtocol.roomCreated, 'roomCreated');
+    final String text = 'Yo ... !';
+
+    await chat.sendMessage(text: text);
+    final ChatRoomInfo lastMessageA = await chat.lastMessage;
+    isTrue(lastMessageA.text == text, 'Got last message for a');
+
+    await _ff.loginOrRegister(email: bEmail, password: password);
+    final ChatRoomInfo lastMessageB = await chat.lastMessage;
+    isTrue(lastMessageB.text == text, 'Got last message for b');
+
+    await _ff.loginOrRegister(email: cEmail, password: password);
+    final ChatRoomInfo lastMessageC = await chat.lastMessage;
+    isTrue(lastMessageC.text == text, 'Got last message for c');
   }
 
-  _userInvitationTest() async {}
+  _leaveTest() async {
+    await _ff.loginOrRegister(email: aEmail, password: password);
+    final chat = ChatRoom(inject: _ff);
+    await chat.enter(users: [b, c], hatch: true);
 
-  _addModeratorTest() async {}
-  _removeModeratorTest() async {}
+    await _ff.loginOrRegister(email: bEmail, password: password);
+    final chatB = ChatRoom(inject: _ff);
+    await chatB.enter(id: chat.id);
+    await chatB.leave();
 
-  _leaveTest() async {}
-  _blockTest() async {}
-  _kickoutTest() async {}
+    await _ff.loginOrRegister(email: aEmail, password: password);
+    final chatA = ChatRoom(inject: _ff);
+    await chatA.enter(id: chat.id);
+    final lastMessageA = await chatA.lastMessage;
+    isTrue(lastMessageA.text == ChatProtocol.leave, 'leave checked by a');
+
+    await _ff.loginOrRegister(email: cEmail, password: password);
+    final chatC = ChatRoom(inject: _ff);
+    await chatC.enter(id: chat.id);
+    final lastMessageC = await chatC.lastMessage;
+    isTrue(lastMessageC.text == ChatProtocol.leave, 'leave checked by c');
+
+    await _ff.loginOrRegister(email: bEmail, password: password);
+    try {
+      await chatB.lastMessage;
+      isTrue(false, 'room must not exist after leave');
+    } catch (e) {
+      isTrue(e == ROOM_NOT_EXISTS, 'room not exist after leave');
+    }
+  }
+
+  _userInvitationTest() async {
+    await _ff.loginOrRegister(email: aEmail, password: password);
+    final chat = ChatRoom(inject: _ff);
+    await chat.enter();
+    await chat.addUser({b: 'B'});
+    final lastMassage = await chat.lastMessage;
+    isTrue(lastMassage.text == ChatProtocol.add, 'b added');
+    isTrue(lastMassage.newUsers.length == 1, 'one user added');
+    isTrue(lastMassage.newUsers.first == 'B', 'The user is B');
+
+    // ? Strange action: It produce permission-error here if it does not read
+    // ? updated room. The security rule is very clean.
+    await chat.getGlobalRoom(chat.id);
+
+    await _ff.loginOrRegister(email: bEmail, password: password);
+    final bChat = ChatRoom(inject: _ff);
+    await bChat.enter(id: chat.id);
+    await bChat.addUser({c: 'C', d: 'D'});
+
+    final lastMassageB = await bChat.lastMessage;
+    isTrue(lastMassageB.text == ChatProtocol.add, 'C & D added');
+    isTrue(lastMassageB.newUsers.length == 2, 'One user added');
+    isTrue(lastMassageB.newUsers.contains('C'), 'The user C is included');
+    isTrue(lastMassageB.newUsers.contains('D'), 'The user D is included');
+
+    final room = await bChat.getGlobalRoom(bChat.id);
+    isTrue(room.users.length == 4, 'Four users are in the room');
+    isTrue(room.users.contains(a), 'A is included');
+    isTrue(room.users.contains(b), 'B is included');
+    isTrue(room.users.contains(c), 'C is included');
+    isTrue(room.users.contains(d), 'D is included');
+
+    bChat.leave();
+
+    await _ff.loginOrRegister(email: cEmail, password: password);
+    final cChat = ChatRoom(inject: _ff);
+    await cChat.enter(id: chat.id);
+    final cRoom = await cChat.getGlobalRoom(chat.id);
+
+    isTrue(cRoom.users.length == 3, 'Four users are in the room');
+    isTrue(cRoom.users.contains(a), 'A is included');
+    isTrue(cRoom.users.contains(b) == false, 'B is NOT included');
+    isTrue(cRoom.users.contains(c), 'C is included');
+    isTrue(cRoom.users.contains(d), 'D is included');
+  }
+
+  _addModeratorTest() async {
+    await _ff.loginOrRegister(email: aEmail, password: password);
+    final chat = ChatRoom(inject: _ff);
+    await chat.enter(users: [b, c]);
+    await chat.addModerator(b);
+    var room = await chat.getGlobalRoom(chat.id);
+    print(room);
+    isTrue(room.moderators.length == 2, '2 moderators are in the room');
+    isTrue(room.moderators.contains(a), 'A is included as moderator');
+    isTrue(room.moderators.contains(b), 'B is included as moderator');
+
+    try {
+      await chat.addModerator(d);
+      isTrue(false, 'await chat.addModerator(c);');
+    } catch (e) {
+      isTrue(
+          e == MODERATOR_NOT_EXISTS_IN_USERS, 'moderator must exists in users');
+    }
+
+    await _ff.loginOrRegister(email: cEmail, password: password);
+    final cChat = ChatRoom(inject: _ff);
+    await cChat.enter(id: chat.id);
+    await cChat.addUser({d: 'User D'});
+
+    try {
+      await cChat.addModerator(d);
+      isTrue(false, 'You are not moderator');
+    } catch (e) {
+      isTrue(e == YOU_ARE_NOT_MODERATOR,
+          'Only moderator can add another moderator');
+    }
+
+    // room = await chat.getGlobalRoom(chat.id);
+    // print(room);
+  }
+
+  _removeModeratorTest() async {
+    await _ff.loginOrRegister(email: aEmail, password: password);
+    final chat = ChatRoom(inject: _ff);
+    await chat.enter(users: [b, c]);
+    await chat.addModerator(b);
+    var room = await chat.getGlobalRoom(chat.id);
+    isTrue(room.moderators.length == 2, '2 moderators are in the room');
+    isTrue(room.moderators.contains(a), 'A is included as moderator');
+    isTrue(room.moderators.contains(b), 'B is included as moderator');
+
+    await chat.removeModerator(b);
+    room = await chat.getGlobalRoom(chat.id);
+    isTrue(room.moderators.length == 1, '2 moderators are in the room');
+    isTrue(room.moderators.contains(a), 'A is included as moderator');
+    isTrue(
+        room.moderators.contains(b) == false, 'B is NOT included as moderator');
+  }
+
+  _blockTest() async {
+    await _ff.loginOrRegister(email: aEmail, password: password);
+    final chat = ChatRoom(inject: _ff);
+    await chat.enter(users: [b, c]);
+    await chat.blockUser(b, 'Name of B');
+    var room = await chat.getGlobalRoom(chat.id);
+    isTrue(room.users.length == 2, '2 user is in the room');
+    isTrue(room.blockedUsers.length == 1, '1 user is in block list');
+    isTrue(room.blockedUsers.first == b, 'b is blocked');
+
+    try {
+      await chat.addUser({b: 'Name of B'});
+      isTrue(false, "await chat.addUser({b: 'Name of B'});");
+    } catch (e) {
+      isTrue(e == ONE_OF_USERS_ARE_BLOCKED, 'One of users are in block list');
+    }
+  }
+
+  _kickoutTest() async {
+    await _ff.loginOrRegister(email: aEmail, password: password);
+    final chat = ChatRoom(inject: _ff);
+    await chat.enter(users: [b, c]);
+
+    await _ff.loginOrRegister(email: bEmail, password: password);
+    final bChat = ChatRoom(inject: _ff);
+    await bChat.enter(id: chat.id);
+
+    try {
+      await bChat.kickout(c, 'Name of C');
+      isTrue(false, "await bChat.kickout(c, 'Name of C');");
+    } catch (e) {
+      isTrue(e == YOU_ARE_NOT_MODERATOR, 'Only moderator can kick a user out');
+    }
+
+    await _ff.loginOrRegister(email: aEmail, password: password);
+    await chat.kickout(c, 'Name of C');
+
+    var room = await chat.getGlobalRoom(chat.id);
+    isTrue(room.users.length == 2, '2 user is in the room');
+
+    isTrue(room.users.contains(a), 'A is included');
+    isTrue(room.users.contains(b), 'B is included');
+    isTrue(room.users.contains(c) == false, 'C is NOT included');
+  }
 
   _roomCreateTest() async {
-    // User user = await _ff.loginOrRegister(email: aEmail, password: password);
-    // a = user.uid;
-    // user = await _ff.loginOrRegister(email: bEmail, password: password);
-    // b = user.uid;
-    // user = await _ff.loginOrRegister(email: cEmail, password: password);
-    // c = user.uid;
-    // user = await _ff.loginOrRegister(email: dEmail, password: password);
-    // d = user.uid;
-
-    // print("$a $b $c $d");
-
-    /// Login A
-    ///
-    ///
-    ///
-    /// TODO: md5 is not enough. when there are many users, uid(s) must be sorted(ordered) or md5 string would have different results.
-    /// TODO: give opion on ChatRoom(hatch: true). If hatch is true, then it will always create new room. By default it is false and it does md5 of uids. meaning, it will not create new room if the uids are same.
-    /// so, developers does not need to do md5 by themselves.
-    ///
-    /// if the app can add other users into existing room, hatch should be true. If it is 1:1 chat only, hatch should be false.
-    ///
-
-    /// Create room without users.
-    /// - ChatRoom() without id and users and hatch: true
-    /// - ChatRoom() over again without room id and users, and hatch: true => new room will be created over again
-    /// - ChatRoom() with id => no room will be created.
-    /// - ChatRoom() should not create new room again if room id is given.
-    /// - ChatRoom(hatch: false) should create room for the first time.
-    /// - ChatRoom(hatch: false) should not create room again intead, it will enter previous room.
-
+    // User user = await _ff.l
     // create room alone
     final chat = ChatRoom(inject: _ff, render: null);
     await chat.enter();
