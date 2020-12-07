@@ -1,3 +1,7 @@
+## [0.0.38] - Dependency update
+
+- Some of packages have failed due to rxdart dependency issue.
+
 ## [0.0.37] - Updates and fixes
 
 - User search based on GEO location has updated.
@@ -90,7 +94,7 @@ Cloud Functions has been removed from the project and security rules has been ch
 
 - userChange event fires on photoURL change
 
-## [0.0.16] - deprecation of data
+## [0.0.17] - deprecation of data
 
 - data variable is now deprecated. Use `userData` instead.
 
