@@ -1090,8 +1090,8 @@ To create a creategory,
 - Open `Cloud Firestore`
 - Create the `categories` collection if it is not present( by clicking `+ Start collection`)
 - Then click `add a document`.
-  - Put category id in `Document ID` and this should not be changed after.
-  - And put `id` in Field column and the same category id in Value column.
+  - Put category(for instance, qna) id in `Document ID` and this should not be changed after.
+  - And put `id` in Field column and the same category(for instance, qna) id in Value column.
   - You may optionally add more Field with `title` and `description`.
 
 # Developer Coding Guidelines
@@ -1485,7 +1485,7 @@ Call `fetchPosts()` method the ForumData instance and fireflutter will get posts
 - Do [Firestore security rules](#firestore-security-rules). When the app list posts, it will require indexes.
 - Do [Cloud Functions Setup](#cloud-functions-setup). When the app is displaying posts, the Clould Funtions soubld be ready.
 - See [smaple app's forum-list branch](https://github.com/thruthesky/fireflutter_sample_app/tree/forum-list) for the sample code.
-  - You would open [forum.list.dart](https://github.com/thruthesky/fireflutter_sample_app/blob/forum-list/lib/screens/forum/forum.list.dart) to see what's going on to list a forum.
+  - You would open [forum.list.dart](https://github.com/thruthesky/fireflutter_sample_app/blob/forum-list/lib/screens/forum/forum.list.screen.dart) to see what's going on to list a forum.
     - It first gets category
     - then, fetches posts
     - then, display it in list view.
@@ -1730,24 +1730,21 @@ Push notification is one kind of basic functionality that all apps should have. 
 ### Notification Settings for Topic Subscription
 
 A user can subscribe
+
 - Forum for new post or comment.
 - Chat room for new chats.
 - And much more.
 
 - To enable the subscription, you need to put on/off swich some where(forum list or chat room). When it is swtiched on, then it need to subscribe to the topic name.
+
   - All topic must begin with `notify`. For instance `notify-post-qna`, `notify-comment-disucssion`, `notify-chatroom-roomId`, and so on.
     - You can name topic anything you want as long as that starts with `notify`.
   - And save the topic as a boolean property in `/meta/user/public/{uid}` and when the user's auth state changes, it will re-subscribe all the topics. Therefore all devices of the user will be synced to subscribe same topics.
   - See `Cavists of push notification`
 
-
 - See [forum-subscription branch](https://github.com/thruthesky/fireflutter_sample_app/tree/forum-subscription) for the code.
 
 ### Logic of Push Notification
-
-
-
-
 
 #### Cavits of push notification
 
@@ -1755,8 +1752,9 @@ A user can subscribe
   - And A unsubscribes a topic from device D1,
   - But A will still get push notifications from devices D2 until A restarts(or auth state changes) the app on B, C.
 - Another cavits is,
+
   - A logs in both D1 and D2.
-  - A subscribes to a new topic in D1, 
+  - A subscribes to a new topic in D1,
   - Then D2 will not get message from that device until A restarts(or auth state chnages) the app in P2 again.
 
 - This is the limitation of `Flutter Firebase SDK - Cloud Messaging` package. Other SDKs like Nodejs Admin SDK, PHP Admin SDK have a method to subscribe to a topic by specifying tokens.
@@ -2023,7 +2021,7 @@ Firestore structure and its data are secured by Firestore security rules.
 - When a room is created, `ChatProtocol.roomCreated` message will devlivered to all users.
   - This protocol message can be useful to display that there is no more messages or this is the first message when user scrolls up to view previous messages.
 - When a user is added, `ChatProtocol.enter` message (with user information) will devlivered to all users and property `users` has the names of the addedusers.
-- When a user leaves a room, `ChatProtocol.leave` message (with user information) will devlivered to all users and property `userName` has the  name of the left user.
+- When a user leaves a room, `ChatProtocol.leave` message (with user information) will devlivered to all users and property `userName` has the name of the left user.
 - When a user is blocked, `ChatProtocol.block` message will (with user information) devlivered to all users. Only moderator can blocks a user and the user's uid will be saved in `{ blockedUsers: [ ... ]}` array. And `users` will hold the names of bloked users.
 - When a room is created or a user is added, protocol message will be delivered to newly added users. And the room list should be appears on their room list.
 - Blocked users will not be added to the room until moderator remove the user from `{ blockedUsers: [ ... ]}` array.
@@ -2032,8 +2030,8 @@ Firestore structure and its data are secured by Firestore security rules.
 - Logically, a user can search himself on search screen and begin chat with himself. You may add some logic to prevent it if you want.
 - When a user is blocked by moderator, the user received no more messages except the `ChatProtocol.blocked` message.
 
-
 - You would code like below to enter a chat room.
+
   - if `id` (as chat room id) is given, it will enter the chat room and listens all the event of the room.
   - Or if `id` is null, then a room will be created with the `users` of UIDs list.
   - If both of `id` and `users` are null(or empty), then a room will be created without any users except the login user himself. He will be alone in the room.
@@ -2060,7 +2058,6 @@ Firestore structure and its data are secured by Firestore security rules.
 
 ## Code of chat
 
-
 ### Preparation for chat
 
 - By default, app can search users by name in `/meta/user/public/{uid}`. You may extend to search by gender and age.
@@ -2072,7 +2069,6 @@ ff.init({
   'openProfile': true,
 })
 ```
-
 
 ### Chat room
 
@@ -2127,7 +2123,6 @@ await ab2.enter(users: [b], hatch: false);
 print( ab1.id == ab2.id );
 ```
 
-
 - Sending a message. The code below will send message to all users in the room.
 
 ```dart
@@ -2155,7 +2150,6 @@ final chat = ChatRoom(inject: _ff, render: () => setState(() {}));
 await chat.lastMessage;
 ```
 
-
 - When change the screen, the app should not listen to the room anymore by unsubscibing.
 
 ```dart
@@ -2166,12 +2160,11 @@ void dispose() {
 }
 ```
 
-
 ### Begin chat with a user
 
 - Let's assume there are user A, B, C and whose UIDs are also a, b, c respectively.
-  - And A is the logged in user(of current device).
 
+  - And A is the logged in user(of current device).
 
 - To begin to chat with user B and C, you can enter room with their UIDs.
 
@@ -2188,10 +2181,10 @@ await chat.enter();
 await chat.addUser({b: 'Name of B', c: 'Name of C'});
 ```
 
-
 ### Displaying chat messages on the screen
 
 - Once `enter()` method is called on the instance of `ChatRoom`, the app begins to listen to any messages(event) that happen in the room and `render` function will be called. The app, then, re-render the screen with updated information.
+
   - `ChatRoom.messages` has the loaded chat messages of the chat room including `who enters`, `who leaves`, `who blocked`, `who becomes moderator` and much more.
 
 - `ChatRoom.id`, `ChatRoom.users`, and the likes have the chat room information.
@@ -2219,7 +2212,7 @@ ListView.builder(
   - removing moderators
   - blocking a user
   - kicking a user out
-  
+
 ### Push notifications of chat
 
 - Read `Notification Settings for Topic Subscription` section to enable push notifications on chat room.
@@ -2335,7 +2328,6 @@ Since fireflutter is a bit complicated and depends on many other packages, we fo
 
 You can add the code below in Home screen. You need to fix the import path.
 
-
 ### Chat unit test
 
 - To do unit test of chat
@@ -2349,7 +2341,6 @@ ChatTest(inject: ff).runTests();
 Test code creates chat room with hatch option and leaves out of the room, the test may produce unhandled exception if you do not run test code in order. The best wayy to test the code is to remove the chat collection from firestore and run full test code.
 
 After test, you need to remove the code from `main.dart`
-
 
 ## Integration Test
 
