@@ -23,6 +23,8 @@ dependencies:
   firebase_messaging: ^7.0.3
 
   sign_in_with_apple: ^2.5.4
+
+  # md5 on chat, facebook  login
   crypto: ^2.1.5
 
   dio: ^3.0.10
@@ -45,4 +47,3 @@ dev_dependencies:
     sdk: flutter
 
 flutter:
-

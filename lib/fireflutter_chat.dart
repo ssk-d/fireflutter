@@ -265,13 +265,8 @@ class ChatMyRoomList extends ChatBase {
 /// By defining this helper class, you may open more than one chat room at the same time.
 /// todo separate this class to `chat.dart`
 class ChatRoom extends ChatBase {
-  /// [users] is the uids of users
-  /// [title] is to set the title of the newly created room.
   ChatRoom({
     @required inject,
-    @Deprecated('to be removed') String id,
-    @Deprecated('to be removed') List<String> users,
-    @Deprecated('to be removed') String title = '',
     Function render,
   }) : __render = render {
     f = inject;
@@ -338,9 +333,14 @@ class ChatRoom extends ChatBase {
   /// Enter chat room
   ///
   /// If [hatch] is set to true, then it will always create new room.
+  /// null or empty string in [users] will be wiped out.
   Future<void> enter({String id, List<String> users, bool hatch = true}) async {
     String _id = id;
-    if (_id != null && users != null) throw 'ONE_OF_ID_OR_USERS_MUST_BE_NULL';
+
+    if (users == null) users = [];
+    users.removeWhere((element) => element == null || element == '');
+    if (_id != null && users.length > 0)
+      throw 'ONE_OF_ID_OR_USERS_MUST_BE_NULL';
     if (_id != null) {
       // Enter existing room
       // If permission-denied error happens here,
@@ -350,7 +350,6 @@ class ChatRoom extends ChatBase {
       // print(_id);
       _info = await getGlobalRoom(_id);
     } else {
-      if (users == null) users = [];
       // Add login user(uid) into room users.
       users.add(f.user.uid);
       users = users.toSet().toList();
@@ -755,97 +754,4 @@ class ChatRoom extends ChatBase {
   /// Note that `getMyRoomInfo()` returns `ChatRoomInfo` while `myRoom()`
   /// returns document reference.
   Future<ChatRoomInfo> get lastMessage => getMyRoomInfo(f.user.uid, id);
-
-  //////////////////////////////////////////////////////////////////////////////
-  //////////////////////////////////////////////////////////////////////////////
-  //////////////////////////////////////////////////////////////////////////////
-  ///
-  ///
-  /// Old methods to be deleted.
-  ///
-  ///
-  //////////////////////////////////////////////////////////////////////////////
-  //////////////////////////////////////////////////////////////////////////////
-  //////////////////////////////////////////////////////////////////////////////
-
-  @Deprecated('To be deleted')
-  init() async {
-    if (_id != null) {
-      try {
-        ChatRoomInfo room = await getGlobalRoom(_id);
-        if (room.exists) {
-          _enterChatRoom();
-          return;
-        }
-      } catch (e) {
-        if (e.code == 'permission-denied') {
-          /// continue to create room
-        } else {
-          rethrow;
-        }
-      }
-    }
-
-    /// If chat id was not given on instantiating the ChatRoom class,
-    /// then it will create a room.
-
-    if (_users == null) _users = [f.user.uid];
-    ChatRoomInfo _info = await create(users: _users, title: _title, id: _id);
-    _id = _info.id;
-
-    _enterChatRoom();
-  }
-
-  @Deprecated('To be deleted')
-
-  /// Fetch chat messages (of the first page or last messages), then listen to
-  /// changes of room information.
-  _enterChatRoom() {
-    /// Fetch when instance is created to fetch messages for the first time.
-    fetchMessages();
-
-    globalRoomDoc(_id).snapshots().listen((event) {
-      info = ChatRoomInfo.fromSnapshot(event);
-      _notify();
-    });
-  }
-
-  @Deprecated('enter() does what it takes')
-
-  /// Creates new chat room
-  ///
-  /// [users] is a list of users' uid to create chat room with.
-  /// [title] is the title of the room.
-  /// [id] is the room id to create.
-  /// The login user who creates the room becomes the moderator.
-  Future<ChatRoomInfo> create(
-      {List<String> users, String title, String id}) async {
-    if (users == null) users = [];
-
-    /// Add login user's uid.
-    users.add(f.user.uid);
-    users = [
-      ...{...users}
-    ];
-
-    // String roomId = chatRoomId();
-    // print('roomId: $roomId');
-
-    info = ChatRoomInfo(
-      users: users,
-      title: title,
-      moderators: [f.user.uid],
-      createdAt: FieldValue.serverTimestamp(),
-    );
-    if (id == null) {
-      DocumentReference doc = await globalRoomListCol.add(info.data);
-      info.id = doc.id;
-    } else {
-      await globalRoomListCol.doc(id).set(info.data);
-      info.id = id;
-    }
-
-    await sendMessage(text: ChatProtocol.roomCreated);
-    return info;
-  }
 }
