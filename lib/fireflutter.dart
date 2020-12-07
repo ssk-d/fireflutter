@@ -91,11 +91,11 @@ class FireFlutter extends Base {
         // print('settingsChange.listen() on fireflutter::init() $settings');
 
         // Initalize Algolia
-        String applicationId = appSetting(ALGOLIA_APP_ID);
+        String algoliaAppId = appSetting(ALGOLIA_APP_ID);
         String apiKey = appSetting(ALGOLIA_ADMIN_API_KEY);
-        if (applicationId != null && apiKey != null) {
+        if (algoliaAppId != null && apiKey != null) {
           algolia = Algolia.init(
-            applicationId: applicationId,
+            applicationId: algoliaAppId,
             apiKey: apiKey,
           );
         }
@@ -523,8 +523,8 @@ class FireFlutter extends Base {
 
       /// Since push notification takes time, do indexing comes first.
 
-      final String applicationId = appSetting(ALGOLIA_APP_ID);
-      if (applicationId != null) {
+      final String algoliaAppId = appSetting(ALGOLIA_APP_ID);
+      if (algoliaAppId != null) {
         await addSearchIndex(
           path: doc.path,
           title: data['title'],
@@ -550,8 +550,8 @@ class FireFlutter extends Base {
             SetOptions(merge: true),
           );
 
-      final String applicationId = appSetting(ALGOLIA_APP_ID);
-      if (applicationId != null) {
+      final String algoliaAppId = appSetting(ALGOLIA_APP_ID);
+      if (algoliaAppId != null) {
         await addSearchIndex(
           path: postsCol.doc(data['id']).path,
           title: data['title'],
@@ -1036,6 +1036,10 @@ class FireFlutter extends Base {
       {@required String path,
       @required String title,
       @required String content}) async {
+    /// If Aloglia settings are not set, then simply return.
+    final String algoliaAppId = appSetting(ALGOLIA_APP_ID);
+    if (algoliaAppId == null) return;
+
     String algoliaIndexName = appSetting(ALGOLIA_INDEX_NAME);
     if (algoliaIndexName == null || algoliaIndexName == "") {
       throw ALGOLIA_INDEX_NAME_IS_EMPTY;

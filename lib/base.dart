@@ -973,7 +973,7 @@ class Base {
   /// Get app settings under `/settings/app` document.
   ///
   /// This is a simple helper function to get `app` settings easily.
-  /// If the key of the settings does not exist, it will return [defaultValue]
+  /// If the key of the settings does not exist, it will return [defaultValue] which is null by default.
   ///
   /// ```dart
   /// appSettigns(); // returns all app settings.
