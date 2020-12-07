@@ -116,12 +116,15 @@ A free, open source, rapid development flutter package to build apps like shoppi
 - [Chat](#chat)
   - [Preview of chat functionality](#preview-of-chat-functionality)
   - [Firestore structure of chat](#firestore-structure-of-chat)
-  - [Logic of chat](#logic-of-chat)
+  - [Logic and Scenario of chat](#logic-and-scenario-of-chat)
   - [Pitfalls of chat logic](#pitfalls-of-chat-logic)
   - [Code of chat](#code-of-chat)
     - [Preparation for chat](#preparation-for-chat)
+    - [Chat room](#chat-room)
     - [Begin chat with a user](#begin-chat-with-a-user)
-  - [Scenario of extending chat functionality](#scenario-of-extending-chat-functionality)
+    - [Displaying chat messages on the screen](#displaying-chat-messages-on-the-screen)
+    - [Other code samples](#other-code-samples)
+    - [Push notifications of chat](#push-notifications-of-chat)
   - [Unit tests of chat](#unit-tests-of-chat)
 - [Location](#location)
   - [Firestore structure of Location](#firestore-structure-of-location)
@@ -129,6 +132,7 @@ A free, open source, rapid development flutter package to build apps like shoppi
     - [Initialization of Location](#initialization-of-location)
 - [Tests](#tests)
   - [Unit Test](#unit-test)
+    - [Chat unit test](#chat-unit-test)
   - [Integration Test](#integration-test)
 - [Developers Tips](#developers-tips)
   - [Extension method on fireflutter](#extension-method-on-fireflutter)
@@ -1958,23 +1962,23 @@ If you are looking for a package that support a complete chat functionality, fir
 
 ## Preview of chat functionality
 
-- All chat functionality works with user login. If a user didn't log in, then the user must not be able to enter chat screen.
-- All chat related methods throw permission error when a user tries something that is not permitted.
-- To use chat functionality, `openProfile` option of `ff.init()` must be set.
+- All chat functionality works on user login. That means, to use chat, the user must logged in.
+- Most of chat related methods throw permission error when a user tries something that is not permitted.
+- To use chat functionality, `openProfile` option of `ff.init()` must be set to access user's displayName and photoURL.
 
 ## Firestore structure of chat
 
 Before we begin, let's put an assumption.
 
-- There are 3 users. User `A`, user `B`, user `C`, and user `D`. User A is the moderator which means he is the one who created the room.
+- There are 4 users. User `A`, user `B`, user `C`, and user `D`. User A is the moderator which means he is the one who created the room.
 - The room that moderator A created is `RoomA` and there are two users in the room. User A, B.
 - The UIDs of user A, B, C, D is A, B, C, D respectively.
 - The room id of RoomA is RoomA.
 
 Firestore structure and its data are secured by Firestore security rules.
 
-- `/chat/info/room-list/{roomId}` is where each room information(setting) is stored.
-  - When a room is created, the `roomId` will be autogenrated by Firestore by adding a document under `/chat/info/room-list` collection.
+- `/chat/info/room-list/{roomId}` is where each room information(setting) is stored. It's called global room list.
+  - When a room is created, the `roomId` will be autogenrated by Firestore by adding a document under global room list collection - `/chat/info/room-list`.
   - Document properties
     - `moderators` is an array of user's uid. Users in this array are the moderators.
     - `users` is an array of participant users' uid.
@@ -1982,11 +1986,11 @@ Firestore structure and its data are secured by Firestore security rules.
     - `createdAt` has the time when the chat room was created.
     - `title` is the title of chat room.
   - When `{users: [ ... ]}` is updated to add or remove user, other properties cannot be edited.
-- `/chat/my-room-list/{uid}/{roomId}` is where each user's room list are stored. The document has information about the room and last message.
+- `/chat/my-room-list/{uid}/{roomId}` is where each user's room list are stored. The document has information about the room and last message. It's called private room.
   - If a user has unread messages, it has no of new messages.
   - It has last message information of who sent what, time, and more.
   - It may have information about who added, blocked.
-    When A chat in RoomA, the (last) message goes to `/chat/info/room-list/RoomA` and to all the users in the room which are
+    When A chats in RoomA, the (last) message goes to `/chat/info/room-list/RoomA` and to all the users in the room which are
     - `/chat/my-room-list/A/RoomA`
     - `/chat/my-room-list/B/RoomA`
   - Document properties
@@ -2005,26 +2009,42 @@ Firestore structure and its data are secured by Firestore security rules.
 
 - `/chat/messages/{roomId}/{message}` is where all the chat messages for the room are stored.
 
-## Logic of chat
+- By default, when a user begins to chat with another user, it will always create a new room. If `hatch` option is given, it may not create a new room for the same users.
 
-- User who begin(or create) chat becomes the moderator.
+## Logic and Scenario of chat
+
+- User who begin(or create) to chat becomes the moderator.
 - Moderator can add another moderator.
-- User will enter `chat entrance screen` and the app should display all of the user's chat room list.
-- User may search another user by openning a `user search screen` and select a user (or multiple users) to begin chat. Then the app should redirect the user to `chat room screen`
+- When a user enters `chat room list screen`, the app should display all of the user's chat room list. It is a recommended but costomisable.
+- User may search another user by openning a `user search screen` and select a user (or multiple users) to begin chat. Then the app should redirect the user to `chat room screen` when the use chosen other users to begin chat.
 - User can enter chat room by selecting a chat room in his chat room list.
 - User can add other users by selecting add user button in the chat room.
-- User can create a chat room with the same user(s) over again. That means, A can begin chat with B by creating a room. And then, A can begin chat with B again by creating another room.
+- User can create a chat room with the same user(s) over again. That means, A can begin chat with B by creating a room. And then, A can begin chat with B again by creating another room. `hatch` option can prevent creating new room upon creating a chat room with same users.
 - When a room is created, `ChatProtocol.roomCreated` message will devlivered to all users.
-  - This protocol message can be useful to display that there is no more messages or this is the first message.
-- When a room is added, `ChatProtocol.enter` message (with user information) will devlivered to all users.
-- When a room left, `ChatProtocol.leave` message (with user information) will devlivered to all users.
-- When a user is blocked, `ChatProtocol.block` message will (with user information) devlivered to all users. Only moderator can blocks a user and the user's uid will be saved in `{ blockedUsers: [ ... ]}` array.
-- When a room is created or a user is added, protocol message will be delivered to newly added users. And the room list will be appears on their room list.
+  - This protocol message can be useful to display that there is no more messages or this is the first message when user scrolls up to view previous messages.
+- When a user is added, `ChatProtocol.enter` message (with user information) will devlivered to all users and property `users` has the names of the addedusers.
+- When a user leaves a room, `ChatProtocol.leave` message (with user information) will devlivered to all users and property `userName` has the  name of the left user.
+- When a user is blocked, `ChatProtocol.block` message will (with user information) devlivered to all users. Only moderator can blocks a user and the user's uid will be saved in `{ blockedUsers: [ ... ]}` array. And `users` will hold the names of bloked users.
+- When a room is created or a user is added, protocol message will be delivered to newly added users. And the room list should be appears on their room list.
 - Blocked users will not be added to the room until moderator remove the user from `{ blockedUsers: [ ... ]}` array.
-- When a user(or a moderator) leaves the room and there is no user left in the room, then that's it.
+- When a user(or a moderator) leaves the room and there is no user left in the room, then that's it. The chat room is left as ghost chat room.
 - When a user logs out or logs into another account while listening room list will causes permission error. Especially on testing, you would not open chat screen since testing uses several accounts at the same time.
-- Logically, a user can search himself and begin chat with himself. This is by design and it's not a bug. You may add some logic to prevent it if you want.
+- Logically, a user can search himself on search screen and begin chat with himself. You may add some logic to prevent it if you want.
 - When a user is blocked by moderator, the user received no more messages except the `ChatProtocol.blocked` message.
+
+
+- You would code like below to enter a chat room.
+  - if `id` (as chat room id) is given, it will enter the chat room and listens all the event of the room.
+  - Or if `id` is null, then a room will be created with the `users` of UIDs list.
+  - If both of `id` and `users` are null(or empty), then a room will be created without any users except the login user himself. He will be alone in the room.
+  - If both of `id` and `users` have value, then, it enters the room if the room of the `id` exists. Or it will create a room with the `id` and with the users.
+    - This will be a good option for 1:1 chat. If the app only allows 1:1 chat, or the user chats to admin for help, this will be a good option.
+    - The `id` can be an md5 string of the login user's uid(A) and other user's uid(B).
+      - When it creates the room, it will create a room for A and B, and next time A or B try to chat each other again, it will not create a new room. Instead, it will use previously created room.
+
+- If the app must inform new messages to the user when the user is not in room list screen,
+  - The app can listen `my-room-list` collection on app screen (or homescreen)
+  - And when a new message arrives, the app can show snackbar.
 
 ## Pitfalls of chat logic
 
@@ -2036,10 +2056,9 @@ Firestore structure and its data are secured by Firestore security rules.
   - At this point, there are [A, B, D] in the room. C is not added yet, since B was offline when he added C.
   - B goes online and tries to update users array with [A, B, C].
     - It will produce permission error since, the users in the room is [A, B, D] and when B updates [A, B, C], D is missing. It is like B is trying to add C and remove D.
+    - But this won't happens often and considerable.
 
 ## Code of chat
-
-- The best code sample is in firefutter sample app.
 
 
 ### Preparation for chat
@@ -2054,124 +2073,156 @@ ff.init({
 })
 ```
 
-### Begin chat with a user
 
-- Let's assume there are user A, B, C and whose UIDs are also A, B, C respectively.
-  - And A is the logged in user(of current device).
-- To create a chat room, you can create an instance of `ChatRoom`.
-  - The code below creates a room without users but the login user himself. A will be alone in the room.
+### Chat room
+
+- First create an instance of chat room.
+
 ```dart
-ChatRoom(inject: ff);
+final chat = ChatRoom(inject: _ff, render: null);
 ```
 
-- To create a chat room with user B,
+- Then, enter chat room like below.
 
 ```dart
-ChatRoom(inject: ff, users: ['A']);
+await chat.enter();
 ```
 
+The code above will create a chat room and enters into that room. In the chat room, there will be only one user that is the login user and one moderator that is also the login user.
 
-- You would code like below to enter a chat room.
-  - if `id` (as chat room id) is given, it will enter the chat room and listens all the event of the room.
-  - Or if `id` is null, then a room will be created with the `users` of UIDs list.
-  - If both of `id` and `users` are null(or empty), then a room will be created without any users except the login user himself. He will be alone in the room.
-  - If both of `id` and `users` have value, then, it enters the room if the room of the `id` exists. Or it will create a room with the `id` and with the users.
-    - This will be a good option for 1:1 chat. If the app only allows 1:1 chat, or the user chats to admin for help, this will be a good option.
-    - The `id` can be an md5 string of the login user's uid(A) and other user's uid(B).
-      - When it creates the room, it will create a room for A and B, and next time A or B try to chat each other again, it will not create a new room. Instead, it will use previously created room.
-
-- One important thing to know is when A begins to chat with B, a new room will be create for A and B.
-  - And later A begins to chat with B again, then another room for A and b will be created.
-  - This is by design to create new room over and over again with same user. 
-  - You may code to block this.
-
-
-- Below is a sample code to enter a chat room. If it has an incoming room id, then it will enter that room. Or it will create a room with uid1.
-  - If the user is entering from chat room list, then there will be room id.
-  - Or if the user is entering by searching user, then it will create a room.
-  - In this way, it will create rooms over again with same user.
+If the app is entering again like below, then another room will be created with one user and one moderator that is the login user.
 
 ```dart
-class A extends StatefullWidget {
-  ChatRoom chat;
-  @override
-  initState() {
-    chat = ChatRoom(
-      inject: ff,
-      id: argument['id'],
-      users: ['uid1']
-      render: () {
-        setState(() {});
-      },
-    );
-  }
-}
+final newChatRoom = ChatRoom(inject: _ff, render: null);
+await newChatRoom.enter();
 ```
 
-- Below is a sample code to show to block creating rooms again with same user.
-  - When A creates a room for the first time, it sets the room id of MD5 string based on uid. So, next time when the user begins to chat with same user again, it will not create a new room id, instead, it will use the same room id of MD5 string. So, it will not create a new room any more. the user continues to chat in previous chat room.
+- Creating a room with a user.
 
 ```dart
-String id;
-if (args['id'] == null) {
-  var digest = md5.convert(utf8.encode(ff.user.uid + args['uid']));
-  id = digest.toString();
-} else {
-  id = args['id'];
-}
+final ab = ChatRoom(inject: _ff);
+await ab.enter(users: [b]);
+```
 
-chat = ChatRoom(
-  inject: ff,
-  id: id,
-  users: args['uid'] == null ? null : [args['uid']],
-  render: () {
-    setState(() {});
-  },
-);
+The above code will create a room with user b. And if the same code run again, then another room will be created.
+
+```dart
+final ab1 = ChatRoom(inject: _ff);
+await ab1.enter(users: [b]);
+final ab2 = ChatRoom(inject: _ff);
+await ab2.enter(users: [b]);
+print( ab1.id != ab2.id );
+```
+
+- Entering existing room for the same users. If `hatch` option is set, then it will not create another room (if the room is already exising), instead it will enter that room.
+  - This is good for 1:1 chatting
+  - Or customer chatting service between user and admin.
+  - This could be used as a notes(or memo) between two users.
+
+```dart
+final ab1 = ChatRoom(inject: _ff);
+await ab1.enter(users: [b], hatch: false);
+final ab2 = ChatRoom(inject: _ff);
+await ab2.enter(users: [b], hatch: false);
+print( ab1.id == ab2.id );
 ```
 
 
-- Once an instance of `ChatRoom` created, it begins to listen to any messages(event) that happen in the room and `render` function will be called. The app, then, re-render the screen with updated information.
-  - `ChatRoom.message` has all the messages of the chat room including `who enters`, `who leaves`, `who blocked`, `who becomes moderator` and much more.
+- Sending a message. The code below will send message to all users in the room.
 
-- `ChatRoom.info` has the chat room information.
+```dart
+chat.sendMessage(text: text);
+```
+
+- Leaving a chat room.
+  - When a user is leaving chat room, the room does not exists. So, re-entering or reading last message will throw an exception.
+
+```dart
+final chatB = ChatRoom(inject: _ff);
+await chatB.enter(id: '...');
+await chatB.leave();
+```
+
+- When a chat has delivered, global room and private rooms will be updated. And `render` method will be called informing that there is a new message. You can then re-render the screen.
+
+```dart
+final chat = ChatRoom(inject: _ff, render: () => setState(() {}));
+```
+
+- Getting the last message of chat room
+
+```dart
+await chat.lastMessage;
+```
 
 
-- It is important to put `leave()` method on my chat room list and chat room to release the listeners.
-
-For chat my room list leave,
+- When change the screen, the app should not listen to the room anymore by unsubscibing.
 
 ```dart
 @override
 void dispose() {
-  myRoomList.leave();
+  chat.unsubscribe();
   super.dispose();
 }
 ```
 
-For chat room leave,
+
+### Begin chat with a user
+
+- Let's assume there are user A, B, C and whose UIDs are also a, b, c respectively.
+  - And A is the logged in user(of current device).
+
+
+- To begin to chat with user B and C, you can enter room with their UIDs.
 
 ```dart
-  @override
-  void dispose() {
-    chat.leave();
-    super.dispose();
+final chat = ChatRoom(inject: _ff);
+await chat.enter(users: [b, c]);
+```
+
+- Or you can enter room without users and add user b and c.
+
+```dart
+final chat = ChatRoom(inject: _ff);
+await chat.enter();
+await chat.addUser({b: 'Name of B', c: 'Name of C'});
+```
+
+
+### Displaying chat messages on the screen
+
+- Once `enter()` method is called on the instance of `ChatRoom`, the app begins to listen to any messages(event) that happen in the room and `render` function will be called. The app, then, re-render the screen with updated information.
+  - `ChatRoom.messages` has the loaded chat messages of the chat room including `who enters`, `who leaves`, `who blocked`, `who becomes moderator` and much more.
+
+- `ChatRoom.id`, `ChatRoom.users`, and the likes have the chat room information.
+
+- To update chat message on the screen,
+
+```dart
+final chat = ChatRoom(inject: _ff, render: () => setState(() {});
+// ...
+ListView.builder(
+  itemCount: chat.messages.length,
+  builder: (_, count) {
+    Map<String, dynamic> message = chat.messages[i];
+    return ListTile(title: Text(message.text));
   }
+)
 ```
 
-- How to send a chat message
+### Other code samples
 
-```dart
+- See unit test code for
+  - leaving from a chat room,
+  - inviting users into a chat room,
+  - adding moderators
+  - removing moderators
+  - blocking a user
+  - kicking a user out
+  
+### Push notifications of chat
 
-```
-
-
-## Scenario of extending chat functionality
-
-- If the app must inform new messages to the user when the user is not in room list screen,
-  - The app can listen `my-room-list` collection on app screen (or homescreen)
-  - And when a new message arrives, the app can show snackbar.
-  - For this case, the app must unsubscribe when user is logs out and subscribe again when user is logs in.
+- Read `Notification Settings for Topic Subscription` section to enable push notifications on chat room.
 
 ## Unit tests of chat
 
@@ -2284,15 +2335,21 @@ Since fireflutter is a bit complicated and depends on many other packages, we fo
 
 You can add the code below in Home screen. You need to fix the import path.
 
+
+### Chat unit test
+
+- To do unit test of chat
+
 ```dart
-import 'file:///Users/thruthesky/apps/fireflutter_sample_app/packages/fireflutter/test/chat.test.dart';
-FireFlutter ff = FireFlutter();
+import 'file:///Users/thruthesky/apps/dating/packages/fireflutter/test/chat.tests.v2.dart';FireFlutter ff = FireFlutter();
 ff.init({});
-ChatTest ct = ChatTest(ff);
-ct.runChatTest();
+ChatTest(inject: ff).runTests();
 ```
 
-After test, you need to remove the code.
+Test code creates chat room with hatch option and leaves out of the room, the test may produce unhandled exception if you do not run test code in order. The best wayy to test the code is to remove the chat collection from firestore and run full test code.
+
+After test, you need to remove the code from `main.dart`
+
 
 ## Integration Test
 

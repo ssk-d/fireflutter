@@ -212,10 +212,23 @@ class FireFlutterLocation {
       print('_max $_maxTimeStamp');
 
       colRef = colRef
-          .orderBy('birthday')
-          .where('birthday', isGreaterThanOrEqualTo: _minTimeStamp)
-          .where('birthday', isLessThanOrEqualTo: _maxTimeStamp);
+              // .where('birthday', isGreaterThanOrEqualTo: DateTime(1950))
+              .where('birthday', isLessThanOrEqualTo: DateTime.now())
+          // .orderBy('birthday');
+          ;
     }
+
+    colRef = colRef
+            // .where('birthday', isGreaterThanOrEqualTo: DateTime(1950))
+            // .where('birthday', isLessThanOrEqualTo: DateTime.now())
+
+            // .where('geo.locaiton', ...)
+
+            // .where('location.geohash', isLessThan: ...);
+
+            .where('gender', isEqualTo: 'M')
+        // .orderBy('birthday');
+        ;
 
     if (usersNearMeSubscription != null) usersNearMeSubscription.cancel();
 
@@ -231,8 +244,8 @@ class FireFlutterLocation {
         .listen((List<DocumentSnapshot> documents) {
       Map<String, dynamic> _users = {};
 
-      print('document length');
-      print(documents.length.toString());
+      // print('document length');
+      // print(documents.length.toString());
 
       /// Clear users if documents is empty
       /// documents might have 1 document containing the current user's location.
@@ -251,8 +264,8 @@ class FireFlutterLocation {
 
         /// TODO: add age information
 
-        print('bday');
-        print(data['birthday'].toString());
+        // print('bday');
+        // print(data['birthday'].toString());
 
         data['uid'] = document.id;
         // get distance from current user.

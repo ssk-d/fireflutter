@@ -1,3 +1,10 @@
+## [0.0.36] - Rewriting chat functionality and updates on push notifications and user location
+
+- Complete rewriting on chat functionality. Unit testing codes also rewritten.
+- Chat has push noitification by each room.
+- User location search based on GEO location now works better.
+- Minor updates and fixes on many parts of the code.
+
 ## [0.0.35] - appSetting() returns null by default
 
 - `appSettings()` now return null instead of an empty string. This is a breaking change.
