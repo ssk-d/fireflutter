@@ -60,8 +60,6 @@ class FireFlutterLocation {
 
   /// Exposed getter to get filtered users near me.
   Map<String, dynamic> get usersNearMe {
-    // return _usersNearMe;
-
     Map<String, dynamic> _users = {};
     if (_minAgeStamp != null && _maxAgeStamp != null) {
       _usersNearMe.forEach((key, value) {
@@ -258,11 +256,6 @@ class FireFlutterLocation {
 
         Map<String, dynamic> data = document.data();
         GeoPoint _point = data[geoFieldName]['geopoint'];
-
-        /// users age
-        DateTime bday = DateTime.fromMillisecondsSinceEpoch(data['birthday'].seconds * 1000);
-        data.remove('birthday');
-        data['birthday'] = bday;
 
         data['uid'] = document.id;
         // get distance from current user.
