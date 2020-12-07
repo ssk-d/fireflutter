@@ -458,6 +458,9 @@ class Base {
         (tokens == null || tokens.length == 0) &&
         topic == null) return false;
 
+    if (title == null || title == '') throw 'TITLE_IS_EMPTY';
+    if (body == null || body == '') throw 'BODY_IS_EMPTY';
+
     final postUrl = 'https://fcm.googleapis.com/fcm/send';
 
     /// Check if it will send notification via single token, set of tokens and topic.

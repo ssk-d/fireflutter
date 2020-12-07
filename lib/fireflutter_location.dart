@@ -14,9 +14,8 @@ const String geoFieldName = 'location';
 class FireFlutterLocation {
   FireFlutterLocation({
     @required FireFlutter inject,
-    double radius = 200.0,
   }) : _ff = inject {
-    init(radius: radius);
+    init();
   }
   FireFlutter _ff;
 
@@ -77,9 +76,8 @@ class FireFlutterLocation {
 
   /// [radius] is the radius to search users. If it is not set(or set as null),
   /// 22(km) will be set by default.
-  init({@required double radius, String gender}) {
+  init({double radius = 22, String gender}) {
     // print('location:init');
-    if (radius == null) radius = 22;
     _radius = radius;
     _gender = gender;
     _checkPermission();
@@ -217,6 +215,9 @@ class FireFlutterLocation {
       return;
     }
 
+    // print('point: ${point.latitude} x ${point.longitude}');
+    // print('radius: $_radius');
+    // print('gender: $_gender');
     Query colRef = _ff.publicCol;
     if (_gender != null) {
       colRef = colRef.where('gender', isEqualTo: _gender);
@@ -237,10 +238,11 @@ class FireFlutterLocation {
         )
         .listen((List<DocumentSnapshot> documents) {
       usersNearMe = {};
+      // print('found: ${documents.length}');
 
       /// Clear users if documents is empty
       /// documents might have 1 document containing the current user's location.
-      if (documents.isEmpty || documents.length == 1) {
+      if (documents.isEmpty) {
         users.add(usersNearMe);
         return;
       }

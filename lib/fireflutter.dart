@@ -532,6 +532,13 @@ class FireFlutter extends Base {
         );
       }
 
+      /// todo do more customization on title or body is empty.
+      if (data['title'] == null || data['title'] == '') {
+        data['title'] = '${user.displayName} has created a post';
+      }
+      if (data['content'] == null || data['content'] == '') {
+        data['content'] = '${user.displayName} has created a post';
+      }
       sendNotification(
         data['title'],
         data['content'],
