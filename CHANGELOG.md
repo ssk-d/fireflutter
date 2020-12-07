@@ -1,7 +1,7 @@
 ## [0.0.37] - Updates and fixes
 
 - User search based on GEO location has updated.
-- Algolia index exception on commenti g.
+- Algolia index exception on comment.
 
 ## [0.0.36] - Rewriting chat functionality and updates on push notifications and user location
 
