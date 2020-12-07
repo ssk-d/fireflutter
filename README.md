@@ -2318,6 +2318,12 @@ if (location.lastPoint == null)
       "Warning: the device cannot fetch location information(GEO location)!"),
 ```
 
+- Listing users based on location
+
+```dart
+location.init(radius: 10000, gender: 'M');
+```
+
 ### Initialization of Location
 
 # Tests

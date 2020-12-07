@@ -22,9 +22,7 @@ class FireFlutterLocation {
 
   double _radius;
   String _gender;
-
-  int _minAgeStamp;
-  int _maxAgeStamp;
+  String get gender => _gender;
 
   /// [change] event will be fired when user changes his location.
   /// Since [change] is BehaviorSubject, it will be fired with null for the
@@ -56,33 +54,34 @@ class FireFlutterLocation {
   GeoFirePoint get lastPoint => _lastPoint;
 
   /// Holds all users near me without the age filter
-  Map<String, dynamic> _usersNearMe = {};
+  Map<String, dynamic> usersNearMe = {};
 
   /// Exposed getter to get filtered users near me.
-  Map<String, dynamic> get usersNearMe {
-    Map<String, dynamic> _users = {};
-    if (_minAgeStamp != null && _maxAgeStamp != null) {
-      _usersNearMe.forEach((key, value) {
-        Timestamp bday = _usersNearMe[key]['birthday'];
-        if (bday == null) return;
-        if (bday.seconds >= _minAgeStamp && bday.seconds <= _maxAgeStamp) {
-          _users[key] = value;
-        }
-        print(bday);
-      });
-      return _users;
-    } else {
-      // print('no age filter');
-      return _usersNearMe;
-    }
-  }
+  // Map<String, dynamic> get usersNearMe {
+  //   Map<String, dynamic> _users = {};
+  //   if (_minAgeStamp != null && _maxAgeStamp != null) {
+  //     _usersNearMe.forEach((key, value) {
+  //       Timestamp bday = _usersNearMe[key]['birthday'];
+  //       if (bday == null) return;
+  //       if (bday.seconds >= _minAgeStamp && bday.seconds <= _maxAgeStamp) {
+  //         _users[key] = value;
+  //       }
+  //       print(bday);
+  //     });
+  //     return _users;
+  //   } else {
+  //     // print('no age filter');
+  //     return _usersNearMe;
+  //   }
+  // }
 
   /// [radius] is the radius to search users. If it is not set(or set as null),
   /// 22(km) will be set by default.
-  init({@required double radius}) {
+  init({@required double radius, String gender}) {
     // print('location:init');
     if (radius == null) radius = 22;
     _radius = radius;
+    _gender = gender;
     _checkPermission();
     _updateUserLocation();
   }
@@ -98,18 +97,18 @@ class FireFlutterLocation {
     _radius = radius ?? _radius;
     _gender = gender ?? _gender;
 
-    if (minAge != null && maxAge != null) {
-      _minAgeStamp = _secondsSinceEpoch(maxAge);
-      _maxAgeStamp = _secondsSinceEpoch(minAge);
-    }
+    // if (minAge != null && maxAge != null) {
+    //   _minAgeStamp = _secondsSinceEpoch(maxAge);
+    //   _maxAgeStamp = _secondsSinceEpoch(minAge);
+    // }
 
     _listenUsersNearMe(_lastPoint);
   }
 
-  int _secondsSinceEpoch(int value) {
-    DateTime now = DateTime.now();
-    return DateTime(now.year - value).millisecondsSinceEpoch ~/ 1000;
-  }
+  // int _secondsSinceEpoch(int value) {
+  //   DateTime now = DateTime.now();
+  //   return DateTime(now.year - value).millisecondsSinceEpoch ~/ 1000;
+  // }
 
   Future<bool> hasPermission() async {
     return await _location.hasPermission() == PermissionStatus.granted;
@@ -212,7 +211,6 @@ class FireFlutterLocation {
   /// And a second does not look enough to handle the stream listening(updating UI) of hundreds users within the radius.
   /// ? This is a clear race condition. How are you going to handle this racing?
   ///
-
   _listenUsersNearMe(GeoFirePoint point) {
     if (point == null) {
       /// If the device can't fetch location information, then [point] will be null.
@@ -224,7 +222,9 @@ class FireFlutterLocation {
       colRef = colRef.where('gender', isEqualTo: _gender);
     }
 
-    if (usersNearMeSubscription != null) usersNearMeSubscription.cancel();
+    if (usersNearMeSubscription != null) {
+      usersNearMeSubscription.cancel();
+    }
 
     usersNearMeSubscription = geo
         .collection(collectionRef: colRef)
@@ -236,20 +236,16 @@ class FireFlutterLocation {
           strictMode: true,
         )
         .listen((List<DocumentSnapshot> documents) {
-      Map<String, dynamic> _users = {};
-
-      // print('document length');
-      // print(documents.length.toString());
+      usersNearMe = {};
 
       /// Clear users if documents is empty
       /// documents might have 1 document containing the current user's location.
       if (documents.isEmpty || documents.length == 1) {
-        print('document empty');
-        _usersNearMe = {};
-        users.add(_users);
+        users.add(usersNearMe);
         return;
       }
 
+      /// Get new users into [usersNearMe] and update.
       documents.forEach((document) {
         // if this is the current user's data. don't add it to the list.
         if (document.id == _ff.user.uid) return;
@@ -264,9 +260,9 @@ class FireFlutterLocation {
           lng: _point.longitude,
         );
 
-        _usersNearMe[document.id] = data;
+        usersNearMe[document.id] = data;
       });
-      users.add(_users);
+      users.add(usersNearMe);
     });
   }
 }
