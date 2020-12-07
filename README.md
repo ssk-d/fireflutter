@@ -1441,6 +1441,7 @@ In forum edit screen, user can create or update a post and he can upload photos.
 
 - Post create and update are done with `editPost()` method.
   - If `id` is null, then, it will create a post. Or it will update the post of the id.
+  - When post is created or updated, the login user's `displayName` and `photoURL` are saved in the document.
 
 ```dart
 ff.editPost({

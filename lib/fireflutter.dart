@@ -513,6 +513,9 @@ class FireFlutter extends Base {
     Map category = (await categoryDoc(data['category']).get()).data();
     if (category == null) throw CATEGORY_NOT_EXISTS;
 
+    data['displayName'] = user.displayName;
+    data['photoURL'] = user.photoURL;
+
     // Create
     if (data['id'] == null) {
       data.remove('id');
@@ -598,6 +601,9 @@ class FireFlutter extends Base {
     data.remove('postid');
 
     // print('ref.path: ' + commentsCol.path.toString());
+
+    data['displayName'] = user.displayName;
+    data['photoURL'] = user.photoURL;
 
     /// Create
     if (data['id'] == null) {

@@ -2,6 +2,7 @@
 
 - User search based on GEO location has updated.
 - Algolia index exception on comment.
+- When post and comment are created/updated, author(login user)'s displayName and photoURL are saved in the post/comment documents.
 
 ## [0.0.36] - Rewriting chat functionality and updates on push notifications and user location
 

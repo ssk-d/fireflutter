@@ -595,6 +595,7 @@ class Base {
       tokens = [...tokens, ...tokensDoc.keys];
     }
 
+    /// TODO make the title and body of push notification optioanl.
     sendNotification(
       post['title'],
       data['content'],
