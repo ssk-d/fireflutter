@@ -21,8 +21,7 @@ class FireFlutterLocation {
   FireFlutter _ff;
   double _radius;
 
-  Timestamp _minTimeStamp;
-  Timestamp _maxTimeStamp;
+  String _gender;
 
   /// [change] event will be fired when user changes his location.
   /// Since [change] is BehaviorSubject, it will be fired with null for the
@@ -67,32 +66,14 @@ class FireFlutterLocation {
   ///
   reset({
     double radius,
-    int minAge,
-    int maxAge,
+    String gender,
   }) {
     _radius = radius ?? _radius;
-
-    /// set age limit/filter
-    _setAgeFilter(minAge, maxAge);
+    _gender = gender ?? _gender;
 
     /// TODO: calculate date from min and max Age, convert to timestamp
 
     _listenUsersNearMe(_lastPoint);
-  }
-
-  _setAgeFilter(int startAge, int endAge) {
-    if (startAge == null && endAge == null) return;
-    print('Age range $startAge - $endAge');
-
-    DateTime now = DateTime.now();
-    int minYear = now.year - endAge;
-    int maxYear = now.year - startAge;
-    print('minYear $minYear : maxYear $maxYear');
-
-    _minTimeStamp = Timestamp.fromMillisecondsSinceEpoch(
-        DateTime(minYear).millisecondsSinceEpoch);
-    _maxTimeStamp = Timestamp.fromMillisecondsSinceEpoch(
-        DateTime(maxYear).millisecondsSinceEpoch);
   }
 
   Future<bool> hasPermission() async {
@@ -205,30 +186,9 @@ class FireFlutterLocation {
     }
 
     Query colRef = _ff.publicCol;
-
-    /// TODO: add age filter
-    if (_minTimeStamp != null && _maxTimeStamp != null) {
-      print('_min $_minTimeStamp');
-      print('_max $_maxTimeStamp');
-
-      colRef = colRef
-              // .where('birthday', isGreaterThanOrEqualTo: DateTime(1950))
-              .where('birthday', isLessThanOrEqualTo: DateTime.now())
-          // .orderBy('birthday');
-          ;
+    if (_gender != null) {
+      colRef = colRef.where('gender', isEqualTo: _gender);
     }
-
-    colRef = colRef
-            // .where('birthday', isGreaterThanOrEqualTo: DateTime(1950))
-            // .where('birthday', isLessThanOrEqualTo: DateTime.now())
-
-            // .where('geo.locaiton', ...)
-
-            // .where('location.geohash', isLessThan: ...);
-
-            .where('gender', isEqualTo: 'M')
-        // .orderBy('birthday');
-        ;
 
     if (usersNearMeSubscription != null) usersNearMeSubscription.cancel();
 
@@ -236,12 +196,13 @@ class FireFlutterLocation {
         .collection(collectionRef: colRef)
         .within(
           center: point,
-          // radius: _radius, // km
-          radius: 10000000, // km
+          radius: _radius, // km
+          // radius: 10000000, // km
           field: geoFieldName,
           strictMode: true,
         )
         .listen((List<DocumentSnapshot> documents) {
+
       Map<String, dynamic> _users = {};
 
       // print('document length');
@@ -262,8 +223,6 @@ class FireFlutterLocation {
         Map<String, dynamic> data = document.data();
         GeoPoint _point = data[geoFieldName]['geopoint'];
 
-        /// TODO: add age information
-
         // print('bday');
         // print(data['birthday'].toString());
 
@@ -274,9 +233,9 @@ class FireFlutterLocation {
           lng: _point.longitude,
         );
 
-        usersNearMe[document.id] = data;
+        _users[document.id] = data;
       });
-      users.add(usersNearMe);
+      users.add(_users);
     });
   }
 }
