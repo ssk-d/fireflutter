@@ -238,9 +238,9 @@ class ChatMyRoomList extends ChatBase {
     });
   }
 
-  @Deprecated('This does not help for performance')
-
-  /// This is useless since the UI redraws the whole list anyway.
+  /// This was for performance and is useless since the UI redraws the whole
+  /// list anyway. This does not help any performance matter.
+  /// TODO Remove this.
   _overwrite(roomInfo) {
     int found = rooms.indexWhere((r) => r['id'] == roomInfo['id']);
     if (found > -1) {
