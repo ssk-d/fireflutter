@@ -315,20 +315,8 @@ class ChatRoom extends ChatBase {
   List<String> get blockedUsers => _info?.blockedUsers;
   Timestamp get createdAt => _info.createdAt;
 
-  @Deprecated('to be removed')
-  ChatRoomInfo info;
-
-  // The room id.
-  @Deprecated('To be removed')
-  String _id;
-
-  // Temporary variable to create a chat room
-  @Deprecated('To be removed')
-  List<String> _users;
-
-  // Temporary variable to set room title on room creation
-  @Deprecated('To be removed')
-  String _title;
+  /// push notification topic name
+  String get topic => 'notifyChat-${this.id}';
 
   /// Enter chat room
   ///

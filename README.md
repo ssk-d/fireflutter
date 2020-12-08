@@ -84,6 +84,7 @@ A free, open source, rapid development flutter package to build apps like shoppi
   - [Login with email and password](#login-with-email-and-password)
   - [Profile update](#profile-update)
   - [Create admin page](#create-admin-page)
+  - [Getting user public data](#getting-user-public-data)
   - [Forum Coding](#forum-coding)
     - [Create forum category management screen](#create-forum-category-management-screen)
     - [Create post edit screen](#create-post-edit-screen)
@@ -1411,6 +1412,26 @@ GetMateriaApp(
 - Now, you will be able to login admin page. A user may accidentally enter admin page but he cannot see administrative information since Firestore security rules are in blocking the middle.
 
 - See [admin-page branch of sample app](https://github.com/thruthesky/fireflutter_sample_app/tree/admin-page) for complete code.
+
+## Getting user public data
+
+- `ff.publicData` which holds user's public data will be available after user logged in and whenever user public document changes.
+- You can get login user's data directly querying Firestore like below. This may be helpful when you are unsure if the `ff.publicData` is already avaiable or updated. For instance, you want to use user's public data as soon as app boots, but you are unsure when `ff.publicData` will be available, or how long it will take for it to be ready.
+
+```dart
+final data = (await ff.publicDoc.get()).data();
+```
+
+- You may use the code below. This code waits until `ff.publicData` is ready to be consumed.
+
+```dart
+ff.userChange
+  .where((x) => ff.publicData != null && ff.publicData.keys.length > 0)
+  .take(1)
+  .listen((x) {
+    // ... do something here
+});
+```
 
 ## Forum Coding
 
