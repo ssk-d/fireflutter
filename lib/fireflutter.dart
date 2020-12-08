@@ -545,7 +545,7 @@ class FireFlutter extends Base {
       sendNotification(
         data['title'],
         data['content'],
-        screen: '/forumView',
+        screen: 'postView',
         id: doc.id,
         topic: NotificationOptions.post(data['category']),
       );

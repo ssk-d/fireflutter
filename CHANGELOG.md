@@ -2,6 +2,7 @@
 
 - Sending chat push notification is now encapsulated inside ChatRoom.
 - Removing deprecated and unused variables.
+- Change push notification screen from `/forumView` to `postView`.
 
 ## [0.0.38] - Dependency update
 

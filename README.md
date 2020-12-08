@@ -1435,6 +1435,17 @@ ff.userChange
 });
 ```
 
+- The code above is very much the same as below.
+
+```dart
+ff.userChange
+  .where((x) => x == UserChangeType.public)
+  .take(1)
+  .listen((x) async {
+    // ... do something here
+  });
+```
+
 ## Forum Coding
 
 FireFlutter does not involve any of the app's in UI/UX. Because of this, you can customize your app as whatever you like.
@@ -1662,6 +1673,10 @@ If you are following the path of how to create a post, list posts, and edit post
   - And you need to show an alert message, if it was send while the app is open.
   - Or move to specific page when you click the notification from tray.
 
+- When push notification arrives by creating post/comment, then screen property in push data will be `postView` while it will be `chatRoom` when push notification arrives by chatting.
+
+  - Then, the app can route respective screen(route) based on the screen property.
+
 - Listening to incoming notification.
 
 ```dart
@@ -1700,7 +1715,7 @@ RaisedButton(
         'title message only',
         'test body message',
         id: '0X1upoaLklWc2Z07dsbn',
-        screen: '/forumView',
+        screen: 'any-screen-name',
         token: 'Replace DeviceToken here',
       );
     });
@@ -1713,7 +1728,7 @@ RaisedButton(
         'title message only',
         'test body message',
         id: '0X1upoaLklWc2Z07dsbn',
-        screen: '/forumView',
+        screen: 'any-screen-name',
         topic: ff.allTopic,
       );
     });
@@ -1726,7 +1741,7 @@ RaisedButton(
         'title message only',
         'test body message',
         id: '0X1upoaLklWc2Z07dsbn',
-        screen: '/forumView',
+        screen: 'any-screen-name',
         tokens: ['Device Token', 'Another Device Token'],
       );
     });
@@ -2065,8 +2080,14 @@ Firestore structure and its data are secured by Firestore security rules.
       - When it creates the room, it will create a room for A and B, and next time A or B try to chat each other again, it will not create a new room. Instead, it will use previously created room.
 
 - If the app must inform new messages to the user when the user is not in room list screen,
+
   - The app can listen `my-room-list` collection on app screen (or homescreen)
   - And when a new message arrives, the app can show snackbar.
+
+- You may put the logic of the app like below
+  - Declare `ChatMyRoomList` and `ChatRoom` instances as global variables.
+  - Listen to chat room update on home screen and display updates on chat icon.
+  - When somebody chats, the user will get push notification. and ignore push notifications if it's my chat or someone that I am talking to.
 
 ## Pitfalls of chat logic
 

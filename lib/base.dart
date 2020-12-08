@@ -5,6 +5,7 @@ class Base {
   bool isFirebaseInitialized = false;
 
   /// Fires after Firebase has initialized or if already initialized.
+  /// The true event will be fired only once when Firebase initialized.
   BehaviorSubject<bool> firebaseInitialized = BehaviorSubject.seeded(false);
 
   /// Returns Firestore instance. Firebase database instance.
@@ -177,7 +178,7 @@ class Base {
           (DocumentSnapshot snapshot) {
             if (snapshot.exists) {
               publicData = snapshot.data();
-              userChange.add(UserChangeType.document);
+              userChange.add(UserChangeType.public);
             }
           },
         );
@@ -600,7 +601,7 @@ class Base {
       post['title'],
       data['content'],
       id: post['id'],
-      screen: '/forumView',
+      screen: 'postView',
       topic: topicKey,
       tokens: tokens,
     );
