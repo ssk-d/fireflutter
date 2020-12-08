@@ -1,8 +1,9 @@
-## [0.0.39] - Chat push notification
+## [0.0.39] - Admin sites
 
 - Sending chat push notification is now encapsulated inside ChatRoom.
 - Removing deprecated and unused variables.
 - Change push notification screen from `/forumView` to `postView`.
+- Admin site development with Vuejs + Ionic
 
 ## [0.0.38] - Dependency update
 
