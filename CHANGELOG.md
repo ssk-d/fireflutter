@@ -1,3 +1,8 @@
+## [0.0.39] - Chat push notification
+
+- Sending chat push notification is now encapsulated inside ChatRoom.
+- Removing deprecated and unused variables.
+
 ## [0.0.38] - Dependency update
 
 - Some of packages have failed due to rxdart dependency issue.

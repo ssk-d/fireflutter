@@ -5,6 +5,7 @@ const String MODERATOR_NOT_EXISTS_IN_USERS = 'MODERATOR_NOT_EXISTS_IN_USERS';
 const String YOU_ARE_NOT_MODERATOR = 'YOU_ARE_NOT_MODERATOR';
 const String ONE_OF_USERS_ARE_BLOCKED = 'ONE_OF_USERS_ARE_BLOCKED';
 const String USER_NOT_EXIST_IN_ROOM = 'USER_NOT_EXIST_IN_ROOM';
+const String NAME_IS_EMPTY = 'NAME_IS_EMPTY';
 
 /// ChatRoomInfo for global rooms and private room.
 class ChatRoomInfo {
@@ -504,13 +505,19 @@ class ChatRoom extends ChatBase {
     _subscription.cancel();
   }
 
+  /// Send chat message to the users in the room
+  ///
   Future<Map<String, dynamic>> sendMessage({
     @required String text,
     Map<String, dynamic> extra,
   }) async {
+    String name = f.user.displayName;
+    if (name == null || name.trim() == '') {
+      throw NAME_IS_EMPTY;
+    }
     Map<String, dynamic> message = {
       'senderUid': f.user.uid,
-      'senderDisplayName': f.user.displayName,
+      'senderDisplayName': name,
       'senderPhotoURL': f.user.photoURL,
       'text': text,
 
@@ -548,6 +555,15 @@ class ChatRoom extends ChatBase {
     }
     // print('send messages to: ${messages.length}');
     await Future.wait(messages);
+
+    await f.sendNotification(
+      '$name send you message.',
+      text,
+      id: id,
+      screen: 'chatRoom',
+      topic: topic,
+    );
+
     return message;
   }
 

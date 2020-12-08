@@ -1,11 +1,11 @@
 # Fire Flutter
 
-A free, open source, rapid development flutter package to build apps like shopping mall, social community, or any kind of apps.
+A free, open source, complete, rapid development package for creating Social apps, Chat apps, Community(Forum) apps, Shopping mall apps, and much more based on Firebase.
 
 - Complete features.\
-  This package has complete features (see Features below) that most of apps are needed.
+  This package has complete features (see Features below) that most of apps require.
 - `Simple, easy and the right way`.\
-  We want it to be deadly simple but right way for ourselves and for the developers in the world.
+  We want it to be deadly simple yet, right way for ourselves and for the developers in the world.
   We know when it gets complicated, our lives would get even more complicated.
 - Real time.\
   We design it to be real time when it is applied to your app. All the events like post and comment creation, voting(like, dislike), deletion would appears on all the user's phone immediately after the event.
@@ -1259,6 +1259,8 @@ class FirebaseReady extends StatelessWidget {
 - Private user information is saved under `/users/{uid}` documentation.
 - User's notification subscription information is saved under `/users/{uid}/meta/public` documents.
 - Push notification tokens are saved under `/users/{uid}/meta/tokens` document.
+
+- The app may store user name(displayName) on different place. But fireflutter uses user's name from firebase auth displayName. So, developers needs to sync your name to firebase auth displayName when the name is stored some where else.
 
 ## Create Register Screen
 
