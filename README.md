@@ -208,8 +208,8 @@ A free, open source, complete, rapid development package for creating Social app
 
 - Location
 
-  - App can update login user's location
-  - App can search other users(by distance, gender) near the login user.
+  - App can update login user's GEO location. There are many possiblities by saving GEO location.
+  - App can search other users(by distance, gender) near the login user GEO point.
 
 - Settings in real time.
 
@@ -1455,6 +1455,17 @@ ff.userChange
   .listen((x) async {
     // ... do something here
   });
+```
+
+- Here is another sample code to wait until the gender data is loaded.
+
+```dart
+ff.userChange
+  .where((x) => ff.publicData != null && ff.publicData['gender'] != null)
+  .take(1)
+  .listen((x) async {
+    // ... do something here
+   });
 ```
 
 ## Forum Coding
