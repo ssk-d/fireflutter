@@ -209,7 +209,7 @@ A free, open source, complete, rapid development package for creating Social app
 - Location
 
   - App can update login user's location
-  - App can search other users near the login user.
+  - App can search other users(by distance, gender) near the login user.
 
 - Settings in real time.
 
@@ -223,6 +223,16 @@ A free, open source, complete, rapid development package for creating Social app
 
   - Tight Firestore security rules are applied.
   - For some functionalities that cannot be covered by Firestore security are covered by Cloud Functions.
+
+- In App Purchase
+
+  - Some apps need in-app-purchase functionality while others not. So, we made the in-app-purchase as a separate package. You can find it at [https://pub.dev/packages/fireflutter_in_app_purchase](https://pub.dev/packages/fireflutter_in_app_purchase)
+  - The fireflutter_in_app_purchase supports a simplified payment API over [inapppurchase](https://pub.dev/packages/in_app_purchase) package for both Android and iOS.
+
+- Admin Site
+
+  - Of course most apps need admin feature that works outside of the app. And that should be a desktop version of website since there are so much contents to view in a single page.
+  - Unfortunately, Flutter web is not ready for production, so we have chosen `Vuejs3 + Ionic` to build admin site to manage users, posts, photos and other resources in Firebase.
 
 - Fully Customizable
   - FireFlutter package does not involve in any of part application's login or UI. It is completely separated from the app. Thus, it's highly customizable.
