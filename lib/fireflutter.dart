@@ -502,7 +502,7 @@ class FireFlutter extends Base {
   /// });
   /// ```
   Future<String> editPost(Map<String, dynamic> data) async {
-    print('data: $data');
+    // print('data: $data');
     if (notLoggedIn) throw LOGIN_FIRST;
     if (data['category'] == null || data['category'] == '') {
       throw CATEGORY_EMPTY;

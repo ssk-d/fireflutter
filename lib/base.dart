@@ -52,6 +52,8 @@ class Base {
 
   /// [authStateChange] is a link to `FirebaseAuth.instance.authStateChanges()`
   ///
+  /// Use this to know if the user has logged in or not.
+  ///
   /// You can do the following with [authStateChanges]
   /// ```
   /// StreamBuilder(

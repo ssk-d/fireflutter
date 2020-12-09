@@ -1,3 +1,7 @@
+## [0.0.40] - Minor fixes
+
+- Admin site development with Vue.js without Ionic.
+
 ## [0.0.39] - Admin sites
 
 - Sending chat push notification is now encapsulated inside ChatRoom.
