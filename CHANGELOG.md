@@ -1,5 +1,6 @@
-## [0.0.40] - Minor fixes
+## [0.0.40] - userChange event data
 
+- `userChange` event delivers user information change type and Firebase.auth.User data if available.
 - Admin site development with Vue.js without Ionic. Ionic was dropped since it does not support vue class component at this time.
 
 ## [0.0.39] - Admin sites

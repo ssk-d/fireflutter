@@ -121,6 +121,7 @@ A free, open source, complete, rapid development package for creating Social app
   - [Pitfalls of chat logic](#pitfalls-of-chat-logic)
   - [Code of chat](#code-of-chat)
     - [Preparation for chat](#preparation-for-chat)
+    - [Chat Room List](#chat-room-list)
     - [Chat room](#chat-room)
     - [Begin chat with a user](#begin-chat-with-a-user)
     - [Displaying chat messages on the screen](#displaying-chat-messages-on-the-screen)
@@ -1450,7 +1451,7 @@ ff.userChange
 
 ```dart
 ff.userChange
-  .where((x) => x == UserChangeType.public)
+  .where((x) => x.type == UserChangeType.public)
   .take(1)
   .listen((x) async {
     // ... do something here
@@ -2135,6 +2136,142 @@ Firestore structure and its data are secured by Firestore security rules.
 ff.init({
   'openProfile': true,
 })
+```
+
+### Chat Room List
+
+- On chat room list screen, you may code like below
+
+```dart
+class ChatMyRoomListScreen extends StatefulWidget {
+  @override
+  _ChatMyRoomListScreenState createState() => _ChatMyRoomListScreenState();
+}
+
+class _ChatMyRoomListScreenState extends State<ChatMyRoomListScreen> {
+  ChatMyRoomList myRoomList;
+
+  @override
+  void initState() {
+    // create chat room instance
+    myRoomList = ChatMyRoomList(
+        inject: ff,
+        render: () {
+          // render screen
+          setState(() {});
+        });
+    super.initState();
+  }
+  @override
+  void dispose() {
+    // leave chat room
+    myRoomList.leave();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return SingleChildScrollView(
+      child: Container(
+        child: Column(
+          children: [
+            RaisedButton(onPressed: () {}, child: Text('Add Friends')),
+            Text('My room list'),
+            ListView.builder(
+                shrinkWrap: true,
+                physics: NeverScrollableScrollPhysics(),
+                itemCount: myRoomList.rooms.length,
+                itemBuilder: (_, i) {
+                  ChatRoomInfo room = ChatRoomInfo.fromData(
+                      myRoomList.rooms[i], myRoomList.rooms[i]['id']);
+                  return ListTile(
+                    title: Text((room.title ?? '') + " (${room.newMessages})"),
+                    subtitle: Text(room.id +
+                        ': ' + (room.text ?? '')),
+                    trailing: Icon(Icons.arrow_right),
+                    onTap: () { /** enter chat room  */ },
+                  );
+                }),
+          ],
+        ),
+      ),
+    );
+  }
+}
+```
+
+- To listen chat room list, declare it on main.dart.
+
+```dart
+// Put this code somewhere in global scope.
+BehaviorSubject myRoomListChange = BehaviorSubject.seeded(null);
+ChatMyRoomList myRoomList;
+
+
+
+// Put this code in main.dart
+// Listen only one time when user change. The nature of Firebase auth fires
+// login event twice.
+ff.userChange
+    .distinct((p, n) => p?.user?.uid == n?.user?.uid)
+    .listen((data) {
+  if (myRoomList != null) {
+    myRoomList.leave();
+    myRoomList = null;
+  }
+  if (ff.user == null) {
+    return;
+  }
+  myRoomList = ChatMyRoomList(
+    inject: ff,
+    render: () {
+      myRoomListChange.add(myRoomList.rooms);
+    },
+  );
+});
+
+// Put this code in my chat room list screen.
+  StreamSubscription subscription;
+  @override
+  void initState() {
+    super.initState();
+    subscription = myRoomListChange.listen((value) => setState(() {}));
+  }
+  @override
+  void dispose() {
+    super.dispose();
+    subscription.cancel();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return SingleChildScrollView(
+      child: Container(
+        child: Column(
+          children: [
+            RaisedButton(onPressed: () {}, child: Text('Add Friends')),
+            Text('chat my room list'),
+            ListView.builder(
+              shrinkWrap: true,
+              physics: NeverScrollableScrollPhysics(),
+              itemCount: myRoomList.rooms.length,
+              itemBuilder: (_, i) {
+                ChatRoomInfo room = ChatRoomInfo.fromData(
+                    myRoomList.rooms[i], myRoomList.rooms[i]['id']);
+                return ListTile(
+                  title: Text((room.title ?? '') + " (${room.newMessages})"),
+                  subtitle: Text(room.id + ': ' +  (room.text ?? '')),
+                  trailing: Icon(Icons.arrow_right),
+                  onTap: () { /* enter chat room */ },
+                );
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
 ```
 
 ### Chat room

@@ -60,8 +60,19 @@ final String notifyComment = NotificationOptions.notifyCommentsUnderMyComment;
 typedef Render = void Function(RenderType x);
 const ERROR_SIGNIN_ABORTED = 'ERROR_SIGNIN_ABORTED';
 
-/// [UserChangeType.public] is for public data change(read and listening for update)
-enum UserChangeType { auth, document, public, register, profile, phoneNumber }
+/// [UserChangeType.public] is for `/meta/user/public/{uid}` change(read for the first time and listening for update)
+/// [UserChangeType.document] is for `/users/{uid}` change.
+/// [UserChangeType.auth] is for login, or logout. Be reminded that login even will be fired twice. This is the nature of firebase.
+/// [UserChangeType.profile] is for changing `photoURL` or `displayName`.
+enum UserChangeType { auth, document, public, register, profile }
+
+/// Event data on [userChange] event
+class UserChangeData {
+  UserChangeData(this.type, {this.user});
+  UserChangeType type;
+  User user;
+}
+
 enum NotificationType { onMessage, onLaunch, onResume }
 
 typedef NotificationHandler = void Function(Map<String, dynamic> messge,

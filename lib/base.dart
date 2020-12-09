@@ -102,7 +102,7 @@ class Base {
   ///
   /// It is important to know that [authStateChanges] event happens only when
   /// user logs in or logs out.
-  BehaviorSubject<UserChangeType> userChange = BehaviorSubject.seeded(null);
+  BehaviorSubject<UserChangeData> userChange = BehaviorSubject.seeded(null);
 
   /// [notification] will be fired whenever there is a push notification.
   /// the return data will the following and can be use when user receive notifications.
@@ -152,7 +152,7 @@ class Base {
     /// Note: listen handler will called twice if Firestore is working as offline mode.
     authStateChanges.listen((User user) {
       /// [userChange] event fires when user is logs in or logs out.
-      userChange.add(UserChangeType.auth);
+      userChange.add(UserChangeData(UserChangeType.auth, user: user));
 
       /// Cancel listening user document.
       ///
@@ -172,15 +172,18 @@ class Base {
           (DocumentSnapshot snapshot) {
             if (snapshot.exists) {
               userData = snapshot.data();
-              userChange.add(UserChangeType.document);
+              userChange
+                  .add(UserChangeData(UserChangeType.document, user: user));
             }
           },
         );
+
+        ///
         userPublicDocSubscription = publicDoc.snapshots().listen(
           (DocumentSnapshot snapshot) {
             if (snapshot.exists) {
               publicData = snapshot.data();
-              userChange.add(UserChangeType.public);
+              userChange.add(UserChangeData(UserChangeType.public, user: user));
             }
           },
         );
@@ -804,11 +807,11 @@ class Base {
   /// This method may fire userChange event.
   Future<void> onProfileUpdate() async {
     if (openProfile) {
+      // This will fire user `UserChangeType.public` event on the listener.
       await updateUserPublic({
         'displayName': user.displayName,
         'photoURL': user.photoURL,
       });
-      userChange.add(UserChangeType.profile);
     }
   }
 

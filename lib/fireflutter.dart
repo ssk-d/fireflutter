@@ -315,9 +315,9 @@ class FireFlutter extends Base {
   /// This method updates user profile photo faster than `updateProfile`.
   Future<void> updatePhoto(String url) async {
     await user.updateProfile(photoURL: url);
+    userChange.add(UserChangeData(UserChangeType.profile));
     await user.reload();
     await onProfileUpdate();
-    userChange.add(UserChangeType.profile);
   }
 
   /// Get more posts from Firestore
@@ -857,12 +857,10 @@ class FireFlutter extends Base {
         if (linkOrSignIn == linkPhoneAuth) {
           user.linkWithCredential(credential).then((value) {
             user.reload();
-            userChange.add(UserChangeType.phoneNumber);
             onVerificationCompleted(value.user);
           });
         } else {
           FirebaseAuth.instance.signInWithCredential(credential).then((value) {
-            userChange.add(UserChangeType.auth);
             onVerificationCompleted(value.user);
           });
         }
@@ -908,8 +906,6 @@ class FireFlutter extends Base {
     } else {
       await FirebaseAuth.instance.signInWithCredential(creds);
     }
-
-    userChange.add(UserChangeType.phoneNumber);
   }
 
   /// Returns previous choice
