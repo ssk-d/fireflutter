@@ -1,6 +1,6 @@
 ## [0.0.40] - Minor fixes
 
-- Admin site development with Vue.js without Ionic.
+- Admin site development with Vue.js without Ionic. Ionic was dropped since it does not support vue class component at this time.
 
 ## [0.0.39] - Admin sites
 
