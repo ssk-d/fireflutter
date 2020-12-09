@@ -327,6 +327,7 @@ class ChatRoom extends ChatBase {
     String _id = id;
 
     if (users == null) users = [];
+    // [users] has empty elem,ent, remove.
     users.removeWhere((element) => element == null || element == '');
     if (_id != null && users.length > 0)
       throw 'ONE_OF_ID_OR_USERS_MUST_BE_NULL';
@@ -368,12 +369,25 @@ class ChatRoom extends ChatBase {
     // fetch latest messages
     fetchMessages();
 
-    // Listen to changes of room info
+    // Listening current global room for changes
     globalRoomDoc(id).snapshots().listen((event) {
       _info = ChatRoomInfo.fromSnapshot(event);
       _notify();
     });
+
+    // Listening current room in my room list.
+    currentRoom.snapshots().listen((DocumentSnapshot doc) {
+      // If the user got a message from a chat room where the user is currently in,
+      // then, set `newMessages` to 0.
+      final data = ChatRoomInfo.fromSnapshot(doc);
+      if (data.newMessages > 0 && data.createdAt != null) {
+        currentRoom.update({'newMessages': 0});
+      }
+    });
   }
+
+  /// Returns the current room in my room list.
+  DocumentReference get currentRoom => myRoom(id);
 
   Future<void> ___create({List<String> users, String id}) async {
     // String roomId = chatRoomId();
@@ -434,6 +448,7 @@ class ChatRoom extends ChatBase {
     _subscription = q.snapshots().listen((snapshot) {
       // print('fetchMessage() -> done: _page: $_page');
       // Block loading previous messages for some time.
+
       Timer(Duration(milliseconds: _throttle), () => _throttling = false);
       Timer(Duration(milliseconds: _loadingTimeout), () {
         loading = false;
@@ -449,9 +464,9 @@ class ChatRoom extends ChatBase {
 
         /// 새로 채팅을 하거나, 이전 글을 가져 올 때, 새 채팅(생성)뿐만 아니라, 이전 채팅 글을 가져올 때에도 added 이벤트 발생.
         if (documentChange.type == DocumentChangeType.added) {
-          /// FieldValue.serverTimestamp() 를 채팅을 작성할 때, listen 이벤트를 두번 발생시킨다.
-          /// 처음 이벤트는 `added` 이며, 값은 null 이다.
-          /// 두번째 이벤트는 `modified` 이며, 실제 시간 값을 가지고 있다.
+          // Two events will be fired on the sender's device.
+          // First event has null of FieldValue.serverTimestamp()
+          // Only one event will be fired on other user's devices.
           if (message['createdAt'] == null) {
             messages.add(message);
           }
@@ -463,13 +478,13 @@ class ChatRoom extends ChatBase {
                   messages[0]['createdAt'].microsecondsSinceEpoch) {
             messages.add(message);
           } else {
-            /// if it's old message, add on top.
+            // if it's old message, add on top.
             messages.insert(0, message);
           }
 
-          /// if it is loading old messages
-          /// and if it has less messages than the limit
-          /// check if it is the very first message.
+          // if it is loading old messages
+          // and if it has less messages than the limit
+          // check if it is the very first message.
           if (message['createdAt'] != null) {
             if (snapshot.docs.length < _limit) {
               if (message['text'] == ChatProtocol.roomCreated) {
