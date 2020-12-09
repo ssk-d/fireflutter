@@ -91,11 +91,11 @@ class FireFlutter extends Base {
         // print('settingsChange.listen() on fireflutter::init() $settings');
 
         // Initalize Algolia
-        String applicationId = appSetting(ALGOLIA_APP_ID);
+        String algoliaAppId = appSetting(ALGOLIA_APP_ID);
         String apiKey = appSetting(ALGOLIA_ADMIN_API_KEY);
-        if (applicationId != null && apiKey != null) {
+        if (algoliaAppId != null && apiKey != null) {
           algolia = Algolia.init(
-            applicationId: applicationId,
+            applicationId: algoliaAppId,
             apiKey: apiKey,
           );
         }
@@ -502,7 +502,7 @@ class FireFlutter extends Base {
   /// });
   /// ```
   Future<String> editPost(Map<String, dynamic> data) async {
-    print('data: $data');
+    // print('data: $data');
     if (notLoggedIn) throw LOGIN_FIRST;
     if (data['category'] == null || data['category'] == '') {
       throw CATEGORY_EMPTY;
@@ -512,6 +512,9 @@ class FireFlutter extends Base {
     /// * But write is really rear compaing to read and it would not cause a big performance problem.
     Map category = (await categoryDoc(data['category']).get()).data();
     if (category == null) throw CATEGORY_NOT_EXISTS;
+
+    data['displayName'] = user.displayName;
+    data['photoURL'] = user.photoURL;
 
     // Create
     if (data['id'] == null) {
@@ -523,8 +526,8 @@ class FireFlutter extends Base {
 
       /// Since push notification takes time, do indexing comes first.
 
-      final String applicationId = appSetting(ALGOLIA_APP_ID);
-      if (applicationId != null) {
+      final String algoliaAppId = appSetting(ALGOLIA_APP_ID);
+      if (algoliaAppId != null) {
         await addSearchIndex(
           path: doc.path,
           title: data['title'],
@@ -532,10 +535,17 @@ class FireFlutter extends Base {
         );
       }
 
+      /// todo do more customization on title or body is empty.
+      if (data['title'] == null || data['title'] == '') {
+        data['title'] = '${user.displayName} has created a post';
+      }
+      if (data['content'] == null || data['content'] == '') {
+        data['content'] = '${user.displayName} has created a post';
+      }
       sendNotification(
         data['title'],
         data['content'],
-        screen: '/forumView',
+        screen: 'postView',
         id: doc.id,
         topic: NotificationOptions.post(data['category']),
       );
@@ -550,8 +560,8 @@ class FireFlutter extends Base {
             SetOptions(merge: true),
           );
 
-      final String applicationId = appSetting(ALGOLIA_APP_ID);
-      if (applicationId != null) {
+      final String algoliaAppId = appSetting(ALGOLIA_APP_ID);
+      if (algoliaAppId != null) {
         await addSearchIndex(
           path: postsCol.doc(data['id']).path,
           title: data['title'],
@@ -591,6 +601,9 @@ class FireFlutter extends Base {
     data.remove('postid');
 
     // print('ref.path: ' + commentsCol.path.toString());
+
+    data['displayName'] = user.displayName;
+    data['photoURL'] = user.photoURL;
 
     /// Create
     if (data['id'] == null) {
@@ -1036,6 +1049,10 @@ class FireFlutter extends Base {
       {@required String path,
       @required String title,
       @required String content}) async {
+    /// If Aloglia settings are not set, then simply return.
+    final String algoliaAppId = appSetting(ALGOLIA_APP_ID);
+    if (algoliaAppId == null) return;
+
     String algoliaIndexName = appSetting(ALGOLIA_INDEX_NAME);
     if (algoliaIndexName == null || algoliaIndexName == "") {
       throw ALGOLIA_INDEX_NAME_IS_EMPTY;

@@ -60,7 +60,8 @@ final String notifyComment = NotificationOptions.notifyCommentsUnderMyComment;
 typedef Render = void Function(RenderType x);
 const ERROR_SIGNIN_ABORTED = 'ERROR_SIGNIN_ABORTED';
 
-enum UserChangeType { auth, document, register, profile, phoneNumber }
+/// [UserChangeType.public] is for public data change(read and listening for update)
+enum UserChangeType { auth, document, public, register, profile, phoneNumber }
 enum NotificationType { onMessage, onLaunch, onResume }
 
 typedef NotificationHandler = void Function(Map<String, dynamic> messge,

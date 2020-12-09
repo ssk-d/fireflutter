@@ -5,6 +5,7 @@ const String MODERATOR_NOT_EXISTS_IN_USERS = 'MODERATOR_NOT_EXISTS_IN_USERS';
 const String YOU_ARE_NOT_MODERATOR = 'YOU_ARE_NOT_MODERATOR';
 const String ONE_OF_USERS_ARE_BLOCKED = 'ONE_OF_USERS_ARE_BLOCKED';
 const String USER_NOT_EXIST_IN_ROOM = 'USER_NOT_EXIST_IN_ROOM';
+const String NAME_IS_EMPTY = 'NAME_IS_EMPTY';
 
 /// ChatRoomInfo for global rooms and private room.
 class ChatRoomInfo {
@@ -238,9 +239,9 @@ class ChatMyRoomList extends ChatBase {
     });
   }
 
-  @Deprecated('This does not help for performance')
-
-  /// This is useless since the UI redraws the whole list anyway.
+  /// This was for performance and is useless since the UI redraws the whole
+  /// list anyway. This does not help any performance matter.
+  /// TODO Remove this.
   _overwrite(roomInfo) {
     int found = rooms.indexWhere((r) => r['id'] == roomInfo['id']);
     if (found > -1) {
@@ -315,20 +316,8 @@ class ChatRoom extends ChatBase {
   List<String> get blockedUsers => _info?.blockedUsers;
   Timestamp get createdAt => _info.createdAt;
 
-  @Deprecated('to be removed')
-  ChatRoomInfo info;
-
-  // The room id.
-  @Deprecated('To be removed')
-  String _id;
-
-  // Temporary variable to create a chat room
-  @Deprecated('To be removed')
-  List<String> _users;
-
-  // Temporary variable to set room title on room creation
-  @Deprecated('To be removed')
-  String _title;
+  /// push notification topic name
+  String get topic => 'notifyChat-${this.id}';
 
   /// Enter chat room
   ///
@@ -516,13 +505,19 @@ class ChatRoom extends ChatBase {
     _subscription.cancel();
   }
 
+  /// Send chat message to the users in the room
+  ///
   Future<Map<String, dynamic>> sendMessage({
     @required String text,
     Map<String, dynamic> extra,
   }) async {
+    String name = f.user.displayName;
+    if (name == null || name.trim() == '') {
+      throw NAME_IS_EMPTY;
+    }
     Map<String, dynamic> message = {
       'senderUid': f.user.uid,
-      'senderDisplayName': f.user.displayName,
+      'senderDisplayName': name,
       'senderPhotoURL': f.user.photoURL,
       'text': text,
 
@@ -560,6 +555,15 @@ class ChatRoom extends ChatBase {
     }
     // print('send messages to: ${messages.length}');
     await Future.wait(messages);
+
+    await f.sendNotification(
+      '$name send you message.',
+      text,
+      id: id,
+      screen: 'chatRoom',
+      topic: topic,
+    );
+
     return message;
   }
 

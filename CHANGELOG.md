@@ -1,3 +1,25 @@
+## [0.0.40] - Minor fixes
+
+- Admin site development with Vue.js without Ionic. Ionic was dropped since it does not support vue class component at this time.
+
+## [0.0.39] - Admin sites
+
+- Sending chat push notification is now encapsulated inside ChatRoom.
+- Removing deprecated and unused variables.
+- Change push notification screen from `/forumView` to `postView`.
+- Admin site development with Vuejs + Ionic
+
+## [0.0.38] - Dependency update
+
+- Some of packages have failed due to rxdart dependency issue.
+
+## [0.0.37] - Updates and fixes
+
+- User search based on GEO location has updated.
+- Algolia index exception on comment.
+- When post and comment are created/updated, author(login user)'s displayName and photoURL are saved in the post/comment documents.
+- And other small fixes.
+
 ## [0.0.36] - Rewriting chat functionality and updates on push notifications and user location
 
 - Complete rewriting on chat functionality. Unit testing codes also rewritten.
@@ -83,7 +105,7 @@ Cloud Functions has been removed from the project and security rules has been ch
 
 - userChange event fires on photoURL change
 
-## [0.0.16] - deprecation of data
+## [0.0.17] - deprecation of data
 
 - data variable is now deprecated. Use `userData` instead.
 

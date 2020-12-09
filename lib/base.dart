@@ -5,6 +5,7 @@ class Base {
   bool isFirebaseInitialized = false;
 
   /// Fires after Firebase has initialized or if already initialized.
+  /// The true event will be fired only once when Firebase initialized.
   BehaviorSubject<bool> firebaseInitialized = BehaviorSubject.seeded(false);
 
   /// Returns Firestore instance. Firebase database instance.
@@ -50,6 +51,8 @@ class Base {
   bool enableNotification;
 
   /// [authStateChange] is a link to `FirebaseAuth.instance.authStateChanges()`
+  ///
+  /// Use this to know if the user has logged in or not.
   ///
   /// You can do the following with [authStateChanges]
   /// ```
@@ -177,7 +180,7 @@ class Base {
           (DocumentSnapshot snapshot) {
             if (snapshot.exists) {
               publicData = snapshot.data();
-              userChange.add(UserChangeType.document);
+              userChange.add(UserChangeType.public);
             }
           },
         );
@@ -457,6 +460,9 @@ class Base {
         (tokens == null || tokens.length == 0) &&
         topic == null) return false;
 
+    if (title == null || title == '') throw 'TITLE_IS_EMPTY';
+    if (body == null || body == '') throw 'BODY_IS_EMPTY';
+
     final postUrl = 'https://fcm.googleapis.com/fcm/send';
 
     /// Check if it will send notification via single token, set of tokens and topic.
@@ -591,11 +597,12 @@ class Base {
       tokens = [...tokens, ...tokensDoc.keys];
     }
 
+    /// TODO make the title and body of push notification optioanl.
     sendNotification(
       post['title'],
       data['content'],
       id: post['id'],
-      screen: '/forumView',
+      screen: 'postView',
       topic: topicKey,
       tokens: tokens,
     );
@@ -972,7 +979,7 @@ class Base {
   /// Get app settings under `/settings/app` document.
   ///
   /// This is a simple helper function to get `app` settings easily.
-  /// If the key of the settings does not exist, it will return [defaultValue]
+  /// If the key of the settings does not exist, it will return [defaultValue] which is null by default.
   ///
   /// ```dart
   /// appSettigns(); // returns all app settings.

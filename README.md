@@ -1,11 +1,11 @@
 # Fire Flutter
 
-A free, open source, rapid development flutter package to build apps like shopping mall, social community, or any kind of apps.
+A free, open source, complete, rapid development package for creating Social apps, Chat apps, Community(Forum) apps, Shopping mall apps, and much more based on Firebase.
 
 - Complete features.\
-  This package has complete features (see Features below) that most of apps are needed.
+  This package has complete features (see Features below) that most of apps require.
 - `Simple, easy and the right way`.\
-  We want it to be deadly simple but right way for ourselves and for the developers in the world.
+  We want it to be deadly simple yet, right way for ourselves and for the developers in the world.
   We know when it gets complicated, our lives would get even more complicated.
 - Real time.\
   We design it to be real time when it is applied to your app. All the events like post and comment creation, voting(like, dislike), deletion would appears on all the user's phone immediately after the event.
@@ -84,6 +84,7 @@ A free, open source, rapid development flutter package to build apps like shoppi
   - [Login with email and password](#login-with-email-and-password)
   - [Profile update](#profile-update)
   - [Create admin page](#create-admin-page)
+  - [Getting user public data](#getting-user-public-data)
   - [Forum Coding](#forum-coding)
     - [Create forum category management screen](#create-forum-category-management-screen)
     - [Create post edit screen](#create-post-edit-screen)
@@ -207,8 +208,8 @@ A free, open source, rapid development flutter package to build apps like shoppi
 
 - Location
 
-  - App can update login user's location
-  - App can search other users near the login user.
+  - App can update login user's GEO location. There are many possiblities by saving GEO location.
+  - App can search other users(by distance, gender) near the login user GEO point.
 
 - Settings in real time.
 
@@ -222,6 +223,17 @@ A free, open source, rapid development flutter package to build apps like shoppi
 
   - Tight Firestore security rules are applied.
   - For some functionalities that cannot be covered by Firestore security are covered by Cloud Functions.
+
+- In App Purchase
+
+  - Some apps need in-app-purchase functionality while others not. So, we made the in-app-purchase as a separate package. You can find it at [https://pub.dev/packages/fireflutter_in_app_purchase](https://pub.dev/packages/fireflutter_in_app_purchase)
+  - The fireflutter_in_app_purchase supports a simplified payment API over [inapppurchase](https://pub.dev/packages/in_app_purchase) package for both Android and iOS.
+
+- Admin Site
+
+  - Of course most apps need admin feature that works outside of the app. And that should be a desktop version of website since there are so much contents to view in a single page.
+  - Unfortunately, Flutter web is not ready for production, so we have chosen `Vuejs + Ionic` to build admin site to manage users, posts, photos and other resources in Firebase.
+  - Github repository: [https://github.com/thruthesky/fireflutter-admin](https://github.com/thruthesky/fireflutter-admin)
 
 - Fully Customizable
   - FireFlutter package does not involve in any of part application's login or UI. It is completely separated from the app. Thus, it's highly customizable.
@@ -1259,6 +1271,8 @@ class FirebaseReady extends StatelessWidget {
 - User's notification subscription information is saved under `/users/{uid}/meta/public` documents.
 - Push notification tokens are saved under `/users/{uid}/meta/tokens` document.
 
+- The app may store user name(displayName) on different place. But fireflutter uses user's name from firebase auth displayName. So, developers needs to sync your name to firebase auth displayName when the name is stored some where else.
+
 ## Create Register Screen
 
 - Do [General Setup](#general-setup).
@@ -1412,6 +1426,48 @@ GetMateriaApp(
 
 - See [admin-page branch of sample app](https://github.com/thruthesky/fireflutter_sample_app/tree/admin-page) for complete code.
 
+## Getting user public data
+
+- `ff.publicData` which holds user's public data will be available after user logged in and whenever user public document changes.
+- You can get login user's data directly querying Firestore like below. This may be helpful when you are unsure if the `ff.publicData` is already avaiable or updated. For instance, you want to use user's public data as soon as app boots, but you are unsure when `ff.publicData` will be available, or how long it will take for it to be ready.
+
+```dart
+final data = (await ff.publicDoc.get()).data();
+```
+
+- You may use the code below. This code waits until `ff.publicData` is ready to be consumed.
+
+```dart
+ff.userChange
+  .where((x) => ff.publicData != null && ff.publicData.keys.length > 0)
+  .take(1)
+  .listen((x) {
+    // ... do something here
+});
+```
+
+- The code above is very much the same as below.
+
+```dart
+ff.userChange
+  .where((x) => x == UserChangeType.public)
+  .take(1)
+  .listen((x) async {
+    // ... do something here
+  });
+```
+
+- Here is another sample code to wait until the gender data is loaded.
+
+```dart
+ff.userChange
+  .where((x) => ff.publicData != null && ff.publicData['gender'] != null)
+  .take(1)
+  .listen((x) async {
+    // ... do something here
+   });
+```
+
 ## Forum Coding
 
 FireFlutter does not involve any of the app's in UI/UX. Because of this, you can customize your app as whatever you like.
@@ -1441,6 +1497,7 @@ In forum edit screen, user can create or update a post and he can upload photos.
 
 - Post create and update are done with `editPost()` method.
   - If `id` is null, then, it will create a post. Or it will update the post of the id.
+  - When post is created or updated, the login user's `displayName` and `photoURL` are saved in the document.
 
 ```dart
 ff.editPost({
@@ -1638,6 +1695,10 @@ If you are following the path of how to create a post, list posts, and edit post
   - And you need to show an alert message, if it was send while the app is open.
   - Or move to specific page when you click the notification from tray.
 
+- When push notification arrives by creating post/comment, then screen property in push data will be `postView` while it will be `chatRoom` when push notification arrives by chatting.
+
+  - Then, the app can route respective screen(route) based on the screen property.
+
 - Listening to incoming notification.
 
 ```dart
@@ -1676,7 +1737,7 @@ RaisedButton(
         'title message only',
         'test body message',
         id: '0X1upoaLklWc2Z07dsbn',
-        screen: '/forumView',
+        screen: 'any-screen-name',
         token: 'Replace DeviceToken here',
       );
     });
@@ -1689,7 +1750,7 @@ RaisedButton(
         'title message only',
         'test body message',
         id: '0X1upoaLklWc2Z07dsbn',
-        screen: '/forumView',
+        screen: 'any-screen-name',
         topic: ff.allTopic,
       );
     });
@@ -1702,7 +1763,7 @@ RaisedButton(
         'title message only',
         'test body message',
         id: '0X1upoaLklWc2Z07dsbn',
-        screen: '/forumView',
+        screen: 'any-screen-name',
         tokens: ['Device Token', 'Another Device Token'],
       );
     });
@@ -2041,8 +2102,14 @@ Firestore structure and its data are secured by Firestore security rules.
       - When it creates the room, it will create a room for A and B, and next time A or B try to chat each other again, it will not create a new room. Instead, it will use previously created room.
 
 - If the app must inform new messages to the user when the user is not in room list screen,
+
   - The app can listen `my-room-list` collection on app screen (or homescreen)
   - And when a new message arrives, the app can show snackbar.
+
+- You may put the logic of the app like below
+  - Declare `ChatMyRoomList` and `ChatRoom` instances as global variables.
+  - Listen to chat room update on home screen and display updates on chat icon.
+  - When somebody chats, the user will get push notification. and ignore push notifications if it's my chat or someone that I am talking to.
 
 ## Pitfalls of chat logic
 
