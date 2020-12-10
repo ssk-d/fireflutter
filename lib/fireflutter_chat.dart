@@ -59,6 +59,7 @@ class ChatRoomInfo {
   factory ChatRoomInfo.fromData(Map<String, dynamic> info, [String id]) {
     if (info == null) return ChatRoomInfo();
 
+    String _text = info['text'];
     return ChatRoomInfo(
       id: id,
       title: info['title'],
@@ -70,7 +71,7 @@ class ChatRoomInfo {
       blockedUsers: List<String>.from(info['blockedUsers'] ?? []),
       newUsers: List<String>.from(info['newUsers'] ?? []),
       createdAt: info['createdAt'],
-      text: info['text'],
+      text: _text,
       newMessages: info['newMessages'],
       global: info['global'],
     );
@@ -240,15 +241,17 @@ class ChatMyRoomList extends ChatBase {
               (DocumentSnapshot snapshot) {
                 int found = rooms.indexWhere((r) => r.id == roomInfo.id);
                 rooms[found].global = snapshot.data();
-                // print('=> global: ');
-                // print(roomInfo['global']);
                 _notify();
               },
             ),
           );
         } else if (documentChange.type == DocumentChangeType.modified) {
           int found = rooms.indexWhere((r) => r.id == roomInfo.id);
+          // If global room information exists, copy it to updated object to
+          // maintain global room information.
+          final global = rooms[found].global;
           rooms[found] = roomInfo;
+          rooms[found].global = global;
         } else if (documentChange.type == DocumentChangeType.removed) {
           final int i = rooms.indexWhere((r) => r.id == roomInfo.id);
           if (i > -1) {
@@ -289,10 +292,19 @@ class ChatMyRoomList extends ChatBase {
 /// By defining this helper class, you may open more than one chat room at the same time.
 /// todo separate this class to `chat.dart`
 class ChatRoom extends ChatBase {
+  /// [render] will be called to notify chat room listener to re-render the screen.
+  ///
+  /// For one chat message sending,
+  /// - [render] will be invoked 2 times on message sender's device due to offline support.
+  /// - [render] will be invoked 1 times on receiver's device.
+  ///
+  /// [globalRoomChange] will be invoked when global chat room changes.
   ChatRoom({
     @required inject,
     Function render,
-  }) : __render = render {
+    Function globalRoomChange,
+  })  : _render = render,
+        _globalRoomChange = globalRoomChange {
     f = inject;
   }
 
@@ -309,10 +321,12 @@ class ChatRoom extends ChatBase {
   bool _throttling = false;
 
   ///
-  Function __render;
+  Function _render;
+  Function _globalRoomChange;
 
   StreamSubscription _chatRoomSubscription;
   StreamSubscription _currentRoomSubscription;
+  StreamSubscription _globalRoomSubscription;
 
   /// Loaded the chat messages of current chat room.
   List<Map<String, dynamic>> messages = [];
@@ -321,14 +335,15 @@ class ChatRoom extends ChatBase {
   /// The app should display loader while it is fetching.
   bool loading = false;
 
+  /// Deprecated: since this produces flashing by rendering again.
   /// Most of the time, fetching finishes to quickly and users won't see the loader.
   /// This prevents loading disappearing too quickly.
   /// 500ms is recommended.
-  int _loadingTimeout = 500;
+  // int _loadingTimeout = 500;
 
-  /// Chat room info (of current room)
+  /// Global room info (of current room)
   /// Use this to dipplay title or other information about the room.
-  /// When `/chat/info/room-list/{roomId}` changes, it will be updated and calls render handler.
+  /// When `/chat/global/room-list/{roomId}` changes, it will be updated and calls render handler.
   ///
   ChatRoomInfo _info;
 
@@ -394,12 +409,17 @@ class ChatRoom extends ChatBase {
     fetchMessages();
 
     // Listening current global room for changes
-    globalRoomDoc(id).snapshots().listen((event) {
+    if (_globalRoomSubscription != null) _globalRoomSubscription.cancel();
+    _globalRoomSubscription = globalRoomDoc(id).snapshots().listen((event) {
       _info = ChatRoomInfo.fromSnapshot(event);
-      _notify();
+      if (_globalRoomChange != null) {
+        _globalRoomChange();
+      }
     });
 
     // Listening current room in my room list.
+    //
+    // This will be notify chat room listener when chat room title changes, or new users enter, etc.
     if (_currentRoomSubscription != null) _currentRoomSubscription.cancel();
     _currentRoomSubscription =
         currentRoom.snapshots().listen((DocumentSnapshot doc) {
@@ -440,8 +460,9 @@ class ChatRoom extends ChatBase {
     await sendMessage(text: ChatProtocol.roomCreated);
   }
 
+  /// Notify chat room listener to re-render the screen.
   _notify() {
-    if (__render != null) __render();
+    if (_render != null) _render();
   }
 
   /// Fetch previous messages
@@ -475,11 +496,12 @@ class ChatRoom extends ChatBase {
       // print('fetchMessage() -> done: _page: $_page');
       // Block loading previous messages for some time.
 
+      loading = false;
       Timer(Duration(milliseconds: _throttle), () => _throttling = false);
-      Timer(Duration(milliseconds: _loadingTimeout), () {
-        loading = false;
-        _notify();
-      });
+      // Timer(Duration(milliseconds: _loadingTimeout), () {
+      //   loading = false;
+      //   _notify();
+      // });
 
       snapshot.docChanges.forEach((DocumentChange documentChange) {
         final message = documentChange.doc.data();
@@ -545,6 +567,7 @@ class ChatRoom extends ChatBase {
   unsubscribe() {
     _chatRoomSubscription.cancel();
     _currentRoomSubscription.cancel();
+    _globalRoomSubscription.cancel();
   }
 
   /// Send chat message to the users in the room
