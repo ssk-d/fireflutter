@@ -11,6 +11,9 @@ const String NAME_IS_EMPTY = 'NAME_IS_EMPTY';
 class ChatRoomInfo {
   String id;
   String title;
+  String senderUid;
+  String senderDisplayName;
+  String senderPhotoURL;
   List<String> users;
   List<String> moderators;
   List<String> blockedUsers;
@@ -21,9 +24,16 @@ class ChatRoomInfo {
   dynamic createdAt;
   String text;
   int newMessages;
+
+  /// On my chat room list, it listens my chat room list document real time
+  /// and [global] holds global room information.
+  Map<String, dynamic> global;
   ChatRoomInfo({
     this.id,
     this.title,
+    this.senderUid,
+    this.senderDisplayName,
+    this.senderPhotoURL,
     this.users,
     this.moderators,
     this.blockedUsers,
@@ -31,6 +41,7 @@ class ChatRoomInfo {
     this.createdAt,
     this.text,
     this.newMessages,
+    this.global,
   }) {
     // ?
     // blockedUsers = [];
@@ -45,11 +56,15 @@ class ChatRoomInfo {
     return ChatRoomInfo.fromData(info, snapshot.id);
   }
 
-  factory ChatRoomInfo.fromData(Map<String, dynamic> info, String id) {
+  factory ChatRoomInfo.fromData(Map<String, dynamic> info, [String id]) {
     if (info == null) return ChatRoomInfo();
+
     return ChatRoomInfo(
       id: id,
       title: info['title'],
+      senderUid: info['senderUid'],
+      senderDisplayName: info['senderDisplayName'],
+      senderPhotoURL: info['senderPhotoURL'],
       users: List<String>.from(info['users'] ?? []),
       moderators: List<String>.from(info['moderators'] ?? []),
       blockedUsers: List<String>.from(info['blockedUsers'] ?? []),
@@ -57,6 +72,7 @@ class ChatRoomInfo {
       createdAt: info['createdAt'],
       text: info['text'],
       newMessages: info['newMessages'],
+      global: info['global'],
     );
   }
 
@@ -64,12 +80,16 @@ class ChatRoomInfo {
     return {
       if (id != null) 'id': id,
       'title': this.title,
+      'senderUid': senderUid,
+      'senderDisplayName': senderDisplayName,
+      'senderPhotoURL': senderPhotoURL,
       'users': this.users,
       'moderators': this.moderators,
       'blockedUsers': this.blockedUsers,
       'newUsers': this.newUsers,
       'text': this.text,
       'createdAt': this.createdAt,
+      'global': this.global
     };
   }
 
@@ -171,8 +191,7 @@ class ChatMyRoomList extends ChatBase {
   List<StreamSubscription> _roomSubscriptions = [];
 
   /// My room list including room id.
-  /// TODO convert it to List<ChatRoomInfo>
-  List<Map<String, dynamic>> rooms = [];
+  List<ChatRoomInfo> rooms = [];
   String _order = "";
   ChatMyRoomList(
       {@required FireFlutter inject,
@@ -210,24 +229,28 @@ class ChatMyRoomList extends ChatBase {
         .snapshots()
         .listen((snapshot) {
       snapshot.docChanges.forEach((DocumentChange documentChange) {
-        final roomInfo = documentChange.doc.data();
-        roomInfo['id'] = documentChange.doc.id;
+        final roomInfo = ChatRoomInfo.fromSnapshot(documentChange.doc);
+
         if (documentChange.type == DocumentChangeType.added) {
-          _overwrite(roomInfo);
+          rooms.add(roomInfo);
 
           /// Listen and merge room settings into room info.
           _roomSubscriptions.add(
-            globalRoomDoc(roomInfo['id']).snapshots().listen(
+            globalRoomDoc(roomInfo.id).snapshots().listen(
               (DocumentSnapshot snapshot) {
-                roomInfo.addAll(snapshot.data());
+                int found = rooms.indexWhere((r) => r.id == roomInfo.id);
+                rooms[found].global = snapshot.data();
+                // print('=> global: ');
+                // print(roomInfo['global']);
                 _notify();
               },
             ),
           );
         } else if (documentChange.type == DocumentChangeType.modified) {
-          _overwrite(roomInfo);
+          int found = rooms.indexWhere((r) => r.id == roomInfo.id);
+          rooms[found] = roomInfo;
         } else if (documentChange.type == DocumentChangeType.removed) {
-          final int i = rooms.indexWhere((r) => r['id'] == roomInfo['id']);
+          final int i = rooms.indexWhere((r) => r.id == roomInfo.id);
           if (i > -1) {
             rooms.removeAt(i);
           }
@@ -242,14 +265,14 @@ class ChatMyRoomList extends ChatBase {
   /// This was for performance and is useless since the UI redraws the whole
   /// list anyway. This does not help any performance matter.
   /// TODO Remove this.
-  _overwrite(roomInfo) {
-    int found = rooms.indexWhere((r) => r['id'] == roomInfo['id']);
-    if (found > -1) {
-      rooms[found].addAll(roomInfo);
-    } else {
-      rooms.add(roomInfo);
-    }
-  }
+  // _overwrite(roomInfo) {
+  //   int found = rooms.indexWhere((r) => r['id'] == roomInfo['id']);
+  //   if (found > -1) {
+  //     rooms[found].addAll(roomInfo);
+  //   } else {
+  //     rooms.add(roomInfo);
+  //   }
+  // }
 
   leave() {
     if (_myRoomListSubscription != null) _myRoomListSubscription.cancel();
@@ -288,7 +311,8 @@ class ChatRoom extends ChatBase {
   ///
   Function __render;
 
-  StreamSubscription _subscription;
+  StreamSubscription _chatRoomSubscription;
+  StreamSubscription _currentRoomSubscription;
 
   /// Loaded the chat messages of current chat room.
   List<Map<String, dynamic>> messages = [];
@@ -376,7 +400,9 @@ class ChatRoom extends ChatBase {
     });
 
     // Listening current room in my room list.
-    currentRoom.snapshots().listen((DocumentSnapshot doc) {
+    if (_currentRoomSubscription != null) _currentRoomSubscription.cancel();
+    _currentRoomSubscription =
+        currentRoom.snapshots().listen((DocumentSnapshot doc) {
       // If the user got a message from a chat room where the user is currently in,
       // then, set `newMessages` to 0.
       final data = ChatRoomInfo.fromSnapshot(doc);
@@ -445,7 +471,7 @@ class ChatRoom extends ChatBase {
       q = q.startAfter([messages.first['createdAt']]);
     }
 
-    _subscription = q.snapshots().listen((snapshot) {
+    _chatRoomSubscription = q.snapshots().listen((snapshot) {
       // print('fetchMessage() -> done: _page: $_page');
       // Block loading previous messages for some time.
 
@@ -517,7 +543,8 @@ class ChatRoom extends ChatBase {
   }
 
   unsubscribe() {
-    _subscription.cancel();
+    _chatRoomSubscription.cancel();
+    _currentRoomSubscription.cancel();
   }
 
   /// Send chat message to the users in the room

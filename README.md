@@ -1059,14 +1059,17 @@ You can set a user to admin by updating user document of Firestore directly. Adm
   - And Copy `User UID` of `admin@user.com`.
 - Open Firebase => Firestore
 
-  - You will see `users` collection under data tab. Click `users`
-  - Search the `User UID` of `admin@user.com`
-    - And click the `User UID`.
-  - Click `+ Add field`.
-  - Input `isAdmin` in Field.
-  - Select `boolean` in Type.
-  - Select `true` as Value.
-  - Click Add
+  - Set `{isAdmin: true}` on user document which is at `/users/{uid}`. Follow the steps below to edit the document.
+    - You will see `users` collection under data tab. Click `users`
+    - Search the `User UID` of `admin@user.com`
+      - And click the `User UID`.
+    - Click `+ Add field`.
+    - Input `isAdmin` in Field.
+    - Select `boolean` in Type.
+    - Select `true` as Value.
+    - Click Add
+  - If ever, user document does not exist, you can create it.
+    - If a user is created by firebase console, or if a user registers in admin site, the user document may not exists.
 
 - Now the user is an admin.
 
@@ -1078,7 +1081,7 @@ You can set a user to admin by updating user document of Firestore directly. Adm
 ## App Settings
 
 - Developers can set default settings on `FireFlutter.init()`.
-- Admin can overwrite all the settings by updating Firestore `settings` docuemnts.
+- Admin can overwrite all the settings by .updating Firestore `settings` docuemnts.
 
 ## Internalization (Localization)
 
@@ -1096,7 +1099,10 @@ Forum category is a list(or a collection) of posts to differentiate from each ki
 
 - Post can be created only under an existing category.
 - You can create forum categories editing `categories` collection in Firestore
+
   - Or if there is an admin screen, admin may do so in admin screen.
+
+- Category can have any number of extra fields and data but `id` is a mandatory. And `title`, `description` are reserved field name that should hold title and description respectively.
 
 To create a creategory,
 
