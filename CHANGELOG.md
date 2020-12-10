@@ -2,7 +2,8 @@
 
 - `userChange` event delivers user information change type and Firebase.auth.User data if available.
 - Preventing counting new messages when the user got a message for the room that he is currently in.
-- remove `_overwrite()` from chat room list.
+- Remove `_overwrite()` from chat room list.
+- Chat related codes refacotring.
 - Admin site development with Vue.js without Ionic. Ionic was dropped since it does not support vue class component at this time.
 
 ## [0.0.39] - Admin sites
