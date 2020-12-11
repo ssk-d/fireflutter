@@ -132,6 +132,8 @@ A free, open source, complete, rapid development package for creating Social app
   - [Firestore structure of Location](#firestore-structure-of-location)
   - [Code of Location](#code-of-location)
     - [Initialization of Location](#initialization-of-location)
+- [In app purchase](#in-app-purchase)
+  - [Document properties](#document-properties)
 - [Tests](#tests)
   - [Unit Test](#unit-test)
     - [Chat unit test](#chat-unit-test)
@@ -2535,6 +2537,37 @@ location.init(radius: 10000, gender: 'M');
 ```
 
 ### Initialization of Location
+
+# In app purchase
+
+## Document properties
+
+- Purchase histories are saved as `/purchase/{purchaseId}`.
+- Each document has the following properties.
+
+```json
+{
+  "uid": "...",
+  "status": "pending|failure|success",
+  "error": "Error message will be saved here in case failure.",
+  "beginAt": "the server timestamp when user started to pay.",
+  "endAt": "the server timestamp when the payment was finished as success or failure",
+  "displayName": "...",
+  "photoURL": "...",
+  "phoneNumber": "...",
+  "email": "...",
+  "productId": "...",
+  "productName": "...",
+  "productDescription": "...",
+  "amount": "...",
+  "currenty": "..."
+}
+```
+
+- `uid` is the user's uid.
+- `status: pending` means the payment has begun.
+- `status: failure` means the payment has failed. In this case it has an error message.
+- `status: success` means the payment made successfully.
 
 # Tests
 
