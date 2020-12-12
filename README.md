@@ -225,7 +225,6 @@ A free, open source, complete, rapid development package for creating Social app
 - Security
 
   - Tight Firestore security rules are applied.
-  - For some functionalities that cannot be covered by Firestore security are covered by Cloud Functions.
 
 - In App Purchase
 
@@ -244,7 +243,7 @@ A free, open source, complete, rapid development package for creating Social app
 # References
 
 - [FireFlutter Package](https://pub.dev/packages/fireflutter) - This package.
-- [FireFlutter Firebase Project](https://github.com/thruthesky/fireflutter-firebase) - Firebase project for Firestore security rules and Functions.
+- [FireFlutter Firebase Project](https://github.com/thruthesky/fireflutter-firebase) - Firebase project for Firestore security rules.
 
 - [FireFlutter Sample App](https://github.com/thruthesky/fireflutter_sample_app) - Sample flutter application.
 
@@ -347,13 +346,14 @@ $ npm run test:chat
 
 ### Update Firestore Index
 
-- Create complex indexes ike below.
+- Create complex indexes like below.
   - Go `Cloud Firestore => Indexes => Composite => + Create Index`
 
 | Collection ID | Fields indexed                                                    | Query scope | Status  |
 | ------------- | ----------------------------------------------------------------- | ----------- | ------- |
 | posts         | category **Ascending** createdAt **Descending**                   | Collection  | Enabled |
 | posts         | category **Ascending** uid **Ascending** createdAt **Descending** | Collection  | Enabled |
+| purchase      | status **Ascending** uid **Ascending** beginAt **Ascending**      | Collection  | Enabled |
 
 Example of adding Firestore indexes)
 ![Firestore Index](wiki/firestore-index.jpg)
@@ -1549,7 +1549,6 @@ It needs to `category` of the forum and a callback which will be called if there
 Call `fetchPosts()` method the ForumData instance and fireflutter will get posts from Firestore storing the posts in `ForumData.posts` and the app can render the posts within the callback of ForumData instance.
 
 - Do [Firestore security rules](#firestore-security-rules). When the app list posts, it will require indexes.
-- Do [Cloud Functions Setup](#cloud-functions-setup). When the app is displaying posts, the Clould Funtions soubld be ready.
 - See [smaple app's forum-list branch](https://github.com/thruthesky/fireflutter_sample_app/tree/forum-list) for the sample code.
   - You would open [forum.list.dart](https://github.com/thruthesky/fireflutter_sample_app/blob/forum-list/lib/screens/forum/forum.list.screen.dart) to see what's going on to list a forum.
     - It first gets category
