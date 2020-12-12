@@ -1,3 +1,7 @@
+## [0.0.41] - Document update.
+
+- Document update.
+
 ## [0.0.40] - userChange event data
 
 - `userChange` event delivers user information change type and Firebase.auth.User data if available.
