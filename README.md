@@ -134,6 +134,7 @@ A free, open source, complete, rapid development package for creating Social app
     - [Initialization of Location](#initialization-of-location)
 - [In app purchase](#in-app-purchase)
   - [Document properties](#document-properties)
+  - [Delivering product](#delivering-product)
 - [Tests](#tests)
   - [Unit Test](#unit-test)
     - [Chat unit test](#chat-unit-test)
@@ -2567,6 +2568,28 @@ location.init(radius: 10000, gender: 'M');
 - `status: pending` means the payment has begun.
 - `status: failure` means the payment has failed. In this case it has an error message.
 - `status: success` means the payment made successfully.
+
+## Delivering product
+
+- If the app would deliver products(or digial goods) in a new screen after purchase made, then consider not to do it.
+  In stead, deliver the product immediately after purchase but before opening a new screen.
+  - The reason is that when purchase was success, the phone(not the app) will open a popup dialog displaying that purchase was made successfully,
+    and the app will not move(or open) to another screen until the user close the dialog.
+  - There is a chance that the app closes(or crashes) before entering the new screen.
+  - So, deliver the product immediately after purchase in `success` event handler.
+
+```dart
+purchase.success.listen((PurchaseSession session) async {
+  print("Purchase made. Success!");
+
+  // Deliver your product here.
+  // ... add points or upgrade user's permission ...
+
+  // Then, move another page to display the purchase was successful.
+  // ... go to payment success screen.
+
+});
+```
 
 # Tests
 
