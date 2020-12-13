@@ -1478,6 +1478,29 @@ ff.userChange
    });
 ```
 
+- As you might notice by now, `userChange` event happens often. As I tested, I found out
+  - When user not logged in, `userChange` event happens 3 times.
+  - When user logs in, `userChange` event happens 7 times.
+  - When user log out, `userChange` event happens 1 or 2 times.
+  - If `ff.userChange.where(...).take(1).listen( { ... })` does not work, you may use debounce like below.
+
+```dart
+StreamSubscription _userChangeSubscription;
+
+if (_userChangeSubscription != null) _userChangeSubscription.cancel();
+
+_userChangeSubscription = ff.userChange
+  .debounceTime(Duration(milliseconds: 300))
+  .listen((x) async {
+    // ... do something here ...
+  });
+@override
+void dispose() {
+  super.dispose();
+  _userChangeSubscription.cancel();
+}
+```
+
 ## Forum Coding
 
 FireFlutter does not involve any of the app's in UI/UX. Because of this, you can customize your app as whatever you like.

@@ -1,3 +1,8 @@
+## [0.0.42] - fix on global chat room listening
+
+- fix on global chat room listening which causes permission error.
+- Dependencies update in pubspec.yaml
+
 ## [0.0.41] - Document update.
 
 - Document update.
