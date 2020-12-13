@@ -5,7 +5,7 @@ const String MODERATOR_NOT_EXISTS_IN_USERS = 'MODERATOR_NOT_EXISTS_IN_USERS';
 const String YOU_ARE_NOT_MODERATOR = 'YOU_ARE_NOT_MODERATOR';
 const String ONE_OF_USERS_ARE_BLOCKED = 'ONE_OF_USERS_ARE_BLOCKED';
 const String USER_NOT_EXIST_IN_ROOM = 'USER_NOT_EXIST_IN_ROOM';
-const String NAME_IS_EMPTY = 'NAME_IS_EMPTY';
+const String CHAT_DISPLAY_NAME_IS_EMPTY = 'CHAT_DISPLAY_NAME_IS_EMPTY';
 
 /// ChatRoomInfo for global rooms and private room.
 class ChatRoomInfo {
@@ -578,7 +578,7 @@ class ChatRoom extends ChatBase {
   }) async {
     String name = f.user.displayName;
     if (name == null || name.trim() == '') {
-      throw NAME_IS_EMPTY;
+      throw CHAT_DISPLAY_NAME_IS_EMPTY;
     }
     Map<String, dynamic> message = {
       'senderUid': f.user.uid,

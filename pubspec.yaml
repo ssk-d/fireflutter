@@ -12,6 +12,8 @@ dependencies:
     sdk: flutter
 
   path: ^1.7.0
+
+  # Needs to be updated when geoflutterfire changes.
   rxdart: ^0.24.1
 
   firebase_core: ^0.5.2
