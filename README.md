@@ -109,7 +109,7 @@ A free, open source, complete, rapid development package for creating Social app
     - [Apple Sign In](#apple-sign-in)
   - [External Logins](#external-logins)
     - [Kakao Login](#kakao-login)
-  - [Phone Verification](#phone-verification)
+  - [Phone Auth](#phone-auth)
 - [Language Settings, I18N](#language-settings-i18n)
 - [Settings](#settings)
   - [Phone number verification](#phone-number-verification)
@@ -131,6 +131,7 @@ A free, open source, complete, rapid development package for creating Social app
 - [Location](#location)
   - [Firestore structure of Location](#firestore-structure-of-location)
   - [Code of Location](#code-of-location)
+  - [Location common fitfalls](#location-common-fitfalls)
     - [Initialization of Location](#initialization-of-location)
 - [In app purchase](#in-app-purchase)
   - [Document properties](#document-properties)
@@ -140,6 +141,7 @@ A free, open source, complete, rapid development package for creating Social app
     - [Chat unit test](#chat-unit-test)
   - [Integration Test](#integration-test)
 - [Developers Tips](#developers-tips)
+  - [Test with user accounts](#test-with-user-accounts)
   - [Extension method on fireflutter](#extension-method-on-fireflutter)
 - [Extending your app with Fireflutter](#extending-your-app-with-fireflutter)
   - [Social photo gallery](#social-photo-gallery)
@@ -235,7 +237,7 @@ A free, open source, complete, rapid development package for creating Social app
 - Admin Site
 
   - Of course most apps need admin feature that works outside of the app. And that should be a desktop version of website since there are so much contents to view in a single page.
-  - Unfortunately, Flutter web is not ready for production, so we have chosen `Vuejs + Ionic` to build admin site to manage users, posts, photos and other resources in Firebase.
+  - Unfortunately, Flutter web is not ready for production, so we have chosen `Vuejs` to build admin site to manage users, posts, photos and other resources in Firebase.
   - Github repository: [https://github.com/thruthesky/fireflutter-admin](https://github.com/thruthesky/fireflutter-admin)
 
 - Fully Customizable
@@ -1926,13 +1928,13 @@ if (GetPlatform.isIOS)
 - Kakao login is completely separated from `fireflutter` since it is not part of `Firebase`.
   - The sample app has an example code on how to do `Kakao login` and link to `Firebase Auth` account.
 
-## Phone Verification
+## Phone Auth
 
-FireFlutter phone verication relies on Firebase's Phone Authentication. We made it easy to use.
+FireFlutter phone verication relies on Firebase's Phone Authentication.
 
 The app can ask users to verify their phone numbers. It is fully customizable, but we put here few recommendations on its implementation.
 
-Admin can set rules like below
+In the sample app, admin can set rules like below
 
 - Verify phone after email/password registration.
 - Verify phone after login(all login including social login).
@@ -1979,6 +1981,8 @@ void main() async {
   - It displays warning dialog when user submit comment button.
 
 - See [sample app's phone verification branch](https://github.com/thruthesky/fireflutter_sample_app/tree/phone-verification) for codes. Again, it is fully customizable.
+
+- When the app is only using mobile authentication, then the user may not have email, display name, photo url.
 
 # Language Settings, I18N
 
@@ -2559,6 +2563,10 @@ if (location.lastPoint == null)
 location.init(radius: 10000, gender: 'M');
 ```
 
+## Location common fitfalls
+
+- When you are testing(or developing), you may log into many users and the location distance from the users you have logged in becomes 0. That is because you have logged in those acccounts and updated their locations as where you are.
+
 ### Initialization of Location
 
 # In app purchase
@@ -2616,6 +2624,8 @@ purchase.success.listen((PurchaseSession session) async {
 
 # Tests
 
+- Be sure you have backed up the database before you are going to test since the test will delete the whole database(or at least some collection) to make a propro test. In is recommended to test on a separate (inactive) Firebase project.
+
 ## Unit Test
 
 Since fireflutter is a bit complicated and depends on many other packages, we found out that the standard unit testing is not an ideal option. So, we wrote our own simple unit test code.
@@ -2653,6 +2663,10 @@ And we don't do widget testing. Instead, we do integration test.
 [![IMAGE ALT TEXT HERE](https://img.youtube.com/vi/wg4yTldihh8/0.jpg)](https://www.youtube.com/watch?v=wg4yTldihh8)
 
 # Developers Tips
+
+## Test with user accounts
+
+- You may delete user account from Firebase Auth menu to register with same phone number.
 
 ## Extension method on fireflutter
 

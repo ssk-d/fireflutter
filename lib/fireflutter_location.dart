@@ -14,9 +14,7 @@ const String geoFieldName = 'location';
 class FireFlutterLocation {
   FireFlutterLocation({
     @required FireFlutter inject,
-  }) : _ff = inject {
-    init();
-  }
+  }) : _ff = inject;
   FireFlutter _ff;
 
   double _radius;
@@ -74,6 +72,8 @@ class FireFlutterLocation {
   //   }
   // }
 
+  /// Initialize the location.
+  ///
   /// [radius] is the radius to search users. If it is not set(or set as null),
   /// 22(km) will be set by default.
   init({double radius = 22, String gender}) {
@@ -147,7 +147,7 @@ class FireFlutterLocation {
   /// It does not matter weather the location service is eanbled or not. Just
   /// listen it here and when the location is enabled later, it will work
   /// alreday.
-  _updateUserLocation() async {
+  _updateUserLocation() {
     // print('initFireFlutterLocation');
 
     // Changes settings to whenever the `onChangeLocation` should emit new locations.
@@ -169,7 +169,9 @@ class FireFlutterLocation {
         longitude: newLocation.longitude,
       );
 
-      if (_lastPoint == null) _lastPoint = _new;
+      if (_lastPoint == null) {
+        _lastPoint = _new;
+      }
       if (_ff.notLoggedIn) return;
 
       /// When the user change his location, it needs to search other users base on his new location.
@@ -188,14 +190,17 @@ class FireFlutterLocation {
     });
   }
 
+  // When user didn't login, it will not try to save to data.
   Future<GeoFirePoint> updateUserLocation(GeoFirePoint _new) async {
     change.add(_new);
+    if (_ff.notLoggedIn) return _new;
     await _ff.publicDoc.set({geoFieldName: _new.data}, SetOptions(merge: true));
     return _new;
   }
 
   /// Listen `/meta/user/public/{uid}` for geo point and search users who are
   /// within the radius from my geo point.
+  ///
   ///
   /// This method will be called
   /// * immediately after the class is instantiated,
@@ -250,7 +255,8 @@ class FireFlutterLocation {
       /// Get new users into [usersNearMe] and update.
       documents.forEach((document) {
         // if this is the current user's data. don't add it to the list.
-        if (document.id == _ff.user.uid) return;
+
+        if (_ff.loggedIn && document.id == _ff.user.uid) return;
 
         Map<String, dynamic> data = document.data();
         GeoPoint _point = data[geoFieldName]['geopoint'];
