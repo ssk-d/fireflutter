@@ -90,7 +90,7 @@ class ChatRoomInfo {
       'newUsers': this.newUsers,
       'text': this.text,
       'createdAt': this.createdAt,
-      'global': this.global
+      if (this.global != null) 'global': this.global
     };
   }
 
