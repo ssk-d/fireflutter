@@ -423,7 +423,7 @@ class FireFlutter extends Base {
                   post['comments'].add(commentData);
                 }
 
-                forum.render(RenderType.commentCreate);
+                forum.updateScreen(RenderType.commentCreate);
               }
 
               // comment modified
@@ -435,14 +435,14 @@ class FireFlutter extends Base {
                 if (ci > -1) {
                   post['comments'][ci] = commentData;
                 }
-                forum.render(RenderType.commentUpdate);
+                forum.updateScreen(RenderType.commentUpdate);
               }
 
               // comment deleted
               else if (commentsChange.type == DocumentChangeType.removed) {
                 post['comments']
                     .removeWhere((c) => c['id'] == commentData['id']);
-                forum.render(RenderType.commentDelete);
+                forum.updateScreen(RenderType.commentDelete);
               }
             });
           });
@@ -460,7 +460,7 @@ class FireFlutter extends Base {
             post['comments'] = forum.posts[i]['comments'];
             forum.posts[i] = post;
           }
-          forum.render(RenderType.postUpdate);
+          forum.updateScreen(RenderType.postUpdate);
         }
 
         /// post delete
@@ -468,13 +468,13 @@ class FireFlutter extends Base {
           // When post is deleted, also remove comment list subscription to avoid memory leak.
           forum.commentsSubcriptions[post['id']].cancel();
           forum.posts.removeWhere((p) => p['id'] == post['id']);
-          forum.render(RenderType.postDelete);
+          forum.updateScreen(RenderType.postDelete);
         } else {
           assert(false, 'This is error');
         }
       });
 
-      forum.render(RenderType.finishFetching);
+      forum.updateScreen(RenderType.finishFetching);
     });
   }
 

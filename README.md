@@ -236,9 +236,9 @@ A free, open source, complete, rapid development package for creating Social app
 
 - Admin Site
 
-  - Of course most apps need admin feature that works outside of the app. And that should be a desktop version of website since there are so much contents to view in a single page.
-  - Unfortunately, Flutter web is not ready for production, so we have chosen `Vuejs` to build admin site to manage users, posts, photos and other resources in Firebase.
-  - Github repository: [https://github.com/thruthesky/fireflutter-admin](https://github.com/thruthesky/fireflutter-admin)
+  - There is no doubt that most apps need admin feature(or site) that works outside of the app. And that should be a desktop version of website since there are much contents to view.
+  - Unfortunately, Flutter web is not ready for production, so we have chosen `Vuejs` to build admin site to manage users, posts, photos and other resources in Fireflutter proejct.
+  - This README.md does not include much information about Admin site. Please visit github repository: [https://github.com/thruthesky/fireflutter-admin](https://github.com/thruthesky/fireflutter-admin) to know more about it.
 
 - Fully Customizable
   - FireFlutter package does not involve in any of part application's login or UI. It is completely separated from the app. Thus, it's highly customizable.

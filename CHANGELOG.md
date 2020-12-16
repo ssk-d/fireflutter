@@ -4,7 +4,7 @@
 - Dependencies update in pubspec.yaml
 - remove global property if it is null on getting its data
 
-## [0.0.41] - Document update.
+## [0.0.41] - Document update
 
 - Document update.
 

@@ -100,7 +100,7 @@ class ForumData {
   /// more posts, comment updating, voting, etc.
   updateScreen(RenderType x) {
     _inLoading = x;
-    render(x);
+    if (render != null) render(x);
   }
 
   ForumStatus status;
