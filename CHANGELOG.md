@@ -1,3 +1,9 @@
+## [0.0.42] - Storage related code update
+
+- Storage security rules are updated and user's uid is attached to the file metadata.
+  - User can delete their own files.
+  - Admin can delete any files on storage via admin site.
+
 ## [0.0.42] - fix on global chat room listening
 
 - fix on global chat room listening which causes permission error.

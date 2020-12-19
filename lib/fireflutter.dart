@@ -693,7 +693,10 @@ class FireFlutter extends Base {
     final ref = FirebaseStorage.instance
         .ref(folder + '/' + getFilenameFromPath(file.path));
 
-    UploadTask task = ref.putFile(file);
+    UploadTask task = ref.putFile(
+      file,
+      SettableMetadata(customMetadata: {'uid': user.uid}),
+    );
     task.snapshotEvents.listen((TaskSnapshot snapshot) {
       double p = (snapshot.bytesTransferred / snapshot.totalBytes);
       progress(p);
@@ -1029,7 +1032,7 @@ class FireFlutter extends Base {
   /// If there is error it will throw error message.
   /// If it succeeds, it will return a Map of `{createdAt: 2020-11-20T15:15:21.623Z, objectID: 1316722002}`
   ///
-  ///
+  /// TODO add search index update
   ///
   /// ```dart
   /// ff.addSearchIndex(
