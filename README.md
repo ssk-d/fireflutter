@@ -10,12 +10,11 @@ A free, open source, complete, rapid development package for creating Social app
 - Real time.\
   We design it to be real time when it is applied to your app. All the events like post and comment creation, voting(like, dislike), deletion would appears on all the user's phone immediately after the event.
 
-# Table of Contents
+- Table of Contents
 
 <!-- TOC -->
 
 - [Fire Flutter](#fire-flutter)
-- [Table of Contents](#table-of-contents)
 - [Features](#features)
 - [References](#references)
 - [Components](#components)
@@ -26,11 +25,12 @@ A free, open source, complete, rapid development package for creating Social app
     - [Install Firestore Security Rules](#install-firestore-security-rules)
       - [Security Rules Testing](#security-rules-testing)
     - [Update Firestore Index](#update-firestore-index)
-  - [Firebase Email/Password Login](#firebase-emailpassword-login)
+  - [Enable Storage](#enable-storage)
   - [Create Flutter project](#create-flutter-project)
-    - [Setup Flutter to connect to Firebase](#setup-flutter-to-connect-to-firebase)
-      - [iOS Setup](#ios-setup)
-      - [Android Setup](#android-setup)
+  - [Setup Flutter to connect to Firebase](#setup-flutter-to-connect-to-firebase)
+    - [iOS Setup](#ios-setup)
+    - [Android Setup](#android-setup)
+  - [Firebase Email/Password Login](#firebase-emailpassword-login)
   - [Create a keystore](#create-a-keystore)
     - [Debug hash key](#debug-hash-key)
       - [Debug hash key base64](#debug-hash-key-base64)
@@ -76,9 +76,9 @@ A free, open source, complete, rapid development package for creating Social app
     - [Add GetX](#add-getx)
   - [Firestore Structure](#firestore-structure)
   - [User](#user)
-  - [Create Register Screen](#create-register-screen)
-  - [Create Login Screen](#create-login-screen)
-  - [Create Profile Screen](#create-profile-screen)
+  - [Register Screen](#register-screen)
+  - [Login Screen](#login-screen)
+  - [Profile Screen](#profile-screen)
   - [User Email And Password Registration](#user-email-and-password-registration)
   - [Display User Login](#display-user-login)
   - [Login with email and password](#login-with-email-and-password)
@@ -252,14 +252,20 @@ A free, open source, complete, rapid development package for creating Social app
 
 # Components
 
-- Firebase.\
+- Firebase\
   Firebase is a leading cloud system powered by Google. It has lots of goods to build web and app.
 
-  - We first built it with Firebase and LEMP(Linux + Nginx + MariaDB + PHP). It is a pressure to maintain two different systems. So, We decided to remove LEMP and we built it again only with Firebase.
+  - We first built it with Firebase and LEMP(Linux + Nginx + MariaDB + PHP). It was fine but was a pressure to maintain two different systems. So, We decided to remove LEMP and built it again with Firebase only.
 
   - You may use Firebase as free plan for a test.
 
-- Algolia.\
+- Flutter\
+  Flutter as its app development toolkit.
+
+- Vue 3\
+  We have chosen the latest version of Vuejs to develop admin site. And you may extend it as a website to serve your clients.
+
+- Algolia\
   Firebase does not support full text search which means users cannot search posts and comments.
   Algolia does it.
 
@@ -269,7 +275,6 @@ A free, open source, complete, rapid development package for creating Social app
 
 - Basic understanding of Flutter and Dart.
 - Basic understanding of Firebase.
-- OS: Windows or Mac.
 - Editor: VSCode, Xcode(for Mac OS).\
   Our primary editor is VSCode and we use Xcode for Flutter settings. We found it more easy to do the settings with Xcode for iOS development.
 
@@ -278,15 +283,14 @@ A free, open source, complete, rapid development package for creating Social app
 - If you are not familiar with Firebase and Flutter, you may have difficulties to install it.
 
   - FireFlutter is not a smple package that you just add it into pubspec.yaml and ready to go.
-  - Many of the settings are coming from the packages that fireflutter is using.
-  - And for release, it may need extra settgins.
+  - Many of the settings are coming from the packages that fireflutter is using. And for release, it may need extra settgins.
   - Most of developers are having troubles with settings. You are not the only one. Ask us on [Git issues](https://github.com/thruthesky/fireflutter/issues).
 
 - We will cover all the settings and try to put it as demonstrative as it can be.
 
   - We will begin with Firebase settings and contiue gradual settings with Flutter.
 
-- And please let us know if there is any mistake on the installation.
+- And please let us know if there is any mistake on the documentation.
 
 ## Create Firebase Project
 
@@ -324,7 +328,9 @@ Firestore needs security rules to secure its data.
 
 #### Security Rules Testing
 
-- If you wish to test Firestore security rules, you may do so with the following command.
+This is optional.
+
+If you wish to test Firestore security rules, you may do so with the following command.
 
 Run Firebase emualtor first.
 
@@ -349,6 +355,12 @@ $ npm run test:chat
 
 ### Update Firestore Index
 
+There are three ways of updating Firestore security rules.
+
+1. Creating the index on Firebase console.
+2. Deploying the index from FireFluter Firebase.
+3. By clicking the URL on debug console while your are developing the app. And this may be the easiest from the other two.
+
 - Create complex indexes like below.
   - Go `Cloud Firestore => Indexes => Composite => + Create Index`
 
@@ -356,25 +368,34 @@ $ npm run test:chat
 | ------------- | ----------------------------------------------------------------- | ----------- | ------- |
 | posts         | category **Ascending** createdAt **Descending**                   | Collection  | Enabled |
 | posts         | category **Ascending** uid **Ascending** createdAt **Descending** | Collection  | Enabled |
-| purchase      | status **Ascending** uid **Ascending** beginAt **Ascending**      | Collection  | Enabled |
 
 Example of adding Firestore indexes)
-![Firestore Index](wiki/firestore-index.jpg)
+![Firestore Index](https://raw.githubusercontent.com/thruthesky/fireflutter/main/wiki/firestore-index.jpg)
 
 - Or you can deploy Firestore index using CLI.
+
   - You can clone the [fireflutter firebase project](https://github.com/thruthesky/fireflutter-firebase) and deploy firestore index.
   - See [Cloud Firestore Index Definition Reference](https://firebase.google.com/docs/reference/firestore/indexes) for details.
 
-## Firebase Email/Password Login
+- Or, when you develop app, you may see a warning message related in security rules. And there will be a link to generate index.
 
-- [Create Firestore Database](#enable-firestore)
-- [Install firestore security rules](#install-firestore-security-rules)
-- Do [Android Setup](#android-setup) and [iOS Setup](#ios-setup)
-- Go to Authentication => (Click `Get started` menu if you see ) => Sign-in Method
-- Click `Enable/Password` (without Email link).
-- It is your choice weather you would let users to register by their email and password or not. But for installation test, just enable it.
+## Enable Storage
 
-- Refer [Firebase Authentication](https://firebase.google.com/docs/auth) and [FlutterFire Social Authentication](https://firebase.flutter.dev/docs/auth/social) for details.
+- Enable Stroage in the project menu on firebase console.
+- And add the following security rules.
+
+```txt
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    match /{allPaths=**} {
+      allow read: if true;
+      allow create: if request.auth != null;
+      allow delete: if resource.metadata.uid == request.auth.uid;
+    }
+  }
+}
+```
 
 ## Create Flutter project
 
@@ -386,15 +407,17 @@ $ cd fireflutter_sample_app
 $ flutter run
 ```
 
-### Setup Flutter to connect to Firebase
+## Setup Flutter to connect to Firebase
 
-#### iOS Setup
+This is a must setup to use Firebase. After iOS or Android setup, you are good to go. Fireflutter has many functionalities like Login, Forum, Chat, Location, In App Purchase, and more. You can optionally choose which functionality you want to use.
+
+### iOS Setup
 
 What to do: Create iOS app in Firebase and add the GoogleService-Info.plist into Flutter project.
 
 - Click `iOS` icon on `Project Overview` page to add `iOS` app to Firebase.
-- Enter iOS Bundle ID. Ex) com.sonub.fireflutter
-  - From now on, we assume that your iOS Bundle ID is `com.sonub.fireflutter`.
+- Enter iOS Bundle ID. Ex) com.fireflutter.app
+  - From now on, we assume that your iOS Bundle ID is `com.fireflutter.app`.
 - click `Register app`.
 - click `Download GoogleService-Info.plist`
   - And save it under `[flutter_project]/ios/Runner` folder.
@@ -406,7 +429,7 @@ What to do: Create iOS app in Firebase and add the GoogleService-Info.plist into
 - open `[flutter_project]/ios/Runner.xcworkspace` with Xcode.
 - click `Runner` on the top of left pane.
 - click `Runner` on TARGETS.
-- edit `Bundle Identifier` to `com.sonub.fireflutter`.
+- edit `Bundle Identifier` to `com.fireflutter.app`.
 - set `iOS 11.0` under Deployment Info.
 - Darg `[flutter_project]/ios/Runner/GoogleService-Info.plist` file under `Runner/Runner` on left pane of Xcode.
 - Close Xcode.
@@ -414,12 +437,12 @@ What to do: Create iOS app in Firebase and add the GoogleService-Info.plist into
 - You may want to test if the settings are alright.
   - Open VSCode and do [FireFlutter Initialization](#fireflutter-initialization) do some registration code. see [User Registration](#user-email-and-password-registration) for more details.
 
-#### Android Setup
+### Android Setup
 
 - Go to Firebase console.
 - Click `Android` icon on `Project Overview` page to add `Android` app to Firebase.
   - If you don't see `Android` icon, look for `+ Add app` button and click, then you would see `Android` icon.
-- Enter `iOS Bundle ID` into `Android package name`. `iOS Bundle ID` and `Android package name` should be kept in idendentical name for easy to maintain. In our case, it is `com.sonub.fireflutter`.
+- Enter `iOS Bundle ID` into `Android package name`. `iOS Bundle ID` and `Android package name` should be kept in idendentical name for easy to maintain. In our case, it is `com.fireflutter.app`.
 - Click `Register app` button.
 - Click `Download google-services.json` file to downlaod
 - And save it under `[flutter_project_folder]/android/app` folder.
@@ -445,7 +468,7 @@ dependencies {
 }
 ```
 
-- Open the 5 files and update the package name to `com.sonub.fireflutter` (or with your app's package name).
+- Open the 5 files and update the package name to `com.fireflutter.app` (or with your app's package name).
 
   - android/app/src/main/AndroidManifest.xml
   - android/app/src/debug/AndroidManifest.xml
@@ -456,6 +479,17 @@ dependencies {
 - That's it.
 - You may want to test if the settings are alright.
   - Open VSCode and do [FireFlutter Initialization](#fireflutter-initialization) do some registration code. see [User Registration](#user-email-and-password-registration) for more details.
+
+## Firebase Email/Password Login
+
+- [Create Firestore Database](#enable-firestore)
+- [Install firestore security rules](#install-firestore-security-rules)
+- Do [Android Setup](#android-setup) and [iOS Setup](#ios-setup)
+- Go to Authentication => (Click `Get started` menu if you see ) => Sign-in Method
+- Click `Enable/Password` (without Email link).
+- It is your choice weather you would let users to register by their email and password or not. But for installation test, just enable it.
+
+- Refer [Firebase Authentication](https://firebase.google.com/docs/auth) and [FlutterFire Social Authentication](https://firebase.flutter.dev/docs/auth/social) for details.
 
 ## Create a keystore
 
@@ -531,6 +565,8 @@ keytool -exportcert -alias YOUR_RELEASE_KEY_ALIAS -keystore YOUR_RELEASE_KEY_PAT
 
 ## Firebase Social Login
 
+It is optional. If you don't need to develop with Firebase social login, then pass this setup.
+
 - Social login is one of difficult part of settings.
   Each social login takes its own settings.
   For instance, you will need to create an app in Facebook developer account and do settings there.
@@ -567,7 +603,7 @@ Most of interactive apps need Social login like Google, Apple, Facebook and the 
 ### Google Sign-in Setup for Android
 
 - Generate debug hash and get SHA1 as described in [Debug hash key](#debug-hash-key)
-- Add it into `Firebase => Project Settings => General => Your apps => Android apps => com.sonub.fireflutter => Add finger print`
+- Add it into `Firebase => Project Settings => General => Your apps => Android apps => com.fireflutter.app => Add finger print`
 - Click save.
 
 - It's important to know that you need to generate two release SHA1 keys for production app. One for upload SHA1, the other for deploy SHA1.
@@ -596,8 +632,8 @@ All the information is coming from [flutter_facebook_auth](https://pub.dev/packa
 - Click `Android`
 - Click `Next`. No need to download SDK.
 - Click `Next`. No need to import the SDK.
-- Input the package name. In our case, it is `com.sonub.fireflutter`.
-- Input `com.sonub.fireflutter.MainActivity` into `Default Activity Class Name`.
+- Input the package name. In our case, it is `com.fireflutter.app`.
+- Input `com.fireflutter.app.MainActivity` into `Default Activity Class Name`.
   - You need to replace `com.sonub.comfirefluter` to your package name and add the main activity class that is stated in AndroidManifest.xml. Default is `.MainActivity`.
 - Click save.
 - Click `use this package naem` if you see it.
@@ -1285,25 +1321,23 @@ class FirebaseReady extends StatelessWidget {
 
 - The app may store user name(displayName) on different place. But fireflutter uses user's name from firebase auth displayName. So, developers needs to sync your name to firebase auth displayName when the name is stored some where else.
 
-## Create Register Screen
+## Register Screen
 
 - Do [General Setup](#general-setup).
-- Create register screen with `lib/screens/register/register.screen.dart` file.
-- Put a route named `register`
 - See complete code on [route banch of sample app](https://github.com/thruthesky/fireflutter_sample_app/tree/routes)
 
-## Create Login Screen
+## Login Screen
 
 - See complete code on [route banch of sample app](https://github.com/thruthesky/fireflutter_sample_app/tree/routes)
 
-## Create Profile Screen
+## Profile Screen
 
 - See complete code on [route banch of sample app](https://github.com/thruthesky/fireflutter_sample_app/tree/routes)
 
 ## User Email And Password Registration
 
-- Open register.screen.dart
-- Put a button for opening register screen.
+- Do [FireFlutter Initialization](#fireflutter-initialization).
+- Create a screen.
 - Then, add email input box, password input box and a submit button.
 
   - You may add more input box for displaName and other informations.
@@ -1314,6 +1348,7 @@ class FirebaseReady extends StatelessWidget {
 - When the submit button is pressed, you would write codes like below for the user to actually register into Firebase.
 
 ```dart
+final FireFlutter ff = FireFlutter();
 try {
   User user = await ff.register({
     'email': emailController.text,
@@ -1341,6 +1376,8 @@ try {
 
 - Visit [register branch of sample app](https://github.com/thruthesky/fireflutter_sample_app/tree/register) for registration sample code.
 
+- When user registers, public data document will be created under `/meta/user/public/{uid}`.
+
 - You can add some extra public data like below.
   - User's information is private and is not available for other.
   - User's public data is open to the world. But it can only be updated by the user.
@@ -1350,8 +1387,8 @@ User user = await ff.register({
   // ...
 }, meta: {
   "public": {
-    "notification_post": true,
-    "notification_comment": true,
+    "birthyear": 1973,
+    "weight": 70,
   }
 });
 ```

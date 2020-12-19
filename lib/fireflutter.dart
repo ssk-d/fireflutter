@@ -172,6 +172,7 @@ class FireFlutter extends Base {
     Map<String, dynamic> defaultPublicData = {
       notifyPost: true,
       notifyComment: true,
+      'createdAt': FieldValue.serverTimestamp(),
     };
 
     /// Merge default with new meta data.
@@ -277,9 +278,20 @@ class FireFlutter extends Base {
   ///  'displayName': 'UserA'
   /// });
   /// ```
+  ///
+  /// ```dart
+  /// dynamic user = await ff.loginOrRegister(
+  ///  email: 'user-a@gmail.com',
+  ///  password: '12345a,*',
+  ///  data: {
+  ///    'displayName': 'UserA'
+  ///  },
+  ///  public: { ... }
+  /// );
+  /// ```
   Future<User> loginOrRegister({
-    @required String email,
-    @required String password,
+    String email,
+    String password,
     Map<String, dynamic> data,
     Map<String, dynamic> public,
     Function onRegister,
@@ -288,8 +300,8 @@ class FireFlutter extends Base {
     try {
       if (data == null) data = {};
 
-      data['email'] = email;
-      data['password'] = password;
+      if (email != null) data['email'] = email;
+      if (password != null) data['password'] = password;
 
       final user = await login(
           email: data['email'],
@@ -1078,7 +1090,7 @@ class FireFlutter extends Base {
   /// Returns empty Map if there is no data or document does not exists.
   /// `/users/{uid}/meta/public` document would alway exists but just in case
   /// it does't exist, it return empty Map.
-  Future<Map<String, dynamic>> userPublicData() async {
+  Future<Map<String, dynamic>> getUserPublicData() async {
     final Map<String, dynamic> data = (await publicDoc.get()).data();
     return data == null ? {} : data;
   }

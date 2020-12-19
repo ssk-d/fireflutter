@@ -87,8 +87,11 @@ class Base {
   /// User document data.
   Map<String, dynamic> userData = {};
 
+  @Deprecated('Use userPublicData')
+
   /// User public document data.
-  Map<String, dynamic> publicData = {};
+  Map<String, dynamic> get publicData => userPublicData;
+  Map<String, dynamic> userPublicData = {};
 
   bool get loggedIn => user != null;
   bool get notLoggedIn => !loggedIn;
@@ -146,6 +149,21 @@ class Base {
   /// For chat and other functionalities that do user search need this option.
   bool openProfile = false;
 
+  /// Helper functions
+  ///
+  /// [uid] returns login user's uid.
+  String get uid => user == null ? null : user.uid;
+
+  /// [displayName] returns displayName or null if the user has not logged in.
+  ///
+  /// ```dart
+  /// Text(ff.displayName ?? '')
+  /// ```
+  String get displayName => user == null ? null : user.displayName;
+
+  /// [photoURL] returns login user's phogo URL.
+  String get photoURL => user == null ? null : user.photoURL;
+
   initUser() {
     authStateChanges = FirebaseAuth.instance.authStateChanges();
 
@@ -182,7 +200,7 @@ class Base {
         userPublicDocSubscription = publicDoc.snapshots().listen(
           (DocumentSnapshot snapshot) {
             if (snapshot.exists) {
-              publicData = snapshot.data();
+              userPublicData = snapshot.data();
               userChange.add(UserChangeData(UserChangeType.public, user: user));
             }
           },
