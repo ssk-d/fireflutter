@@ -1,8 +1,9 @@
-## [0.0.43] - Big changes
+## [0.0.43] - Variable name changes and minor changes.
 
 - `email` and `password` of `loginOrRegister` are now optional.
 - `userPublicData` has been renamed to `getUserPublicData`.
 - `publicData` has been renamed to `userPublicData`.
+- When user logs out, `userPublicData` become an empty Map.
 
 ## [0.0.42] - Storage related code update
 

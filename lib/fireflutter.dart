@@ -194,7 +194,8 @@ class FireFlutter extends Base {
   }
 
   /// Logs out from Firebase Auth.
-  Future<void> logout() {
+  Future logout() {
+    userPublicData = {};
     return FirebaseAuth.instance.signOut();
   }
 

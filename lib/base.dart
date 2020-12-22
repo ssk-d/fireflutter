@@ -93,9 +93,6 @@ class Base {
   Map<String, dynamic> get publicData => userPublicData;
   Map<String, dynamic> userPublicData = {};
 
-  bool get loggedIn => user != null;
-  bool get notLoggedIn => !loggedIn;
-
   /// [userChange] event fires when
   /// - user document(without subcollection) like when user updates his profile
   /// - user log in,
@@ -151,6 +148,12 @@ class Base {
 
   /// Helper functions
   ///
+  /// [loggedIn] returns true if the user has logged in.
+  bool get loggedIn => user != null;
+
+  /// [notLoggedIn] returns true if the user is not logged in.
+  bool get notLoggedIn => !loggedIn;
+
   /// [uid] returns login user's uid.
   String get uid => user == null ? null : user.uid;
 
