@@ -125,7 +125,7 @@ class ForumData {
 
   /// [fetched] becomes true if the app had fetched the first batch of posts
   /// from Firestore. Mostly the UI shows a spinner(loader) that the fetching
-  /// is in progress. And if there is no document to fetch, it would ever
+  /// is in progress. And if there is no document to fetch, it would never
   /// become true that causes the UI show spinner and wait forever. So, it
   /// will turn into true after the [fetchTimeout] when there is no documents
   /// to fetch. This does not mean any documents are actually fetched.
