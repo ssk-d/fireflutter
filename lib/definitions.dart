@@ -16,7 +16,8 @@ enum RenderType {
   fileUpload,
   fileDelete,
   fetching,
-  finishFetching
+  finishFetching,
+  fetchTimeout,
 }
 
 enum ForumStatus {
@@ -83,12 +84,20 @@ typedef SocialLoginSuccessHandler = void Function(User user);
 
 class ForumData {
   /// [render] will be called when the view need to be re-rendered.
+  /// [fetchTimeout] makes the fetch timed out. See [fetch] for
+  /// details.
   ForumData({
     @required this.category,
     @required this.render,
     this.uid,
     this.noOfPostsPerFetch = 12,
-  });
+    fetchTimeout = 15,
+  }) {
+    Timer(Duration(seconds: fetchTimeout), () {
+      fetched = true;
+      render(RenderType.fetchTimeout);
+    });
+  }
 
   /// This is for infinite scrolling in forum screen.
   RenderType _inLoading;
@@ -114,9 +123,14 @@ class ForumData {
   /// [uid] could be the login user's uid or other user's uid.
   String uid;
 
-  /// [fetched] becomes true if the app has fetched from Firestore.
+  /// [fetched] becomes true if the app had fetched the first batch of posts
+  /// from Firestore. Mostly the UI shows a spinner(loader) that the fetching
+  /// is in progress. And if there is no document to fetch, it would ever
+  /// become true that causes the UI show spinner and wait forever. So, it
+  /// will turn into true after the [fetchTimeout] when there is no documents
+  /// to fetch. This does not mean any documents are actually fetched.
   ///
-  /// There might no no there even after it has fetched. So, [fetched] will be true
+  /// There might no posts there even after it has fetched. So, [fetched] will be true
   /// while [posts] is still empty array.
   ///
   bool fetched = false;

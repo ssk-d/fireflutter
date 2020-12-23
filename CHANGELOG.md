@@ -1,6 +1,7 @@
-## [0.0.44] - depreation
+## [0.0.44] - Fetch timeout
 
 - `getPublicData()` has been deprecatd. Use `getUserPublicData()`.
+- `fetched` becomes true if the app had fetched the first batch of posts from Firestore. Mostly the UI shows a spinner(loader) that the fetching is in progress. And if there is no document to fetch, it would ever become true that causes the UI show spinner and wait forever. So, it will turn into true after the [fetchTimeout] when there is no documents to fetch. This does not mean any documents are actually fetched.
 
 ## [0.0.43] - Variable name changes and minor changes.
 
