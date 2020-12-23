@@ -1,3 +1,7 @@
+## [0.0.44] - depreation
+
+- `getPublicData()` has been deprecatd. Use `getUserPublicData()`.
+
 ## [0.0.43] - Variable name changes and minor changes.
 
 - `email` and `password` of `loginOrRegister` are now optional.

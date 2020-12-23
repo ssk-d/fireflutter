@@ -199,24 +199,6 @@ class FireFlutter extends Base {
     return FirebaseAuth.instance.signOut();
   }
 
-  /// Returns user's public document data
-  ///
-  /// If the document does not exist, it returns null.
-  ///
-  /// There is `publicData` map variable which has login user's public document
-  /// data and it's live updated. It is better to use `publicData`, but only if
-  /// you are unsure if `publicData` is available immediately right after login
-  /// or registration, you may use this method.
-  Future<Map<String, dynamic>> getPublicData() async {
-    if (notLoggedIn) return null;
-    final snapshot = await publicDoc.get();
-    if (snapshot.exists) {
-      return snapshot.data();
-    } else {
-      return null;
-    }
-  }
-
   /// Logs into Firebase Auth.
   ///
   /// It can update user displayName, photoURL or other public data while login.
@@ -1083,6 +1065,26 @@ class FireFlutter extends Base {
     } else {
       /// error object: `{message: Method not allowed with this API key, status: 403}`
       throw data['message'];
+    }
+  }
+
+  @Deprecated('Use getUserPublicData()')
+
+  /// Returns user's public document data
+  ///
+  /// If the document does not exist, it returns null.
+  ///
+  /// There is `publicData` map variable which has login user's public document
+  /// data and it's live updated. It is better to use `publicData`, but only if
+  /// you are unsure if `publicData` is available immediately right after login
+  /// or registration, you may use this method.
+  Future<Map<String, dynamic>> getPublicData() async {
+    if (notLoggedIn) return null;
+    final snapshot = await publicDoc.get();
+    if (snapshot.exists) {
+      return snapshot.data();
+    } else {
+      return null;
     }
   }
 
