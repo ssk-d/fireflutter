@@ -17,7 +17,6 @@ enum RenderType {
   fileDelete,
   fetching,
   finishFetching,
-  fetchTimeout,
 }
 
 enum ForumStatus {
@@ -84,20 +83,12 @@ typedef SocialLoginSuccessHandler = void Function(User user);
 
 class ForumData {
   /// [render] will be called when the view need to be re-rendered.
-  /// [fetchTimeout] makes the fetch timed out. See [fetch] for
-  /// details.
   ForumData({
     @required this.category,
     @required this.render,
     this.uid,
     this.noOfPostsPerFetch = 12,
-    fetchTimeout = 15,
-  }) {
-    Timer(Duration(seconds: fetchTimeout), () {
-      fetched = true;
-      render(RenderType.fetchTimeout);
-    });
-  }
+  });
 
   /// This is for infinite scrolling in forum screen.
   RenderType _inLoading;
@@ -126,12 +117,10 @@ class ForumData {
   /// [fetched] becomes true if the app had fetched the first batch of posts
   /// from Firestore. Mostly the UI shows a spinner(loader) that the fetching
   /// is in progress. And if there is no document to fetch, it would never
-  /// become true that causes the UI show spinner and wait forever. So, it
-  /// will turn into true after the [fetchTimeout] when there is no documents
-  /// to fetch. This does not mean any documents are actually fetched.
+  /// become true that causes the UI show spinner and wait forever.
   ///
-  /// There might no posts there even after it has fetched. So, [fetched] will be true
-  /// while [posts] is still empty array.
+  /// There might no posts there even after it has fetched. So, [fetched] might
+  /// be true while [posts] is still empty array.
   ///
   bool fetched = false;
 
@@ -155,28 +144,3 @@ class ForumData {
     }
   }
 }
-
-// class VoteChoice {
-//   static String like = 'like';
-//   static String dislike = 'dislike';
-// }
-
-// /// Algolia search data to index
-// class SearchData {
-//   /// [path] is the path of document
-//   final String path;
-//   final String title;
-//   final String content;
-
-//   /// [stamp] is unix timestmap
-//   final String stamp;
-//   SearchData({@required this.path, this.title, this.content, this.stamp});
-//   Map<String, dynamic> toMap() {
-//     return {
-//       'path': path,
-//       if (title != null) 'title': title,
-//       if (content != null) 'content': content,
-//       if (stamp != null) 'stamp': stamp,
-//     };
-//   }
-// }

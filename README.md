@@ -1632,6 +1632,8 @@ Call `fetchPosts()` method the ForumData instance and fireflutter will get posts
     - It has a code for infinite scrolling to fectch more posts.
   - The code is not complete. Many functionalities are missing like editing, voting for like and dislike, deleting, etc. We will cover this things on the following code samples.
 
+- A common fitfall is that if firestore indexes are not set properly, the app can't fetch posts. It would be stuck there forever.
+
 ### Post list with photos
 
 - Do [Create post list screen](#create-post-list-screen)

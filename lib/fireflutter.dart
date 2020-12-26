@@ -148,6 +148,8 @@ class FireFlutter extends Base {
       password: data['password'],
     );
 
+    userPublicData = {};
+
     // For registraion, it is okay that displayName or photoUrl is empty.
     await updateUserData(data);
 
@@ -219,8 +221,8 @@ class FireFlutter extends Base {
       email: email,
       password: password,
     );
+    userPublicData = {};
     await updateUserData(data);
-
     await updateUserPublic(public);
     await onLogin(userCredential.user);
     return userCredential.user;

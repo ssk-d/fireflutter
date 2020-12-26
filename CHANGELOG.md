@@ -1,3 +1,8 @@
+
+## [0.0.45] - Revert fetch timeout
+
+- Revert code related with `fetched` adn `fetchTimeout`. So, when it can't fetch posts, it would stuck there foerver.
+
 ## [0.0.44] - Fetch timeout
 
 - `getPublicData()` has been deprecatd. Use `getUserPublicData()`.
