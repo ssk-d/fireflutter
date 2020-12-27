@@ -1,3 +1,6 @@
+## [0.0.46] - Resets userPublicData property
+
+- Resets userPublicData property when user logs in or register.
 
 ## [0.0.45] - Revert fetch timeout
 
