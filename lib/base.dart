@@ -61,6 +61,10 @@ class Base {
   ///   builder: (context, snapshot) { ... });
   /// ```
   Stream<User> authStateChanges;
+
+  /// [userChange] is a simple alias of `FirebaseAuth.instance.userChanges()`
+  ///
+  /// It will be fired when user changes `dispolayName` or `photoURL`.
   Stream<User> userChange;
 
   /// Firebase User instance

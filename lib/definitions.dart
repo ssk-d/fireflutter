@@ -64,14 +64,14 @@ const ERROR_SIGNIN_ABORTED = 'ERROR_SIGNIN_ABORTED';
 /// [UserChangeType.document] is for `/users/{uid}` change.
 /// [UserChangeType.auth] is for login, or logout. Be reminded that login even will be fired twice. This is the nature of firebase.
 /// [UserChangeType.profile] is for changing `photoURL` or `displayName`.
-enum UserChangeType { auth, document, public, register, profile }
+// enum UserChangeType { auth, document, public, register, profile }
 
 /// Event data on [userChange] event
-class UserChangeData {
-  UserChangeData(this.type, {this.user});
-  UserChangeType type;
-  User user;
-}
+// class UserChangeData {
+//   UserChangeData(this.type, {this.user});
+//   UserChangeType type;
+//   User user;
+// }
 
 enum NotificationType { onMessage, onLaunch, onResume }
 
