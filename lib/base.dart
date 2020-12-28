@@ -61,6 +61,7 @@ class Base {
   ///   builder: (context, snapshot) { ... });
   /// ```
   Stream<User> authStateChanges;
+  Stream<User> userChange;
 
   /// Firebase User instance
   ///
@@ -93,16 +94,26 @@ class Base {
   Map<String, dynamic> get publicData => userPublicData;
   Map<String, dynamic> userPublicData = {};
 
-  /// [userChange] event fires when
-  /// - user document(without subcollection) like when user updates his profile
-  /// - user log in,
-  /// - user log out,
-  /// - user verify his phone nubmer
-  /// - user profile photo changes
-  ///
-  /// It is important to know that [authStateChanges] event happens only when
-  /// user logs in or logs out.
-  BehaviorSubject<UserChangeData> userChange = BehaviorSubject.seeded(null);
+  // /// [userChange] event fires when
+  // /// - user document(without subcollection) like when user updates his profile
+  // /// - user log in,
+  // /// - user log out,
+  // /// - user verify his phone nubmer
+  // /// - user profile photo changes
+  // ///
+  // /// It is important to know that [authStateChanges] event happens only when
+  // /// user logs in or logs out.
+  // BehaviorSubject<UserChangeData> userChange = BehaviorSubject.seeded(null);
+
+  /// [userDataChange] is fired when `/users/{uid}` changes.
+  // ignore: close_sinks
+  BehaviorSubject<Map<String, dynamic>> userDataChange =
+      BehaviorSubject.seeded(null);
+
+  /// [userPublicDataChange] is fired when `/meta/user/public/{uid}` changes.
+  // ignore: close_sinks
+  BehaviorSubject<Map<String, dynamic>> userPublicDataChange =
+      BehaviorSubject.seeded(null);
 
   /// [notification] will be fired whenever there is a push notification.
   /// the return data will the following and can be use when user receive notifications.
@@ -169,11 +180,12 @@ class Base {
 
   initUser() {
     authStateChanges = FirebaseAuth.instance.authStateChanges();
+    userChange = FirebaseAuth.instance.userChanges();
 
     /// Note: listen handler will called twice if Firestore is working as offline mode.
     authStateChanges.listen((User user) {
       /// [userChange] event fires when user is logs in or logs out.
-      userChange.add(UserChangeData(UserChangeType.auth, user: user));
+      // userChange.add(UserChangeData(UserChangeType.auth, user: user));
 
       /// Cancel listening user document.
       ///
@@ -193,8 +205,7 @@ class Base {
           (DocumentSnapshot snapshot) {
             if (snapshot.exists) {
               userData = snapshot.data();
-              userChange
-                  .add(UserChangeData(UserChangeType.document, user: user));
+              userDataChange.add(userData);
             }
           },
         );
@@ -204,7 +215,7 @@ class Base {
           (DocumentSnapshot snapshot) {
             if (snapshot.exists) {
               userPublicData = snapshot.data();
-              userChange.add(UserChangeData(UserChangeType.public, user: user));
+              userPublicDataChange.add(userPublicData);
             }
           },
         );

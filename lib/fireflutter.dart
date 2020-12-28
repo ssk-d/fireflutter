@@ -311,8 +311,7 @@ class FireFlutter extends Base {
   ///
   /// This method updates user profile photo faster than `updateProfile`.
   Future<void> updatePhoto(String url) async {
-    await user.updateProfile(photoURL: url);
-    userChange.add(UserChangeData(UserChangeType.profile));
+    await updateProfile({'photoURL': url});
     await user.reload();
     await onProfileUpdate();
   }

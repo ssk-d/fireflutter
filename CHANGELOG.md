@@ -1,5 +1,9 @@
-## [0.0.46] - Resets userPublicData property
+## [0.0.46] - Big break on user data events
 
+This is going to be a big break.
+
+- `userDataChange` and `userPublicDataChange` had been diverged from the previous version of `userChange`.
+- And `userChange` is now used as an alias of `FirebaseAuth.instance.userChanges()` which will be fired on all user change events.
 - Resets userPublicData property when user logs in or register.
 
 ## [0.0.45] - Revert fetch timeout
