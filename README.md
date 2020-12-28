@@ -150,7 +150,10 @@ A free, open source, complete, rapid development package for creating Social app
   - [Add GoogleService-Info.plist](#add-googleservice-infoplist)
   - [Stuck in registration](#stuck-in-registration)
   - [MissingPluginException(No implementation found for method ...](#missingpluginexceptionno-implementation-found-for-method-)
-    - [By pass MissingPluginException error](#by-pass-missingpluginexception-error)
+  - [Facebook login package problem](#facebook-login-package-problem)
+    - [Fake setup with flutter_facebook_auth](#fake-setup-with-flutter_facebook_auth)
+  - [cached_network_image package is not working](#cached_network_image-package-is-not-working)
+  - [webview_flutter package is not working](#webview_flutter-package-is-not-working)
   - [com.apple.AuthenticationServices.AuthorizationError error 1001 or if the app hangs on Apple login](#comappleauthenticationservicesauthorizationerror-error-1001-or-if-the-app-hangs-on-apple-login)
   - [sign_in_failed](#sign_in_failed)
   - [operation-not-allowed](#operation-not-allowed)
@@ -476,7 +479,7 @@ dependencies {
   - android/app/build.gradle
   - android/app/src/main/kotlin/….MainActivity.kt
 
-- That's it.
+- And do [Facebook login package problem](#facebook-login-package-problem).
 - You may want to test if the settings are alright.
   - Open VSCode and do [FireFlutter Initialization](#fireflutter-initialization) do some registration code. see [User Registration](#user-email-and-password-registration) for more details.
 
@@ -2790,7 +2793,15 @@ This error may happen when you try to login with `google_sign_in package` but yo
 
 Try to do `By pass MissingPluginException error` and see if the error goes away.
 
-### By pass MissingPluginException error
+## Facebook login package problem
+
+It looks like some of flutter packages are conflicting with `flutter_facebook_auth` package.
+
+We found that `cached_network_image`, `like webview_flutter` packages are not working properly on Android platform until we set the settings of `flutter_facebook_auth` package.
+
+There might be more packages that conflict with `flutter_facebook_auth`, so we recommand to do the setup of Facebook. If your app does not need Facebook login, see [Fake setup with flutter_facebook_auth](#fake-setup-with-flutter_facebook_auth) to do simple fake setup instead of going full setup.
+
+### Fake setup with flutter_facebook_auth
 
 If really don't want to implement Facebook sign in or you want to skip Facebook sign in for the mean time while you are implementing Gogole sign in, then you may add the following settings. You can just put fake data on `strings.xml`.
 
@@ -2834,6 +2845,12 @@ And add the following meta-data element, an activity for Facebook, and an activi
 </activity>
 ```
 
+## cached_network_image package is not working
+
+See [Facebook login package problem](#facebook-login-package-problem)
+## webview_flutter package is not working
+
+See [Facebook login package problem](#facebook-login-package-problem)
 ## com.apple.AuthenticationServices.AuthorizationError error 1001 or if the app hangs on Apple login
 
 If you meet error message like this,
