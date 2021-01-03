@@ -1,3 +1,7 @@
+## [0.0.47] - Chat functions
+
+- Document update on chat functions.
+
 ## [0.0.46] - Big break on user data events
 
 This is going to be a big break.

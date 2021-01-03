@@ -4,8 +4,17 @@ class Base {
   /// Check if Firebase has initialized.
   bool isFirebaseInitialized = false;
 
-  /// Fires after Firebase has initialized or if already initialized.
-  /// The true event will be fired only once when Firebase initialized.
+  /// Firebase intialized event
+  ///
+  /// This event is fires after Firebase has initialized(created instance) or if
+  /// it has already initialized.
+  ///
+  /// When this event is fired, `initUser()` is already called which means,
+  /// `authStateChanages` and `userChanges` are ready to be consumed.
+  ///
+  /// The arguemnt will be true only after when Firebase initialized.
+  ///
+  // ignore: close_sinks
   BehaviorSubject<bool> firebaseInitialized = BehaviorSubject.seeded(false);
 
   /// Returns Firestore instance. Firebase database instance.
@@ -50,22 +59,28 @@ class Base {
 
   bool enableNotification;
 
-  /// [authStateChange] is a link to `FirebaseAuth.instance.authStateChanges()`
+  /// [authStateChange] is fired whenever user logs in or out.
   ///
-  /// Use this to know if the user has logged in or not.
+  /// Use this to know if the user has logged in or not. Since this is
+  /// `BehaviorSubject` that delivers Firebase `User` object, it can be used
+  /// outside of `ff.firebaseInitialized.listen()`
   ///
   /// You can do the following with [authStateChanges]
-  /// ```
+  /// ```dart
   /// StreamBuilder(
   ///   stream: ff.authStateChanges,
   ///   builder: (context, snapshot) { ... });
   /// ```
-  Stream<User> authStateChanges;
+  ///
+  /// ```dart
+  /// ff.authStateChanges.listen((user) { ... }
+  /// ```
+  BehaviorSubject<User> authStateChanges = BehaviorSubject.seeded(null);
 
-  /// [userChange] is a simple alias of `FirebaseAuth.instance.userChanges()`
+  /// [userChanges] is a simple alias of `FirebaseAuth.instance.userChanges()`
   ///
   /// It will be fired when user changes `dispolayName` or `photoURL`.
-  Stream<User> userChange;
+  Stream<User> userChanges;
 
   /// Firebase User instance
   ///
@@ -183,11 +198,12 @@ class Base {
   String get photoURL => user == null ? null : user.photoURL;
 
   initUser() {
-    authStateChanges = FirebaseAuth.instance.authStateChanges();
-    userChange = FirebaseAuth.instance.userChanges();
+    userChanges = FirebaseAuth.instance.userChanges();
 
     /// Note: listen handler will called twice if Firestore is working as offline mode.
-    authStateChanges.listen((User user) {
+    FirebaseAuth.instance.authStateChanges().listen((User user) {
+      authStateChanges.add(user);
+
       /// [userChange] event fires when user is logs in or logs out.
       // userChange.add(UserChangeData(UserChangeType.auth, user: user));
 
@@ -231,17 +247,16 @@ class Base {
 
   /// Initialize Firebase
   ///
-  /// Firebase is initialized asynchronously. It does not block the app by async/await.
+  /// Firebase is initialized asynchronously. Meaning, it does not block the app
+  /// while it's intializaing.
+  ///
+  /// Invoked by `ff.init()`.
   initFirebase() {
     // WidgetsFlutterBinding.ensureInitialized();
     return Firebase.initializeApp().then((firebaseApp) {
-      isFirebaseInitialized = true;
-      firebaseInitialized.add(isFirebaseInitialized);
       FirebaseFirestore.instance.settings =
           Settings(cacheSizeBytes: Settings.CACHE_SIZE_UNLIMITED);
 
-      usersCol = FirebaseFirestore.instance.collection('users');
-      postsCol = FirebaseFirestore.instance.collection('posts');
       return firebaseApp;
     });
   }

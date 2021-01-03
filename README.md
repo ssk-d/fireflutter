@@ -68,6 +68,7 @@ A free, open source, complete, rapid development package for creating Social app
   - [Forum Management](#forum-management)
     - [Forum Category Management](#forum-category-management)
 - [Developer Coding Guidelines](#developer-coding-guidelines)
+  - [Preview of Development](#preview-of-development)
   - [General Setup](#general-setup)
   - [FireFlutter global variable](#fireflutter-global-variable)
     - [FireFlutter Initialization](#fireflutter-initialization)
@@ -117,10 +118,11 @@ A free, open source, complete, rapid development package for creating Social app
 - [Chat](#chat)
   - [Preview of chat functionality](#preview-of-chat-functionality)
   - [Firestore structure of chat](#firestore-structure-of-chat)
-  - [Logic and Scenario of chat](#logic-and-scenario-of-chat)
+  - [Common Scenario of Chat](#common-scenario-of-chat)
+  - [Overview of chat functions](#overview-of-chat-functions)
   - [Pitfalls of chat logic](#pitfalls-of-chat-logic)
   - [Code of chat](#code-of-chat)
-    - [Preparation for chat](#preparation-for-chat)
+    - [Creating chat room list instace on global space](#creating-chat-room-list-instace-on-global-space)
     - [Chat Room List](#chat-room-list)
     - [Chat room](#chat-room)
     - [Begin chat with a user](#begin-chat-with-a-user)
@@ -1162,6 +1164,11 @@ To create a creategory,
 
 # Developer Coding Guidelines
 
+## Preview of Development
+
+- As you may know, Firebase permission denied exception would cause a break as an `Unhandled Exception` on `VSCode` and it is the nature of fireflutter to work with permission denied exception. For instance, when the app meets permission denied error happens, the app would do something else. But the editor(like VScode) may produce `Uncaught Exception` and would stop the runtime pointing where it happens. This is normal. You can simply continue the runtime.
+- When you work with firebase, you should have something in mind that firebase works on offline and that causes reading twice.
+
 ## General Setup
 
 - Add latest version of [FireFlutter](https://pub.dev/packages/fireflutter) in pubspec.yaml
@@ -2094,23 +2101,24 @@ The settings are
 
 # Chat
 
+(Revised on Dec 30, 2020)
+
 If you are looking for a package that support a complete chat functionality, fireflutter is for you. Unlike other sample (tutorial) code on the Internet, it has really complete features like
 
-- listing my room list (chat list or friend list).
-- group chat
-- creating chat room with one user or multip users.
-- adding user.
-- blocking user.
-- search user.
-- sending photo
-- changing settings of the room like room title update.
-- and much more.
+- Listing my room list (chat list or friend list).
+- Listening my room events globally ( or only in chat room list ).
+- Group chat (It can be one and one chat ).
+- Creating chat room with one user or multip users.
+- Adding a user(or multiple users) to existing room.
+- Blocking user.
+- Changing settings of the room like room title update.
+- And much more.
 
 ## Preview of chat functionality
 
-- All chat functionality works on user login. That means, to use chat, the user must logged in.
+- User must login to use chat functionalities.
 - Most of chat related methods throw permission error when a user tries something that is not permitted.
-- To use chat functionality, `openProfile` option of `ff.init()` must be set to access user's displayName and photoURL.
+- ~~To use chat functionality, `openProfile` option of `ff.init()` must be set to access user's displayName and photoURL.~~ TODO: https://github.com/thruthesky/fireflutter/issues/24
 
 ## Firestore structure of chat
 
@@ -2119,12 +2127,12 @@ Before we begin, let's put an assumption.
 - There are 4 users. User `A`, user `B`, user `C`, and user `D`. User A is the moderator which means he is the one who created the room.
 - The room that moderator A created is `RoomA` and there are two users in the room. User A, B.
 - The UIDs of user A, B, C, D is A, B, C, D respectively.
-- The room id of RoomA is RoomA.
+- The room id of `RoomA` is `RoomA`.
 
 Firestore structure and its data are secured by Firestore security rules.
 
-- `/chat/info/room-list/{roomId}` is where each room information(setting) is stored. It's called global room list.
-  - When a room is created, the `roomId` will be autogenrated by Firestore by adding a document under global room list collection - `/chat/info/room-list`.
+- `/chat/global/room-list/{roomId}` is where each room information(setting) is stored. It's called global room list.
+  - When a room is created, the `roomId` will be autogenrated by Firestore by adding a document under global room list collection - `/chat/global/room-list`.
   - Document properties
     - `moderators` is an array of user's uid. Users in this array are the moderators.
     - `users` is an array of participant users' uid.
@@ -2132,11 +2140,11 @@ Firestore structure and its data are secured by Firestore security rules.
     - `createdAt` has the time when the chat room was created.
     - `title` is the title of chat room.
   - When `{users: [ ... ]}` is updated to add or remove user, other properties cannot be edited.
-- `/chat/my-room-list/{uid}/{roomId}` is where each user's room list are stored. The document has information about the room and last message. It's called private room.
-  - If a user has unread messages, it has no of new messages.
+- `/chat/my-room-list/{uid}/{roomId}` is where each user's chat room information is stored. It's called private room. The document has the room information inlcuding last message of the room.
+  - If a user has unread messages, it has the number of new messages.
   - It has last message information of who sent what, time, and more.
-  - It may have information about who added, blocked.
-    When A chats in RoomA, the (last) message goes to `/chat/info/room-list/RoomA` and to all the users in the room which are
+  - It may have information about who were added or blocked.
+    When A chats in RoomA, the (last) message goes to `/chat/global/room-list/RoomA` and to all the users in the room which are
     - `/chat/my-room-list/A/RoomA`
     - `/chat/my-room-list/B/RoomA`
   - Document properties
@@ -2153,16 +2161,33 @@ Firestore structure and its data are secured by Firestore security rules.
 }
 ```
 
-- `/chat/messages/{roomId}/{message}` is where all the chat messages for the room are stored.
+- `/chat/messages/{roomId}/{message}` is where all the chat messages for each chat room are stored.
 
-- By default, when a user begins to chat with another user, it will always create a new room. If `hatch` option is given, it may not create a new room for the same users.
+- By default, when a user begins to chat with another user, it will always create a new room. If `hatch: false` option is given, it may not create a new room for the same users, instead it will use the exising room.
 
-## Logic and Scenario of chat
+## Common Scenario of Chat
+
+- User may enter(create) many chat rooms.
+- The app needs to get(or realtime update) all of login user's chat room in `/chat/my-room-list/{uid}`.
+- And the app needs to listen to all of login user's incomng chat room events.
+  - And apply to the list.
+
+- When the user touches on the room of the room list, the user enters the room
+  - and gets some of last messages of the room
+  - and listen to the events of the room and display
+
+- The user can create a new chat room with other users.
+- The user can add another users.
+- If the user is one of the moderators, he can kickout/block other users.
+
+
+## Overview of chat functions
+
 
 - User who begin(or create) to chat becomes the moderator.
 - Moderator can add another moderator.
-- When a user enters `chat room list screen`, the app should display all of the user's chat room list. It is a recommended but costomisable.
-- User may search another user by openning a `user search screen` and select a user (or multiple users) to begin chat. Then the app should redirect the user to `chat room screen` when the use chosen other users to begin chat.
+- When a user enters `chat room list screen`, the app should display all of the user's chat room list. It is a recommended but customisable.
+- User may search another user by openning a `user search screen` and select a user (or multiple users) to begin chat. Then the app should redirect the user to `chat room screen` when the login user chosen other users to begin chat.
 - User can enter chat room by selecting a chat room in his chat room list.
 - User can add other users by selecting add user button in the chat room.
 - User can create a chat room with the same user(s) over again. That means, A can begin chat with B by creating a room. And then, A can begin chat with B again by creating another room. `hatch` option can prevent creating new room upon creating a chat room with same users.
@@ -2170,27 +2195,25 @@ Firestore structure and its data are secured by Firestore security rules.
   - This protocol message can be useful to display that there is no more messages or this is the first message when user scrolls up to view previous messages.
 - When a user is added, `ChatProtocol.enter` message (with user information) will devlivered to all users and property `users` has the names of the addedusers.
 - When a user leaves a room, `ChatProtocol.leave` message (with user information) will devlivered to all users and property `userName` has the name of the left user.
-- When a user is blocked, `ChatProtocol.block` message will (with user information) devlivered to all users. Only moderator can blocks a user and the user's uid will be saved in `{ blockedUsers: [ ... ]}` array. And `users` will hold the names of bloked users.
+- When a user is blocked, `ChatProtocol.block` message will (with user information) devlivered to all users. Only moderator can blocks a user and the user's uid will be saved in `{ blockedUsers: [ ... ]}` array. And `users` property will hold the names of bloked users.
 - When a room is created or a user is added, protocol message will be delivered to newly added users. And the room list should be appears on their room list.
 - Blocked users will not be added to the room until moderator remove the user from `{ blockedUsers: [ ... ]}` array.
 - When a user(or a moderator) leaves the room and there is no user left in the room, then that's it. The chat room is left as ghost chat room.
 - When a user logs out or logs into another account while listening room list will causes permission error. Especially on testing, you would not open chat screen since testing uses several accounts at the same time.
 - Logically, a user can search himself on search screen and begin chat with himself. You may add some logic to prevent it if you want.
 - When a user is blocked by moderator, the user received no more messages except the `ChatProtocol.blocked` message.
+- Chat protocol messages should be translated into user's language by the translation functionality. You may customise to translate it by yourself.
 
 - You would code like below to enter a chat room.
 
   - if `id` (as chat room id) is given, it will enter the chat room and listens all the event of the room.
   - Or if `id` is null, then a room will be created with the `users` of UIDs list.
   - If both of `id` and `users` are null(or empty), then a room will be created without any users except the login user himself. He will be alone in the room.
-  - If both of `id` and `users` have value, then, it enters the room if the room of the `id` exists. Or it will create a room with the `id` and with the users.
-    - This will be a good option for 1:1 chat. If the app only allows 1:1 chat, or the user chats to admin for help, this will be a good option.
-    - The `id` can be an md5 string of the login user's uid(A) and other user's uid(B).
-      - When it creates the room, it will create a room for A and B, and next time A or B try to chat each other again, it will not create a new room. Instead, it will use previously created room.
+  
 
 - If the app must inform new messages to the user when the user is not in room list screen,
 
-  - The app can listen `my-room-list` collection on app screen (or homescreen)
+  - The app can listen `my-room-list` collection on app screen (or homescreen, or in global space).
   - And when a new message arrives, the app can show snackbar.
 
 - You may put the logic of the app like below
@@ -2198,10 +2221,11 @@ Firestore structure and its data are secured by Firestore security rules.
   - Listen to chat room update on home screen and display updates on chat icon.
   - When somebody chats, the user will get push notification. and ignore push notifications if it's my chat or someone that I am talking to.
 
+
 ## Pitfalls of chat logic
 
 - User cannot remove(or block) another user. Only moderator can do it.
-  - A add B.
+  - A adds B.
   - B goes offline.
   - B add C. Since Firebase works offline, B can still add user C even if he has no connection.
   - A add D.
@@ -2212,17 +2236,91 @@ Firestore structure and its data are secured by Firestore security rules.
 
 ## Code of chat
 
-### Preparation for chat
+### Creating chat room list instace on global space
 
-- By default, app can search users by name in `/meta/user/public/{uid}`. You may extend to search by gender and age.
-  - And it requires `openProfile` option to be set in `fireflutter` initialization like below.
-  - This option updates user's profile name and photo under `/meta/user/public/{uid}` and a user can search other users name and photo.
+- Depending on your app structure, you may declare login user's chat room list instance in global scope.
+  - The declaration below could be a separate service(library) file.
 
 ```dart
-ff.init({
-  'openProfile': true,
-})
+final FireFlutter ff = FireFlutter();
+
+/// [myRoomList] is the instance of ChatMyRoomList. It will be instanciated in
+/// main.dart
+ChatMyRoomList myRoomList;
+
+/// [myRoomListChanges] will be fired whenever/whatever events happens for my
+/// chat room list.
+BehaviorSubject myRoomListChanges = BehaviorSubject.seeded(null);
+
+/// [chat] is the chat room instance.
+/// 
+/// The reason why it is declared in global scope is that the app needs to know
+/// if the user is in a chat room. So, when he gets a push notification from the
+/// chat room where he is in, the push messge will be ignored.
+ChatRoom chat;
 ```
+
+- Then, you need to create an instance of `ChatMyRoomList` in your main.dart (or in root screen) like below.
+
+```dart
+// When user login/logout. (Update my room list when user change account.)
+ff.authStateChanges.listen((user) {
+  // When user is not logged in, or logged out, clear the chat room list.
+  if (user == null) {
+    if (myRoomList != null) {
+      myRoomList.leave();
+      myRoomList = null;
+    }
+    return;
+  }
+
+  // When user just logged in, set room list.
+  if (myRoomList == null) {
+    myRoomList = ChatMyRoomList(
+      inject: ff,
+      render: () {
+        // When there are changes(events) on my chat room list,
+        // notify to listeners.
+        myRoomListChanges.add(myRoomList.rooms);
+      },
+    );
+  }
+});
+```
+
+
+- Then, on chat room list screen(create one if you don't have), add the following code to list my chat room list.
+
+
+- Then, on chat room, you can do the following.
+  - The thing you want to focus is that the app needs to create an instance of `ChatRoom` and enter into it.
+
+
+```dart
+chat = ChatRoom(
+  inject: ff,
+  render: () {
+    setState(() {});
+    if (chat.messages.isNotEmpty) {
+      if (chat.page == 1) {
+        scrollToBottom(ms: 10);
+      } else if (atBottom) {
+        scrollToBottom();
+      }
+    }
+  },
+  globalRoomChange: () {
+    // print('global room change');
+  },
+);
+try {
+  await chat.enter(id: args['roomId'], users: [args['uid']], hatch: false);
+} catch (e) {
+  app.error(e);
+}
+```
+
+
 
 ### Chat Room List
 

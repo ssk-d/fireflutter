@@ -80,7 +80,12 @@ class FireFlutter extends Base {
       translationsChange
           .add(translations); // Must be called before firebase init
     }
+
+    ///
     return initFirebase().then((firebaseApp) {
+      usersCol = FirebaseFirestore.instance.collection('users');
+      postsCol = FirebaseFirestore.instance.collection('posts');
+
       initUser();
       initFirebaseMessaging();
       listenSettingsChange();
@@ -101,6 +106,8 @@ class FireFlutter extends Base {
         }
       });
 
+      isFirebaseInitialized = true;
+      firebaseInitialized.add(isFirebaseInitialized);
       return firebaseApp;
     });
   }
@@ -1080,16 +1087,17 @@ class FireFlutter extends Base {
   /// you are unsure if `publicData` is available immediately right after login
   /// or registration, you may use this method.
   Future<Map<String, dynamic>> getPublicData() async {
-    if (notLoggedIn) return null;
-    final snapshot = await publicDoc.get();
-    if (snapshot.exists) {
-      return snapshot.data();
-    } else {
-      return null;
-    }
+    // if (notLoggedIn) return null;
+    // final snapshot = await publicDoc.get();
+    // if (snapshot.exists) {
+    //   return snapshot.data();
+    // } else {
+    //   return null;
+    // }
+    return getUserPublicData();
   }
 
-  /// Gets user's public document as map
+  /// Get login user's public document as map
   ///
   /// Returns empty Map if there is no data or document does not exists.
   /// `/users/{uid}/meta/public` document would alway exists but just in case
@@ -1097,6 +1105,30 @@ class FireFlutter extends Base {
   Future<Map<String, dynamic>> getUserPublicData() async {
     final Map<String, dynamic> data = (await publicDoc.get()).data();
     return data == null ? {} : data;
+  }
+
+  /// [_usersContainer] to hold other users public document data.
+  ///
+  /// It is a Map container whose key is `uid` and data is the
+  /// `public document` of the user.
+  ///
+  /// Since it is a private member variable, you need to use
+  /// [getOtherUserPublicData] method to access this container.
+  Map<String, Map<String, dynamic>> _usersContainer = {};
+
+  /// Get other user's public document as map.
+  ///
+  /// Returns `null` if there is no data or document does not exists.
+  /// `/users/{uid}/meta/public` document would alway exists but just in case
+  ///
+  /// It caches in memory. Which means, it will not connect to the database
+  /// again once it retrieved the data.
+  ///
+  /// Use this method when you need to access other user's public data.
+  Future<Map<String, dynamic>> getOtherUserPublicData(String uid) async {
+    if (_usersContainer.containsKey(uid)) return _usersContainer[uid];
+    _usersContainer[uid] = (await publicCol.doc(uid).get()).data();
+    return _usersContainer[uid];
   }
 
   /// Return user language
