@@ -294,6 +294,7 @@ class Base {
   /// ```dart
   /// await updateUserPublic(public); // merge a map
   /// await updateUserPublic('a', 'apple'); // merge a key/value
+  /// ff.updateUserPublic(LIST_ORDER, FieldValue.delete()); // delete the key
   /// ```
   ///
   /// * change: `return publicDoc.set` causes a problem when user quickly register and then, register again. It has to `await`.
