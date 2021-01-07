@@ -1,3 +1,7 @@
+## [0.0.48] - Document update only
+
+- Add documentation on location.
+
 ## [0.0.47] - Chat functions
 
 - Document update on chat functions.
