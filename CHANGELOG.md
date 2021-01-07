@@ -1,6 +1,34 @@
-## [0.0.43] - Document update only
+## [0.0.48] - Document update only
 
 - Add documentation on location.
+
+## [0.0.47] - Chat functions
+
+- Document update on chat functions.
+
+## [0.0.46] - Big break on user data events
+
+This is going to be a big break.
+
+- `userDataChange` and `userPublicDataChange` had been diverged from the previous version of `userChange`.
+- And `userChange` is now used as an alias of `FirebaseAuth.instance.userChanges()` which will be fired on all user change events.
+- Resets userPublicData property when user logs in or register.
+
+## [0.0.45] - Revert fetch timeout
+
+- Revert code related with `fetched` adn `fetchTimeout`. So, when it can't fetch posts, it would stuck there foerver.
+
+## [0.0.44] - Fetch timeout
+
+- `getPublicData()` has been deprecatd. Use `getUserPublicData()`.
+- `fetched` becomes true if the app had fetched the first batch of posts from Firestore. Mostly the UI shows a spinner(loader) that the fetching is in progress. And if there is no document to fetch, it would ever become true that causes the UI show spinner and wait forever. So, it will turn into true after the [fetchTimeout] when there is no documents to fetch. This does not mean any documents are actually fetched.
+
+## [0.0.43] - Variable name changes and minor changes.
+
+- `email` and `password` of `loginOrRegister` are now optional.
+- `userPublicData` has been renamed to `getUserPublicData`.
+- `publicData` has been renamed to `userPublicData`.
+- When user logs out, `userPublicData` become an empty Map.
 
 ## [0.0.42] - Storage related code update
 

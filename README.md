@@ -10,12 +10,11 @@ A free, open source, complete, rapid development package for creating Social app
 - Real time.\
   We design it to be real time when it is applied to your app. All the events like post and comment creation, voting(like, dislike), deletion would appears on all the user's phone immediately after the event.
 
-# Table of Contents
+- Table of Contents
 
 <!-- TOC -->
 
 - [Fire Flutter](#fire-flutter)
-- [Table of Contents](#table-of-contents)
 - [Features](#features)
 - [References](#references)
 - [Components](#components)
@@ -26,11 +25,12 @@ A free, open source, complete, rapid development package for creating Social app
     - [Install Firestore Security Rules](#install-firestore-security-rules)
       - [Security Rules Testing](#security-rules-testing)
     - [Update Firestore Index](#update-firestore-index)
-  - [Firebase Email/Password Login](#firebase-emailpassword-login)
+  - [Enable Storage](#enable-storage)
   - [Create Flutter project](#create-flutter-project)
-    - [Setup Flutter to connect to Firebase](#setup-flutter-to-connect-to-firebase)
-      - [iOS Setup](#ios-setup)
-      - [Android Setup](#android-setup)
+  - [Setup Flutter to connect to Firebase](#setup-flutter-to-connect-to-firebase)
+    - [iOS Setup](#ios-setup)
+    - [Android Setup](#android-setup)
+  - [Firebase Email/Password Login](#firebase-emailpassword-login)
   - [Create a keystore](#create-a-keystore)
     - [Debug hash key](#debug-hash-key)
       - [Debug hash key base64](#debug-hash-key-base64)
@@ -68,6 +68,7 @@ A free, open source, complete, rapid development package for creating Social app
   - [Forum Management](#forum-management)
     - [Forum Category Management](#forum-category-management)
 - [Developer Coding Guidelines](#developer-coding-guidelines)
+  - [Preview of Development](#preview-of-development)
   - [General Setup](#general-setup)
   - [FireFlutter global variable](#fireflutter-global-variable)
     - [FireFlutter Initialization](#fireflutter-initialization)
@@ -76,9 +77,9 @@ A free, open source, complete, rapid development package for creating Social app
     - [Add GetX](#add-getx)
   - [Firestore Structure](#firestore-structure)
   - [User](#user)
-  - [Create Register Screen](#create-register-screen)
-  - [Create Login Screen](#create-login-screen)
-  - [Create Profile Screen](#create-profile-screen)
+  - [Register Screen](#register-screen)
+  - [Login Screen](#login-screen)
+  - [Profile Screen](#profile-screen)
   - [User Email And Password Registration](#user-email-and-password-registration)
   - [Display User Login](#display-user-login)
   - [Login with email and password](#login-with-email-and-password)
@@ -117,10 +118,11 @@ A free, open source, complete, rapid development package for creating Social app
 - [Chat](#chat)
   - [Preview of chat functionality](#preview-of-chat-functionality)
   - [Firestore structure of chat](#firestore-structure-of-chat)
-  - [Logic and Scenario of chat](#logic-and-scenario-of-chat)
+  - [Common Scenario of Chat](#common-scenario-of-chat)
+  - [Overview of chat functions](#overview-of-chat-functions)
   - [Pitfalls of chat logic](#pitfalls-of-chat-logic)
   - [Code of chat](#code-of-chat)
-    - [Preparation for chat](#preparation-for-chat)
+    - [Creating chat room list instace on global space](#creating-chat-room-list-instace-on-global-space)
     - [Chat Room List](#chat-room-list)
     - [Chat room](#chat-room)
     - [Begin chat with a user](#begin-chat-with-a-user)
@@ -150,7 +152,10 @@ A free, open source, complete, rapid development package for creating Social app
   - [Add GoogleService-Info.plist](#add-googleservice-infoplist)
   - [Stuck in registration](#stuck-in-registration)
   - [MissingPluginException(No implementation found for method ...](#missingpluginexceptionno-implementation-found-for-method-)
-    - [By pass MissingPluginException error](#by-pass-missingpluginexception-error)
+  - [Facebook login package problem](#facebook-login-package-problem)
+    - [Fake setup with flutter_facebook_auth](#fake-setup-with-flutter_facebook_auth)
+  - [cached_network_image package is not working](#cached_network_image-package-is-not-working)
+  - [webview_flutter package is not working](#webview_flutter-package-is-not-working)
   - [com.apple.AuthenticationServices.AuthorizationError error 1001 or if the app hangs on Apple login](#comappleauthenticationservicesauthorizationerror-error-1001-or-if-the-app-hangs-on-apple-login)
   - [sign_in_failed](#sign_in_failed)
   - [operation-not-allowed](#operation-not-allowed)
@@ -252,14 +257,20 @@ A free, open source, complete, rapid development package for creating Social app
 
 # Components
 
-- Firebase.\
+- Firebase\
   Firebase is a leading cloud system powered by Google. It has lots of goods to build web and app.
 
-  - We first built it with Firebase and LEMP(Linux + Nginx + MariaDB + PHP). It is a pressure to maintain two different systems. So, We decided to remove LEMP and we built it again only with Firebase.
+  - We first built it with Firebase and LEMP(Linux + Nginx + MariaDB + PHP). It was fine but was a pressure to maintain two different systems. So, We decided to remove LEMP and built it again with Firebase only.
 
   - You may use Firebase as free plan for a test.
 
-- Algolia.\
+- Flutter\
+  Flutter as its app development toolkit.
+
+- Vue 3\
+  We have chosen the latest version of Vuejs to develop admin site. And you may extend it as a website to serve your clients.
+
+- Algolia\
   Firebase does not support full text search which means users cannot search posts and comments.
   Algolia does it.
 
@@ -269,7 +280,6 @@ A free, open source, complete, rapid development package for creating Social app
 
 - Basic understanding of Flutter and Dart.
 - Basic understanding of Firebase.
-- OS: Windows or Mac.
 - Editor: VSCode, Xcode(for Mac OS).\
   Our primary editor is VSCode and we use Xcode for Flutter settings. We found it more easy to do the settings with Xcode for iOS development.
 
@@ -278,15 +288,14 @@ A free, open source, complete, rapid development package for creating Social app
 - If you are not familiar with Firebase and Flutter, you may have difficulties to install it.
 
   - FireFlutter is not a smple package that you just add it into pubspec.yaml and ready to go.
-  - Many of the settings are coming from the packages that fireflutter is using.
-  - And for release, it may need extra settgins.
+  - Many of the settings are coming from the packages that fireflutter is using. And for release, it may need extra settgins.
   - Most of developers are having troubles with settings. You are not the only one. Ask us on [Git issues](https://github.com/thruthesky/fireflutter/issues).
 
 - We will cover all the settings and try to put it as demonstrative as it can be.
 
   - We will begin with Firebase settings and contiue gradual settings with Flutter.
 
-- And please let us know if there is any mistake on the installation.
+- And please let us know if there is any mistake on the documentation.
 
 ## Create Firebase Project
 
@@ -324,7 +333,9 @@ Firestore needs security rules to secure its data.
 
 #### Security Rules Testing
 
-- If you wish to test Firestore security rules, you may do so with the following command.
+This is optional.
+
+If you wish to test Firestore security rules, you may do so with the following command.
 
 Run Firebase emualtor first.
 
@@ -349,6 +360,12 @@ $ npm run test:chat
 
 ### Update Firestore Index
 
+There are three ways of updating Firestore security rules.
+
+1. Creating the index on Firebase console.
+2. Deploying the index from FireFluter Firebase.
+3. By clicking the URL on debug console while your are developing the app. And this may be the easiest from the other two.
+
 - Create complex indexes like below.
   - Go `Cloud Firestore => Indexes => Composite => + Create Index`
 
@@ -356,25 +373,34 @@ $ npm run test:chat
 | ------------- | ----------------------------------------------------------------- | ----------- | ------- |
 | posts         | category **Ascending** createdAt **Descending**                   | Collection  | Enabled |
 | posts         | category **Ascending** uid **Ascending** createdAt **Descending** | Collection  | Enabled |
-| purchase      | status **Ascending** uid **Ascending** beginAt **Ascending**      | Collection  | Enabled |
 
 Example of adding Firestore indexes)
-![Firestore Index](wiki/firestore-index.jpg)
+![Firestore Index](https://raw.githubusercontent.com/thruthesky/fireflutter/main/wiki/firestore-index.jpg)
 
 - Or you can deploy Firestore index using CLI.
+
   - You can clone the [fireflutter firebase project](https://github.com/thruthesky/fireflutter-firebase) and deploy firestore index.
   - See [Cloud Firestore Index Definition Reference](https://firebase.google.com/docs/reference/firestore/indexes) for details.
 
-## Firebase Email/Password Login
+- Or, when you develop app, you may see a warning message related in security rules. And there will be a link to generate index.
 
-- [Create Firestore Database](#enable-firestore)
-- [Install firestore security rules](#install-firestore-security-rules)
-- Do [Android Setup](#android-setup) and [iOS Setup](#ios-setup)
-- Go to Authentication => (Click `Get started` menu if you see ) => Sign-in Method
-- Click `Enable/Password` (without Email link).
-- It is your choice weather you would let users to register by their email and password or not. But for installation test, just enable it.
+## Enable Storage
 
-- Refer [Firebase Authentication](https://firebase.google.com/docs/auth) and [FlutterFire Social Authentication](https://firebase.flutter.dev/docs/auth/social) for details.
+- Enable Stroage in the project menu on firebase console.
+- And add the following security rules.
+
+```txt
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    match /{allPaths=**} {
+      allow read: if true;
+      allow create: if request.auth != null;
+      allow delete: if resource.metadata.uid == request.auth.uid;
+    }
+  }
+}
+```
 
 ## Create Flutter project
 
@@ -386,15 +412,17 @@ $ cd fireflutter_sample_app
 $ flutter run
 ```
 
-### Setup Flutter to connect to Firebase
+## Setup Flutter to connect to Firebase
 
-#### iOS Setup
+This is a must setup to use Firebase. After iOS or Android setup, you are good to go. Fireflutter has many functionalities like Login, Forum, Chat, Location, In App Purchase, and more. You can optionally choose which functionality you want to use.
+
+### iOS Setup
 
 What to do: Create iOS app in Firebase and add the GoogleService-Info.plist into Flutter project.
 
 - Click `iOS` icon on `Project Overview` page to add `iOS` app to Firebase.
-- Enter iOS Bundle ID. Ex) com.sonub.fireflutter
-  - From now on, we assume that your iOS Bundle ID is `com.sonub.fireflutter`.
+- Enter iOS Bundle ID. Ex) com.fireflutter.app
+  - From now on, we assume that your iOS Bundle ID is `com.fireflutter.app`.
 - click `Register app`.
 - click `Download GoogleService-Info.plist`
   - And save it under `[flutter_project]/ios/Runner` folder.
@@ -406,7 +434,7 @@ What to do: Create iOS app in Firebase and add the GoogleService-Info.plist into
 - open `[flutter_project]/ios/Runner.xcworkspace` with Xcode.
 - click `Runner` on the top of left pane.
 - click `Runner` on TARGETS.
-- edit `Bundle Identifier` to `com.sonub.fireflutter`.
+- edit `Bundle Identifier` to `com.fireflutter.app`.
 - set `iOS 11.0` under Deployment Info.
 - Darg `[flutter_project]/ios/Runner/GoogleService-Info.plist` file under `Runner/Runner` on left pane of Xcode.
 - Close Xcode.
@@ -414,12 +442,12 @@ What to do: Create iOS app in Firebase and add the GoogleService-Info.plist into
 - You may want to test if the settings are alright.
   - Open VSCode and do [FireFlutter Initialization](#fireflutter-initialization) do some registration code. see [User Registration](#user-email-and-password-registration) for more details.
 
-#### Android Setup
+### Android Setup
 
 - Go to Firebase console.
 - Click `Android` icon on `Project Overview` page to add `Android` app to Firebase.
   - If you don't see `Android` icon, look for `+ Add app` button and click, then you would see `Android` icon.
-- Enter `iOS Bundle ID` into `Android package name`. `iOS Bundle ID` and `Android package name` should be kept in idendentical name for easy to maintain. In our case, it is `com.sonub.fireflutter`.
+- Enter `iOS Bundle ID` into `Android package name`. `iOS Bundle ID` and `Android package name` should be kept in idendentical name for easy to maintain. In our case, it is `com.fireflutter.app`.
 - Click `Register app` button.
 - Click `Download google-services.json` file to downlaod
 - And save it under `[flutter_project_folder]/android/app` folder.
@@ -445,7 +473,7 @@ dependencies {
 }
 ```
 
-- Open the 5 files and update the package name to `com.sonub.fireflutter` (or with your app's package name).
+- Open the 5 files and update the package name to `com.fireflutter.app` (or with your app's package name).
 
   - android/app/src/main/AndroidManifest.xml
   - android/app/src/debug/AndroidManifest.xml
@@ -453,9 +481,20 @@ dependencies {
   - android/app/build.gradle
   - android/app/src/main/kotlin/….MainActivity.kt
 
-- That's it.
+- And do [Facebook login package problem](#facebook-login-package-problem).
 - You may want to test if the settings are alright.
   - Open VSCode and do [FireFlutter Initialization](#fireflutter-initialization) do some registration code. see [User Registration](#user-email-and-password-registration) for more details.
+
+## Firebase Email/Password Login
+
+- [Create Firestore Database](#enable-firestore)
+- [Install firestore security rules](#install-firestore-security-rules)
+- Do [Android Setup](#android-setup) and [iOS Setup](#ios-setup)
+- Go to Authentication => (Click `Get started` menu if you see ) => Sign-in Method
+- Click `Enable/Password` (without Email link).
+- It is your choice weather you would let users to register by their email and password or not. But for installation test, just enable it.
+
+- Refer [Firebase Authentication](https://firebase.google.com/docs/auth) and [FlutterFire Social Authentication](https://firebase.flutter.dev/docs/auth/social) for details.
 
 ## Create a keystore
 
@@ -531,6 +570,8 @@ keytool -exportcert -alias YOUR_RELEASE_KEY_ALIAS -keystore YOUR_RELEASE_KEY_PAT
 
 ## Firebase Social Login
 
+It is optional. If you don't need to develop with Firebase social login, then pass this setup.
+
 - Social login is one of difficult part of settings.
   Each social login takes its own settings.
   For instance, you will need to create an app in Facebook developer account and do settings there.
@@ -567,7 +608,7 @@ Most of interactive apps need Social login like Google, Apple, Facebook and the 
 ### Google Sign-in Setup for Android
 
 - Generate debug hash and get SHA1 as described in [Debug hash key](#debug-hash-key)
-- Add it into `Firebase => Project Settings => General => Your apps => Android apps => com.sonub.fireflutter => Add finger print`
+- Add it into `Firebase => Project Settings => General => Your apps => Android apps => com.fireflutter.app => Add finger print`
 - Click save.
 
 - It's important to know that you need to generate two release SHA1 keys for production app. One for upload SHA1, the other for deploy SHA1.
@@ -596,8 +637,8 @@ All the information is coming from [flutter_facebook_auth](https://pub.dev/packa
 - Click `Android`
 - Click `Next`. No need to download SDK.
 - Click `Next`. No need to import the SDK.
-- Input the package name. In our case, it is `com.sonub.fireflutter`.
-- Input `com.sonub.fireflutter.MainActivity` into `Default Activity Class Name`.
+- Input the package name. In our case, it is `com.fireflutter.app`.
+- Input `com.fireflutter.app.MainActivity` into `Default Activity Class Name`.
   - You need to replace `com.sonub.comfirefluter` to your package name and add the main activity class that is stated in AndroidManifest.xml. Default is `.MainActivity`.
 - Click save.
 - Click `use this package naem` if you see it.
@@ -890,9 +931,7 @@ class AppTranslations extends Translations {
 }
 ```
 
-- Open main.dart
-
-- You can initialize fireflutter like below. It will set the default language when the user didn't choose his language yet.
+- Initialize fireflutter like below. It will set the default language when the user didn't choose his language yet.
 
 ```dart
 await ff.init(
@@ -968,7 +1007,9 @@ class _MainAppState extends State<MainApp> {
 ff.translationsChange.listen((x) => setState(() => updateTranslations(x)));
 ```
 
-- Admin can overwrite the translated texts simply by updating it under `/translations` collection in Firestore.
+- Admin can update the translations on Admin site.
+- Or admin can overwrite the translated texts simply by updating it under `/translations` collection in Firestore.
+
   - Go to Firestore
   - Create `translations` collection if it is not existing.
   - Create `en` document if not existing.
@@ -1049,8 +1090,11 @@ Before setup Algolia, you may try forum code as described in [Forum Coding](#for
 
 - Go to Algolia site and Register.
 - Create app in Algolia.
-- Then, you need to add(or update) ALGOLIA_APP_ID(Application ID), ALGOLIA_ADMIN_API_KEY, ALGOLIA_INDEX_NAME in Firestore `settings/app` document.
-  Optionally, you can put the settings inside `FireFlutter.init()`.
+- Then, you set `ALGOLIA_APP_ID`(Application ID), `ALGOLIA_ADMIN_API_KEY`, `ALGOLIA_SEARCH_ONLY_API_KEY`, `ALGOLIA_INDEX_NAME`. There are three ways to set the settings.
+  - Add it on admin site if you have installed.
+  - Add it on Firestore `settings/app` document. You need to input manullay.
+  - Add it on `FireFlutter.init()`.
+- When the settings are properly set, Search functionality would work fine.
 
 ## Admin Account Setting
 
@@ -1119,6 +1163,11 @@ To create a creategory,
   - You may optionally add more Field with `title` and `description`.
 
 # Developer Coding Guidelines
+
+## Preview of Development
+
+- As you may know, Firebase permission denied exception would cause a break as an `Unhandled Exception` on `VSCode` and it is the nature of fireflutter to work with permission denied exception. For instance, when the app meets permission denied error happens, the app would do something else. But the editor(like VScode) may produce `Uncaught Exception` and would stop the runtime pointing where it happens. This is normal. You can simply continue the runtime.
+- When you work with firebase, you should have something in mind that firebase works on offline and that causes reading twice.
 
 ## General Setup
 
@@ -1285,25 +1334,23 @@ class FirebaseReady extends StatelessWidget {
 
 - The app may store user name(displayName) on different place. But fireflutter uses user's name from firebase auth displayName. So, developers needs to sync your name to firebase auth displayName when the name is stored some where else.
 
-## Create Register Screen
+## Register Screen
 
 - Do [General Setup](#general-setup).
-- Create register screen with `lib/screens/register/register.screen.dart` file.
-- Put a route named `register`
 - See complete code on [route banch of sample app](https://github.com/thruthesky/fireflutter_sample_app/tree/routes)
 
-## Create Login Screen
+## Login Screen
 
 - See complete code on [route banch of sample app](https://github.com/thruthesky/fireflutter_sample_app/tree/routes)
 
-## Create Profile Screen
+## Profile Screen
 
 - See complete code on [route banch of sample app](https://github.com/thruthesky/fireflutter_sample_app/tree/routes)
 
 ## User Email And Password Registration
 
-- Open register.screen.dart
-- Put a button for opening register screen.
+- Do [FireFlutter Initialization](#fireflutter-initialization).
+- Create a screen.
 - Then, add email input box, password input box and a submit button.
 
   - You may add more input box for displaName and other informations.
@@ -1314,6 +1361,7 @@ class FirebaseReady extends StatelessWidget {
 - When the submit button is pressed, you would write codes like below for the user to actually register into Firebase.
 
 ```dart
+final FireFlutter ff = FireFlutter();
 try {
   User user = await ff.register({
     'email': emailController.text,
@@ -1341,6 +1389,8 @@ try {
 
 - Visit [register branch of sample app](https://github.com/thruthesky/fireflutter_sample_app/tree/register) for registration sample code.
 
+- When user registers, public data document will be created under `/meta/user/public/{uid}`.
+
 - You can add some extra public data like below.
   - User's information is private and is not available for other.
   - User's public data is open to the world. But it can only be updated by the user.
@@ -1350,8 +1400,8 @@ User user = await ff.register({
   // ...
 }, meta: {
   "public": {
-    "notification_post": true,
-    "notification_comment": true,
+    "birthyear": 1973,
+    "weight": 70,
   }
 });
 ```
@@ -1467,6 +1517,12 @@ ff.userChange
   .listen((x) async {
     // ... do something here
   });
+```
+
+- Another example to run code only when user logged in and user's public data is available.
+
+```dart
+ff.userChange.where((x) => ff.userPublicData != null).listen((x) async { ... }
 ```
 
 - Here is another sample code to wait until the gender data is loaded.
@@ -1585,6 +1641,8 @@ Call `fetchPosts()` method the ForumData instance and fireflutter will get posts
     - It has a `+` button to open post create screen.
     - It has a code for infinite scrolling to fectch more posts.
   - The code is not complete. Many functionalities are missing like editing, voting for like and dislike, deleting, etc. We will cover this things on the following code samples.
+
+- A common fitfall is that if firestore indexes are not set properly, the app can't fetch posts. It would be stuck there forever.
 
 ### Post list with photos
 
@@ -2043,23 +2101,24 @@ The settings are
 
 # Chat
 
+(Revised on Dec 30, 2020)
+
 If you are looking for a package that support a complete chat functionality, fireflutter is for you. Unlike other sample (tutorial) code on the Internet, it has really complete features like
 
-- listing my room list (chat list or friend list).
-- group chat
-- creating chat room with one user or multip users.
-- adding user.
-- blocking user.
-- search user.
-- sending photo
-- changing settings of the room like room title update.
-- and much more.
+- Listing my room list (chat list or friend list).
+- Listening my room events globally ( or only in chat room list ).
+- Group chat (It can be one and one chat ).
+- Creating chat room with one user or multip users.
+- Adding a user(or multiple users) to existing room.
+- Blocking user.
+- Changing settings of the room like room title update.
+- And much more.
 
 ## Preview of chat functionality
 
-- All chat functionality works on user login. That means, to use chat, the user must logged in.
+- User must login to use chat functionalities.
 - Most of chat related methods throw permission error when a user tries something that is not permitted.
-- To use chat functionality, `openProfile` option of `ff.init()` must be set to access user's displayName and photoURL.
+- ~~To use chat functionality, `openProfile` option of `ff.init()` must be set to access user's displayName and photoURL.~~ TODO: https://github.com/thruthesky/fireflutter/issues/24
 
 ## Firestore structure of chat
 
@@ -2068,12 +2127,12 @@ Before we begin, let's put an assumption.
 - There are 4 users. User `A`, user `B`, user `C`, and user `D`. User A is the moderator which means he is the one who created the room.
 - The room that moderator A created is `RoomA` and there are two users in the room. User A, B.
 - The UIDs of user A, B, C, D is A, B, C, D respectively.
-- The room id of RoomA is RoomA.
+- The room id of `RoomA` is `RoomA`.
 
 Firestore structure and its data are secured by Firestore security rules.
 
-- `/chat/info/room-list/{roomId}` is where each room information(setting) is stored. It's called global room list.
-  - When a room is created, the `roomId` will be autogenrated by Firestore by adding a document under global room list collection - `/chat/info/room-list`.
+- `/chat/global/room-list/{roomId}` is where each room information(setting) is stored. It's called global room list.
+  - When a room is created, the `roomId` will be autogenrated by Firestore by adding a document under global room list collection - `/chat/global/room-list`.
   - Document properties
     - `moderators` is an array of user's uid. Users in this array are the moderators.
     - `users` is an array of participant users' uid.
@@ -2081,11 +2140,11 @@ Firestore structure and its data are secured by Firestore security rules.
     - `createdAt` has the time when the chat room was created.
     - `title` is the title of chat room.
   - When `{users: [ ... ]}` is updated to add or remove user, other properties cannot be edited.
-- `/chat/my-room-list/{uid}/{roomId}` is where each user's room list are stored. The document has information about the room and last message. It's called private room.
-  - If a user has unread messages, it has no of new messages.
+- `/chat/my-room-list/{uid}/{roomId}` is where each user's chat room information is stored. It's called private room. The document has the room information inlcuding last message of the room.
+  - If a user has unread messages, it has the number of new messages.
   - It has last message information of who sent what, time, and more.
-  - It may have information about who added, blocked.
-    When A chats in RoomA, the (last) message goes to `/chat/info/room-list/RoomA` and to all the users in the room which are
+  - It may have information about who were added or blocked.
+    When A chats in RoomA, the (last) message goes to `/chat/global/room-list/RoomA` and to all the users in the room which are
     - `/chat/my-room-list/A/RoomA`
     - `/chat/my-room-list/B/RoomA`
   - Document properties
@@ -2102,16 +2161,33 @@ Firestore structure and its data are secured by Firestore security rules.
 }
 ```
 
-- `/chat/messages/{roomId}/{message}` is where all the chat messages for the room are stored.
+- `/chat/messages/{roomId}/{message}` is where all the chat messages for each chat room are stored.
 
-- By default, when a user begins to chat with another user, it will always create a new room. If `hatch` option is given, it may not create a new room for the same users.
+- By default, when a user begins to chat with another user, it will always create a new room. If `hatch: false` option is given, it may not create a new room for the same users, instead it will use the exising room.
 
-## Logic and Scenario of chat
+## Common Scenario of Chat
+
+- User may enter(create) many chat rooms.
+- The app needs to get(or realtime update) all of login user's chat room in `/chat/my-room-list/{uid}`.
+- And the app needs to listen to all of login user's incomng chat room events.
+  - And apply to the list.
+
+- When the user touches on the room of the room list, the user enters the room
+  - and gets some of last messages of the room
+  - and listen to the events of the room and display
+
+- The user can create a new chat room with other users.
+- The user can add another users.
+- If the user is one of the moderators, he can kickout/block other users.
+
+
+## Overview of chat functions
+
 
 - User who begin(or create) to chat becomes the moderator.
 - Moderator can add another moderator.
-- When a user enters `chat room list screen`, the app should display all of the user's chat room list. It is a recommended but costomisable.
-- User may search another user by openning a `user search screen` and select a user (or multiple users) to begin chat. Then the app should redirect the user to `chat room screen` when the use chosen other users to begin chat.
+- When a user enters `chat room list screen`, the app should display all of the user's chat room list. It is a recommended but customisable.
+- User may search another user by openning a `user search screen` and select a user (or multiple users) to begin chat. Then the app should redirect the user to `chat room screen` when the login user chosen other users to begin chat.
 - User can enter chat room by selecting a chat room in his chat room list.
 - User can add other users by selecting add user button in the chat room.
 - User can create a chat room with the same user(s) over again. That means, A can begin chat with B by creating a room. And then, A can begin chat with B again by creating another room. `hatch` option can prevent creating new room upon creating a chat room with same users.
@@ -2119,27 +2195,25 @@ Firestore structure and its data are secured by Firestore security rules.
   - This protocol message can be useful to display that there is no more messages or this is the first message when user scrolls up to view previous messages.
 - When a user is added, `ChatProtocol.enter` message (with user information) will devlivered to all users and property `users` has the names of the addedusers.
 - When a user leaves a room, `ChatProtocol.leave` message (with user information) will devlivered to all users and property `userName` has the name of the left user.
-- When a user is blocked, `ChatProtocol.block` message will (with user information) devlivered to all users. Only moderator can blocks a user and the user's uid will be saved in `{ blockedUsers: [ ... ]}` array. And `users` will hold the names of bloked users.
+- When a user is blocked, `ChatProtocol.block` message will (with user information) devlivered to all users. Only moderator can blocks a user and the user's uid will be saved in `{ blockedUsers: [ ... ]}` array. And `users` property will hold the names of bloked users.
 - When a room is created or a user is added, protocol message will be delivered to newly added users. And the room list should be appears on their room list.
 - Blocked users will not be added to the room until moderator remove the user from `{ blockedUsers: [ ... ]}` array.
 - When a user(or a moderator) leaves the room and there is no user left in the room, then that's it. The chat room is left as ghost chat room.
 - When a user logs out or logs into another account while listening room list will causes permission error. Especially on testing, you would not open chat screen since testing uses several accounts at the same time.
 - Logically, a user can search himself on search screen and begin chat with himself. You may add some logic to prevent it if you want.
 - When a user is blocked by moderator, the user received no more messages except the `ChatProtocol.blocked` message.
+- Chat protocol messages should be translated into user's language by the translation functionality. You may customise to translate it by yourself.
 
 - You would code like below to enter a chat room.
 
   - if `id` (as chat room id) is given, it will enter the chat room and listens all the event of the room.
   - Or if `id` is null, then a room will be created with the `users` of UIDs list.
   - If both of `id` and `users` are null(or empty), then a room will be created without any users except the login user himself. He will be alone in the room.
-  - If both of `id` and `users` have value, then, it enters the room if the room of the `id` exists. Or it will create a room with the `id` and with the users.
-    - This will be a good option for 1:1 chat. If the app only allows 1:1 chat, or the user chats to admin for help, this will be a good option.
-    - The `id` can be an md5 string of the login user's uid(A) and other user's uid(B).
-      - When it creates the room, it will create a room for A and B, and next time A or B try to chat each other again, it will not create a new room. Instead, it will use previously created room.
+  
 
 - If the app must inform new messages to the user when the user is not in room list screen,
 
-  - The app can listen `my-room-list` collection on app screen (or homescreen)
+  - The app can listen `my-room-list` collection on app screen (or homescreen, or in global space).
   - And when a new message arrives, the app can show snackbar.
 
 - You may put the logic of the app like below
@@ -2147,10 +2221,11 @@ Firestore structure and its data are secured by Firestore security rules.
   - Listen to chat room update on home screen and display updates on chat icon.
   - When somebody chats, the user will get push notification. and ignore push notifications if it's my chat or someone that I am talking to.
 
+
 ## Pitfalls of chat logic
 
 - User cannot remove(or block) another user. Only moderator can do it.
-  - A add B.
+  - A adds B.
   - B goes offline.
   - B add C. Since Firebase works offline, B can still add user C even if he has no connection.
   - A add D.
@@ -2161,17 +2236,91 @@ Firestore structure and its data are secured by Firestore security rules.
 
 ## Code of chat
 
-### Preparation for chat
+### Creating chat room list instace on global space
 
-- By default, app can search users by name in `/meta/user/public/{uid}`. You may extend to search by gender and age.
-  - And it requires `openProfile` option to be set in `fireflutter` initialization like below.
-  - This option updates user's profile name and photo under `/meta/user/public/{uid}` and a user can search other users name and photo.
+- Depending on your app structure, you may declare login user's chat room list instance in global scope.
+  - The declaration below could be a separate service(library) file.
 
 ```dart
-ff.init({
-  'openProfile': true,
-})
+final FireFlutter ff = FireFlutter();
+
+/// [myRoomList] is the instance of ChatMyRoomList. It will be instanciated in
+/// main.dart
+ChatMyRoomList myRoomList;
+
+/// [myRoomListChanges] will be fired whenever/whatever events happens for my
+/// chat room list.
+BehaviorSubject myRoomListChanges = BehaviorSubject.seeded(null);
+
+/// [chat] is the chat room instance.
+/// 
+/// The reason why it is declared in global scope is that the app needs to know
+/// if the user is in a chat room. So, when he gets a push notification from the
+/// chat room where he is in, the push messge will be ignored.
+ChatRoom chat;
 ```
+
+- Then, you need to create an instance of `ChatMyRoomList` in your main.dart (or in root screen) like below.
+
+```dart
+// When user login/logout. (Update my room list when user change account.)
+ff.authStateChanges.listen((user) {
+  // When user is not logged in, or logged out, clear the chat room list.
+  if (user == null) {
+    if (myRoomList != null) {
+      myRoomList.leave();
+      myRoomList = null;
+    }
+    return;
+  }
+
+  // When user just logged in, set room list.
+  if (myRoomList == null) {
+    myRoomList = ChatMyRoomList(
+      inject: ff,
+      render: () {
+        // When there are changes(events) on my chat room list,
+        // notify to listeners.
+        myRoomListChanges.add(myRoomList.rooms);
+      },
+    );
+  }
+});
+```
+
+
+- Then, on chat room list screen(create one if you don't have), add the following code to list my chat room list.
+
+
+- Then, on chat room, you can do the following.
+  - The thing you want to focus is that the app needs to create an instance of `ChatRoom` and enter into it.
+
+
+```dart
+chat = ChatRoom(
+  inject: ff,
+  render: () {
+    setState(() {});
+    if (chat.messages.isNotEmpty) {
+      if (chat.page == 1) {
+        scrollToBottom(ms: 10);
+      } else if (atBottom) {
+        scrollToBottom();
+      }
+    }
+  },
+  globalRoomChange: () {
+    // print('global room change');
+  },
+);
+try {
+  await chat.enter(id: args['roomId'], users: [args['uid']], hatch: false);
+} catch (e) {
+  app.error(e);
+}
+```
+
+
 
 ### Chat Room List
 
@@ -2743,7 +2892,15 @@ This error may happen when you try to login with `google_sign_in package` but yo
 
 Try to do `By pass MissingPluginException error` and see if the error goes away.
 
-### By pass MissingPluginException error
+## Facebook login package problem
+
+It looks like some of flutter packages are conflicting with `flutter_facebook_auth` package.
+
+We found that `cached_network_image`, `like webview_flutter` packages are not working properly on Android platform until we set the settings of `flutter_facebook_auth` package.
+
+There might be more packages that conflict with `flutter_facebook_auth`, so we recommand to do the setup of Facebook. If your app does not need Facebook login, see [Fake setup with flutter_facebook_auth](#fake-setup-with-flutter_facebook_auth) to do simple fake setup instead of going full setup.
+
+### Fake setup with flutter_facebook_auth
 
 If really don't want to implement Facebook sign in or you want to skip Facebook sign in for the mean time while you are implementing Gogole sign in, then you may add the following settings. You can just put fake data on `strings.xml`.
 
@@ -2787,6 +2944,12 @@ And add the following meta-data element, an activity for Facebook, and an activi
 </activity>
 ```
 
+## cached_network_image package is not working
+
+See [Facebook login package problem](#facebook-login-package-problem)
+## webview_flutter package is not working
+
+See [Facebook login package problem](#facebook-login-package-problem)
 ## com.apple.AuthenticationServices.AuthorizationError error 1001 or if the app hangs on Apple login
 
 If you meet error message like this,

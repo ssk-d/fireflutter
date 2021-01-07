@@ -16,7 +16,7 @@ enum RenderType {
   fileUpload,
   fileDelete,
   fetching,
-  finishFetching
+  finishFetching,
 }
 
 enum ForumStatus {
@@ -64,14 +64,14 @@ const ERROR_SIGNIN_ABORTED = 'ERROR_SIGNIN_ABORTED';
 /// [UserChangeType.document] is for `/users/{uid}` change.
 /// [UserChangeType.auth] is for login, or logout. Be reminded that login even will be fired twice. This is the nature of firebase.
 /// [UserChangeType.profile] is for changing `photoURL` or `displayName`.
-enum UserChangeType { auth, document, public, register, profile }
+// enum UserChangeType { auth, document, public, register, profile }
 
 /// Event data on [userChange] event
-class UserChangeData {
-  UserChangeData(this.type, {this.user});
-  UserChangeType type;
-  User user;
-}
+// class UserChangeData {
+//   UserChangeData(this.type, {this.user});
+//   UserChangeType type;
+//   User user;
+// }
 
 enum NotificationType { onMessage, onLaunch, onResume }
 
@@ -114,10 +114,13 @@ class ForumData {
   /// [uid] could be the login user's uid or other user's uid.
   String uid;
 
-  /// [fetched] becomes true if the app has fetched from Firestore.
+  /// [fetched] becomes true if the app had fetched the first batch of posts
+  /// from Firestore. Mostly the UI shows a spinner(loader) that the fetching
+  /// is in progress. And if there is no document to fetch, it would never
+  /// become true that causes the UI show spinner and wait forever.
   ///
-  /// There might no no there even after it has fetched. So, [fetched] will be true
-  /// while [posts] is still empty array.
+  /// There might no posts there even after it has fetched. So, [fetched] might
+  /// be true while [posts] is still empty array.
   ///
   bool fetched = false;
 
@@ -141,28 +144,3 @@ class ForumData {
     }
   }
 }
-
-// class VoteChoice {
-//   static String like = 'like';
-//   static String dislike = 'dislike';
-// }
-
-// /// Algolia search data to index
-// class SearchData {
-//   /// [path] is the path of document
-//   final String path;
-//   final String title;
-//   final String content;
-
-//   /// [stamp] is unix timestmap
-//   final String stamp;
-//   SearchData({@required this.path, this.title, this.content, this.stamp});
-//   Map<String, dynamic> toMap() {
-//     return {
-//       'path': path,
-//       if (title != null) 'title': title,
-//       if (content != null) 'content': content,
-//       if (stamp != null) 'stamp': stamp,
-//     };
-//   }
-// }

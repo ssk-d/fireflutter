@@ -4,8 +4,17 @@ class Base {
   /// Check if Firebase has initialized.
   bool isFirebaseInitialized = false;
 
-  /// Fires after Firebase has initialized or if already initialized.
-  /// The true event will be fired only once when Firebase initialized.
+  /// Firebase intialized event
+  ///
+  /// This event is fires after Firebase has initialized(created instance) or if
+  /// it has already initialized.
+  ///
+  /// When this event is fired, `initUser()` is already called which means,
+  /// `authStateChanages` and `userChanges` are ready to be consumed.
+  ///
+  /// The arguemnt will be true only after when Firebase initialized.
+  ///
+  // ignore: close_sinks
   BehaviorSubject<bool> firebaseInitialized = BehaviorSubject.seeded(false);
 
   /// Returns Firestore instance. Firebase database instance.
@@ -50,17 +59,28 @@ class Base {
 
   bool enableNotification;
 
-  /// [authStateChange] is a link to `FirebaseAuth.instance.authStateChanges()`
+  /// [authStateChange] is fired whenever user logs in or out.
   ///
-  /// Use this to know if the user has logged in or not.
+  /// Use this to know if the user has logged in or not. Since this is
+  /// `BehaviorSubject` that delivers Firebase `User` object, it can be used
+  /// outside of `ff.firebaseInitialized.listen()`
   ///
   /// You can do the following with [authStateChanges]
-  /// ```
+  /// ```dart
   /// StreamBuilder(
   ///   stream: ff.authStateChanges,
   ///   builder: (context, snapshot) { ... });
   /// ```
-  Stream<User> authStateChanges;
+  ///
+  /// ```dart
+  /// ff.authStateChanges.listen((user) { ... }
+  /// ```
+  BehaviorSubject<User> authStateChanges = BehaviorSubject.seeded(null);
+
+  /// [userChanges] is a simple alias of `FirebaseAuth.instance.userChanges()`
+  ///
+  /// It will be fired when user changes `dispolayName` or `photoURL`.
+  Stream<User> userChanges;
 
   /// Firebase User instance
   ///
@@ -87,22 +107,32 @@ class Base {
   /// User document data.
   Map<String, dynamic> userData = {};
 
+  @Deprecated('Use userPublicData')
+
   /// User public document data.
-  Map<String, dynamic> publicData = {};
+  Map<String, dynamic> get publicData => userPublicData;
+  Map<String, dynamic> userPublicData = {};
 
-  bool get loggedIn => user != null;
-  bool get notLoggedIn => !loggedIn;
+  // /// [userChange] event fires when
+  // /// - user document(without subcollection) like when user updates his profile
+  // /// - user log in,
+  // /// - user log out,
+  // /// - user verify his phone nubmer
+  // /// - user profile photo changes
+  // ///
+  // /// It is important to know that [authStateChanges] event happens only when
+  // /// user logs in or logs out.
+  // BehaviorSubject<UserChangeData> userChange = BehaviorSubject.seeded(null);
 
-  /// [userChange] event fires when
-  /// - user document(without subcollection) like when user updates his profile
-  /// - user log in,
-  /// - user log out,
-  /// - user verify his phone nubmer
-  /// - user profile photo changes
-  ///
-  /// It is important to know that [authStateChanges] event happens only when
-  /// user logs in or logs out.
-  BehaviorSubject<UserChangeData> userChange = BehaviorSubject.seeded(null);
+  /// [userDataChange] is fired when `/users/{uid}` changes.
+  // ignore: close_sinks
+  BehaviorSubject<Map<String, dynamic>> userDataChange =
+      BehaviorSubject.seeded(null);
+
+  /// [userPublicDataChange] is fired when `/meta/user/public/{uid}` changes.
+  // ignore: close_sinks
+  BehaviorSubject<Map<String, dynamic>> userPublicDataChange =
+      BehaviorSubject.seeded(null);
 
   /// [notification] will be fired whenever there is a push notification.
   /// the return data will the following and can be use when user receive notifications.
@@ -146,13 +176,36 @@ class Base {
   /// For chat and other functionalities that do user search need this option.
   bool openProfile = false;
 
+  /// Helper functions
+  ///
+  /// [loggedIn] returns true if the user has logged in.
+  bool get loggedIn => user != null;
+
+  /// [notLoggedIn] returns true if the user is not logged in.
+  bool get notLoggedIn => !loggedIn;
+
+  /// [uid] returns login user's uid.
+  String get uid => user == null ? null : user.uid;
+
+  /// [displayName] returns displayName or null if the user has not logged in.
+  ///
+  /// ```dart
+  /// Text(ff.displayName ?? '')
+  /// ```
+  String get displayName => user == null ? null : user.displayName;
+
+  /// [photoURL] returns login user's phogo URL.
+  String get photoURL => user == null ? null : user.photoURL;
+
   initUser() {
-    authStateChanges = FirebaseAuth.instance.authStateChanges();
+    userChanges = FirebaseAuth.instance.userChanges();
 
     /// Note: listen handler will called twice if Firestore is working as offline mode.
-    authStateChanges.listen((User user) {
+    FirebaseAuth.instance.authStateChanges().listen((User user) {
+      authStateChanges.add(user);
+
       /// [userChange] event fires when user is logs in or logs out.
-      userChange.add(UserChangeData(UserChangeType.auth, user: user));
+      // userChange.add(UserChangeData(UserChangeType.auth, user: user));
 
       /// Cancel listening user document.
       ///
@@ -172,8 +225,7 @@ class Base {
           (DocumentSnapshot snapshot) {
             if (snapshot.exists) {
               userData = snapshot.data();
-              userChange
-                  .add(UserChangeData(UserChangeType.document, user: user));
+              userDataChange.add(userData);
             }
           },
         );
@@ -182,8 +234,8 @@ class Base {
         userPublicDocSubscription = publicDoc.snapshots().listen(
           (DocumentSnapshot snapshot) {
             if (snapshot.exists) {
-              publicData = snapshot.data();
-              userChange.add(UserChangeData(UserChangeType.public, user: user));
+              userPublicData = snapshot.data();
+              userPublicDataChange.add(userPublicData);
             }
           },
         );
@@ -195,17 +247,16 @@ class Base {
 
   /// Initialize Firebase
   ///
-  /// Firebase is initialized asynchronously. It does not block the app by async/await.
+  /// Firebase is initialized asynchronously. Meaning, it does not block the app
+  /// while it's intializaing.
+  ///
+  /// Invoked by `ff.init()`.
   initFirebase() {
     // WidgetsFlutterBinding.ensureInitialized();
     return Firebase.initializeApp().then((firebaseApp) {
-      isFirebaseInitialized = true;
-      firebaseInitialized.add(isFirebaseInitialized);
       FirebaseFirestore.instance.settings =
           Settings(cacheSizeBytes: Settings.CACHE_SIZE_UNLIMITED);
 
-      usersCol = FirebaseFirestore.instance.collection('users');
-      postsCol = FirebaseFirestore.instance.collection('posts');
       return firebaseApp;
     });
   }

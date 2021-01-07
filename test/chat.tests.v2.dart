@@ -41,7 +41,7 @@ class ChatTest {
     await _ff.loginOrRegister(email: aEmail, password: password);
     final chat = ChatRoom(inject: _ff);
     await chat.enter(users: [b, c]);
-    ChatRoomInfo _info = await chat.lastMessage;
+    ChatPrivateRoom _info = await chat.lastMessage;
     isTrue(_info.text == ChatProtocol.roomCreated, 'roomCreated a');
 
     await _ff.loginOrRegister(email: bEmail, password: password);
@@ -65,20 +65,20 @@ class ChatTest {
     await _ff.loginOrRegister(email: aEmail, password: password);
     final chat = ChatRoom(inject: _ff);
     await chat.enter(users: [b, c]);
-    final ChatRoomInfo _info = await chat.lastMessage;
+    final ChatPrivateRoom _info = await chat.lastMessage;
     isTrue(_info.text == ChatProtocol.roomCreated, 'roomCreated');
     final String text = 'Yo ... !';
 
     await chat.sendMessage(text: text);
-    final ChatRoomInfo lastMessageA = await chat.lastMessage;
+    final ChatPrivateRoom lastMessageA = await chat.lastMessage;
     isTrue(lastMessageA.text == text, 'Got last message for a');
 
     await _ff.loginOrRegister(email: bEmail, password: password);
-    final ChatRoomInfo lastMessageB = await chat.lastMessage;
+    final ChatPrivateRoom lastMessageB = await chat.lastMessage;
     isTrue(lastMessageB.text == text, 'Got last message for b');
 
     await _ff.loginOrRegister(email: cEmail, password: password);
-    final ChatRoomInfo lastMessageC = await chat.lastMessage;
+    final ChatPrivateRoom lastMessageC = await chat.lastMessage;
     isTrue(lastMessageC.text == text, 'Got last message for c');
   }
 

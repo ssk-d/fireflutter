@@ -80,7 +80,12 @@ class FireFlutter extends Base {
       translationsChange
           .add(translations); // Must be called before firebase init
     }
+
+    ///
     return initFirebase().then((firebaseApp) {
+      usersCol = FirebaseFirestore.instance.collection('users');
+      postsCol = FirebaseFirestore.instance.collection('posts');
+
       initUser();
       initFirebaseMessaging();
       listenSettingsChange();
@@ -101,6 +106,8 @@ class FireFlutter extends Base {
         }
       });
 
+      isFirebaseInitialized = true;
+      firebaseInitialized.add(isFirebaseInitialized);
       return firebaseApp;
     });
   }
@@ -148,6 +155,8 @@ class FireFlutter extends Base {
       password: data['password'],
     );
 
+    userPublicData = {};
+
     // For registraion, it is okay that displayName or photoUrl is empty.
     await updateUserData(data);
 
@@ -172,6 +181,7 @@ class FireFlutter extends Base {
     Map<String, dynamic> defaultPublicData = {
       notifyPost: true,
       notifyComment: true,
+      'createdAt': FieldValue.serverTimestamp(),
     };
 
     /// Merge default with new meta data.
@@ -193,26 +203,9 @@ class FireFlutter extends Base {
   }
 
   /// Logs out from Firebase Auth.
-  Future<void> logout() {
+  Future logout() {
+    userPublicData = {};
     return FirebaseAuth.instance.signOut();
-  }
-
-  /// Returns user's public document data
-  ///
-  /// If the document does not exist, it returns null.
-  ///
-  /// There is `publicData` map variable which has login user's public document
-  /// data and it's live updated. It is better to use `publicData`, but only if
-  /// you are unsure if `publicData` is available immediately right after login
-  /// or registration, you may use this method.
-  Future<Map<String, dynamic>> getPublicData() async {
-    if (notLoggedIn) return null;
-    final snapshot = await publicDoc.get();
-    if (snapshot.exists) {
-      return snapshot.data();
-    } else {
-      return null;
-    }
   }
 
   /// Logs into Firebase Auth.
@@ -235,8 +228,8 @@ class FireFlutter extends Base {
       email: email,
       password: password,
     );
+    userPublicData = {};
     await updateUserData(data);
-
     await updateUserPublic(public);
     await onLogin(userCredential.user);
     return userCredential.user;
@@ -277,9 +270,20 @@ class FireFlutter extends Base {
   ///  'displayName': 'UserA'
   /// });
   /// ```
+  ///
+  /// ```dart
+  /// dynamic user = await ff.loginOrRegister(
+  ///  email: 'user-a@gmail.com',
+  ///  password: '12345a,*',
+  ///  data: {
+  ///    'displayName': 'UserA'
+  ///  },
+  ///  public: { ... }
+  /// );
+  /// ```
   Future<User> loginOrRegister({
-    @required String email,
-    @required String password,
+    String email,
+    String password,
     Map<String, dynamic> data,
     Map<String, dynamic> public,
     Function onRegister,
@@ -288,8 +292,8 @@ class FireFlutter extends Base {
     try {
       if (data == null) data = {};
 
-      data['email'] = email;
-      data['password'] = password;
+      if (email != null) data['email'] = email;
+      if (password != null) data['password'] = password;
 
       final user = await login(
           email: data['email'],
@@ -314,8 +318,7 @@ class FireFlutter extends Base {
   ///
   /// This method updates user profile photo faster than `updateProfile`.
   Future<void> updatePhoto(String url) async {
-    await user.updateProfile(photoURL: url);
-    userChange.add(UserChangeData(UserChangeType.profile));
+    await updateProfile({'photoURL': url});
     await user.reload();
     await onProfileUpdate();
   }
@@ -1073,14 +1076,59 @@ class FireFlutter extends Base {
     }
   }
 
-  /// Gets user's public document as map
+  @Deprecated('Use getUserPublicData()')
+
+  /// Returns user's public document data
+  ///
+  /// If the document does not exist, it returns null.
+  ///
+  /// There is `publicData` map variable which has login user's public document
+  /// data and it's live updated. It is better to use `publicData`, but only if
+  /// you are unsure if `publicData` is available immediately right after login
+  /// or registration, you may use this method.
+  Future<Map<String, dynamic>> getPublicData() async {
+    // if (notLoggedIn) return null;
+    // final snapshot = await publicDoc.get();
+    // if (snapshot.exists) {
+    //   return snapshot.data();
+    // } else {
+    //   return null;
+    // }
+    return getUserPublicData();
+  }
+
+  /// Get login user's public document as map
   ///
   /// Returns empty Map if there is no data or document does not exists.
   /// `/users/{uid}/meta/public` document would alway exists but just in case
   /// it does't exist, it return empty Map.
-  Future<Map<String, dynamic>> userPublicData() async {
+  Future<Map<String, dynamic>> getUserPublicData() async {
     final Map<String, dynamic> data = (await publicDoc.get()).data();
     return data == null ? {} : data;
+  }
+
+  /// [_usersContainer] to hold other users public document data.
+  ///
+  /// It is a Map container whose key is `uid` and data is the
+  /// `public document` of the user.
+  ///
+  /// Since it is a private member variable, you need to use
+  /// [getOtherUserPublicData] method to access this container.
+  Map<String, Map<String, dynamic>> _usersContainer = {};
+
+  /// Get other user's public document as map.
+  ///
+  /// Returns `null` if there is no data or document does not exists.
+  /// `/users/{uid}/meta/public` document would alway exists but just in case
+  ///
+  /// It caches in memory. Which means, it will not connect to the database
+  /// again once it retrieved the data.
+  ///
+  /// Use this method when you need to access other user's public data.
+  Future<Map<String, dynamic>> getOtherUserPublicData(String uid) async {
+    if (_usersContainer.containsKey(uid)) return _usersContainer[uid];
+    _usersContainer[uid] = (await publicCol.doc(uid).get()).data();
+    return _usersContainer[uid];
   }
 
   /// Return user language
