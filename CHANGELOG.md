@@ -1,3 +1,7 @@
+## [0.0.43] - Document update only
+
+- Add documentation on location.
+
 ## [0.0.42] - Storage related code update
 
 - Storage security rules are updated and user's uid is attached to the file metadata.

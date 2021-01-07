@@ -2557,7 +2557,8 @@ if (location.lastPoint == null)
       "Warning: the device cannot fetch location information(GEO location)!"),
 ```
 
-- Listing users based on location
+- Listing users based on location.
+  - If `location.init()` is not being called, then the app will not update(save) user's location. Which means location related funtionalities would not work since there is no location data in firestore.
 
 ```dart
 location.init(radius: 10000, gender: 'M');
