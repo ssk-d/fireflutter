@@ -1632,6 +1632,7 @@ Call `fetchPosts()` method the ForumData instance and fireflutter will get posts
 
 - Do [Firestore security rules](#firestore-security-rules). When the app list posts, it will require indexes.
 - See [smaple app's forum-list branch](https://github.com/thruthesky/fireflutter_sample_app/tree/forum-list) for the sample code.
+
   - You would open [forum.list.dart](https://github.com/thruthesky/fireflutter_sample_app/blob/forum-list/lib/screens/forum/forum.list.screen.dart) to see what's going on to list a forum.
     - It first gets category
     - then, fetches posts
@@ -2170,9 +2171,11 @@ Firestore structure and its data are secured by Firestore security rules.
 - User may enter(create) many chat rooms.
 - The app needs to get(or realtime update) all of login user's chat room in `/chat/my-room-list/{uid}`.
 - And the app needs to listen to all of login user's incomng chat room events.
+
   - And apply to the list.
 
 - When the user touches on the room of the room list, the user enters the room
+
   - and gets some of last messages of the room
   - and listen to the events of the room and display
 
@@ -2180,9 +2183,7 @@ Firestore structure and its data are secured by Firestore security rules.
 - The user can add another users.
 - If the user is one of the moderators, he can kickout/block other users.
 
-
 ## Overview of chat functions
-
 
 - User who begin(or create) to chat becomes the moderator.
 - Moderator can add another moderator.
@@ -2209,7 +2210,6 @@ Firestore structure and its data are secured by Firestore security rules.
   - if `id` (as chat room id) is given, it will enter the chat room and listens all the event of the room.
   - Or if `id` is null, then a room will be created with the `users` of UIDs list.
   - If both of `id` and `users` are null(or empty), then a room will be created without any users except the login user himself. He will be alone in the room.
-  
 
 - If the app must inform new messages to the user when the user is not in room list screen,
 
@@ -2220,7 +2220,6 @@ Firestore structure and its data are secured by Firestore security rules.
   - Declare `ChatMyRoomList` and `ChatRoom` instances as global variables.
   - Listen to chat room update on home screen and display updates on chat icon.
   - When somebody chats, the user will get push notification. and ignore push notifications if it's my chat or someone that I am talking to.
-
 
 ## Pitfalls of chat logic
 
@@ -2253,7 +2252,7 @@ ChatMyRoomList myRoomList;
 BehaviorSubject myRoomListChanges = BehaviorSubject.seeded(null);
 
 /// [chat] is the chat room instance.
-/// 
+///
 /// The reason why it is declared in global scope is that the app needs to know
 /// if the user is in a chat room. So, when he gets a push notification from the
 /// chat room where he is in, the push messge will be ignored.
@@ -2288,13 +2287,10 @@ ff.authStateChanges.listen((user) {
 });
 ```
 
-
 - Then, on chat room list screen(create one if you don't have), add the following code to list my chat room list.
-
 
 - Then, on chat room, you can do the following.
   - The thing you want to focus is that the app needs to create an instance of `ChatRoom` and enter into it.
-
 
 ```dart
 chat = ChatRoom(
@@ -2319,8 +2315,6 @@ try {
   app.error(e);
 }
 ```
-
-
 
 ### Chat Room List
 
@@ -2947,9 +2941,11 @@ And add the following meta-data element, an activity for Facebook, and an activi
 ## cached_network_image package is not working
 
 See [Facebook login package problem](#facebook-login-package-problem)
+
 ## webview_flutter package is not working
 
 See [Facebook login package problem](#facebook-login-package-problem)
+
 ## com.apple.AuthenticationServices.AuthorizationError error 1001 or if the app hangs on Apple login
 
 If you meet error message like this,

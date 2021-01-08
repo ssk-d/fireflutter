@@ -230,12 +230,14 @@ class Base {
           },
         );
 
-        ///
+        /// Get user public document
         userPublicDocSubscription = publicDoc.snapshots().listen(
           (DocumentSnapshot snapshot) {
             if (snapshot.exists) {
               userPublicData = snapshot.data();
               userPublicDataChange.add(userPublicData);
+            } else {
+              print("==> Opps! User public document does exists");
             }
           },
         );
@@ -508,12 +510,16 @@ class Base {
     String topic,
     bool test,
   }) async {
-    if (enableNotification == false) return false;
-    if (firebaseServerToken == null) return false;
+    assert(token != null || tokens != null || topic != null,
+        "One of token, tokens, topic must be provided.");
 
-    if (token == null &&
-        (tokens == null || tokens.length == 0) &&
-        topic == null) return false;
+    final bool target = (token ?? tokens ?? topic) != null;
+    assert(target, "One of token, tokens, topic must be provided.");
+
+    if (enableNotification == false) throw PUSH_NOTIFICATION_NOT_ENABLED;
+    if (firebaseServerToken == null) throw EMPTY_FIREBASE_SERVER_TOKEN;
+
+    if (target == false) throw EMPTY_PUSH_TARGET;
 
     if (title == null || title == '') throw 'TITLE_IS_EMPTY';
     if (body == null || body == '') throw 'BODY_IS_EMPTY';
@@ -522,10 +528,13 @@ class Base {
 
     /// Check if it will send notification via single token, set of tokens and topic.
     final req = [];
-    if (token != null) req.add({'key': 'to', 'value': token});
-    if (topic != null) req.add({'key': 'to', 'value': "/topics/" + topic});
-    if (tokens != null && tokens.isNotEmpty)
+    if (token != null) {
+      req.add({'key': 'to', 'value': token});
+    } else if (topic != null) {
+      req.add({'key': 'to', 'value': "/topics/" + topic});
+    } else if (tokens != null && tokens.isNotEmpty) {
       req.add({'key': 'registration_ids', 'value': tokens});
+    }
 
     final headers = {
       HttpHeaders.contentTypeHeader: "application/json",
